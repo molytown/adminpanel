@@ -1,4 +1,4 @@
-@foreach($customers as $key=>$customer)
+{{-- @foreach($customers as $key=>$customer)
     <tr class="">
         <td class="">
             {{ ++$key }}
@@ -7,4 +7,4 @@
             {{$customer['email']}}
         </td>
     </tr>
-@endforeach
+@endforeach --}}

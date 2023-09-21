@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Review List'))
+@section('title',translate('Review_List'))
 
 @push('css_or_js')
 
@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title">{{translate('messages.food')}} {{translate('messages.reviews')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$reviews->total()}}</span></h1>
+                    <h1 class="page-header-title">{{translate('messages.food_reviews')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$reviews->total()}}</span></h1>
                 </div>
             </div>
         </div>
@@ -21,6 +21,53 @@
             <div class="col-sm-12 col-lg-12 mb-3 mb-lg-2">
                 <!-- Card -->
                 <div class="card">
+
+                <!-- Header -->
+                <div class="card-header border-0 py-2">
+                    <div class="search--button-wrapper justify-content-end">
+                        <form  class="search-form">
+                            <!-- Search -->
+                            <div class="input-group input--group">
+                                <input id="datatableSearch" name="search" value="{{ request()?->search ?? null }}" type="search" class="form-control min-height-45" placeholder="{{translate('ex_:_search_item_name')}}" aria-label="{{translate('messages.search_here')}}">
+                                <button type="submit" class="btn btn--secondary min-height-45"><i class="tio-search"></i></button>
+                            </div>
+                            <!-- End Search -->
+                        </form>
+                        <div class="hs-unfold mr-2">
+                            <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                data-hs-unfold-options='{
+                                        "target": "#usersExportDropdown",
+                                        "type": "css-animation"
+                                    }'>
+                                <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                            </a>
+
+                            <div id="usersExportDropdown"
+                                class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+
+                                <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                <a id="export-excel" class="dropdown-item" href="{{ route('admin.food.reviews_export', ['type' => 'excel', request()->getQueryString()]) }}">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                        alt="Image Description">
+                                    {{ translate('messages.excel') }}
+                                </a>
+                                <a id="export-csv" class="dropdown-item" href="{{ route('admin.food.reviews_export', ['type' => 'csv', request()->getQueryString()]) }}">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                        alt="Image Description">
+                                    .{{ translate('messages.csv') }}
+                                </a>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- End Header -->
+
+
+
+
                     <div class="card-body p-0">
                         <!-- Table -->
                         <div class="table-responsive datatable-custom">
@@ -56,9 +103,9 @@
                                                         <h5 class="text-hover-primary mb-0">{{Str::limit($review->food['name'],20,'...')}}</h5>
                                                     </div>
                                                 </a>
-                                                <a class="text-body" href="{{route('admin.order.details',['id'=>$review->order_id])}}">Order ID: {{$review->order_id}}</a>
+                                                <a class="mr-5 text-body" href="{{route('admin.order.details',['id'=>$review->order_id])}}"> {{ translate('Order_ID') }}: {{$review->order_id}}</a>
                                             @else
-                                                {{translate('messages.Food deleted!')}}
+                                                {{translate('messages.Food_deleted!')}}
                                             @endif
 
                                         </td>
@@ -81,7 +128,7 @@
                                         </td>
                                         <td>
                                             <label class="toggle-switch toggle-switch-sm" for="reviewCheckbox{{$review->id}}">
-                                                <input type="checkbox" onclick="status_form_alert('status-{{$review['id']}}','{{$review->status?translate('messages.you_want_to_hide_this_review_for_customer'):translate('messages.you_want_to_show_this_review_for_customer')}}', event)" class="toggle-switch-input" id="reviewCheckbox{{$review->id}}" {{$review->status?'checked':''}}>
+                                                <input type="checkbox" onclick="status_form_alert('status-{{$review['id']}}','{{$review->status?translate('messages.you_want_to_hide_this_review_for_customer_?'):translate('messages.you_want_to_show_this_review_for_customer_?')}}', event)" class="toggle-switch-input" id="reviewCheckbox{{$review->id}}" {{$review->status?'checked':''}}>
                                                 <span class="toggle-switch-label">
                                                     <span class="toggle-switch-indicator"></span>
                                                 </span>
@@ -134,14 +181,14 @@
         function status_form_alert(id, message, e) {
             e.preventDefault();
             Swal.fire({
-                title: '{{translate('messages.are_you_sure')}}',
+                title: '{{translate('messages.Are_you_sure_?')}}',
                 text: message,
                 type: 'warning',
                 showCancelButton: true,
                 cancelButtonColor: 'default',
                 confirmButtonColor: '#FC6A57',
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
+                cancelButtonText: '{{ translate('no') }}',
+                confirmButtonText: '{{ translate('yes') }}',
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {

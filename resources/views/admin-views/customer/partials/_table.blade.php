@@ -1,4 +1,4 @@
-@foreach($customers as $key=>$customer)
+{{-- @foreach($customers as $key=>$customer)
 <tr class="">
     <td class="">
         {{$key+1}}
@@ -34,9 +34,9 @@
     <td>
         <div class="btn--container">
             <a class="btn btn-sm btn--warning btn-outline-warning action-btn"
-                href="{{route('admin.customer.view',[$customer['id']])}}" title="{{translate('messages.view')}} {{translate('messages.customer')}}"><i class="tio-visible-outlined"></i>
+                href="{{route('admin.customer.view',[$customer['id']])}}" title="{{translate('messages.view_customer')}}"><i class="tio-visible-outlined"></i>
             </a>
         </div>
     </td>
 </tr>
-@endforeach
+@endforeach --}}

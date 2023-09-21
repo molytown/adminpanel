@@ -36,7 +36,7 @@
             }
 
             .code {
-                border-right: 2px solid;
+                border-inline-end: 2px solid;
                 font-size: 26px;
                 padding: 0 15px 0 15px;
                 text-align: center;

@@ -18,7 +18,7 @@ class CategoryLogic
         return Category::where(['parent_id' => $parent_id])->get();
     }
 
-    public static function products(int $category_id, array $zone_id, int $limit,int $offset, $type)
+    public static function products($category_id, array $zone_id, int $limit,int $offset, $type)
     {
         $paginator = Food::whereHas('restaurant', function($query)use($zone_id){
             return $query->whereIn('zone_id', $zone_id);
@@ -37,15 +37,12 @@ class CategoryLogic
     }
 
 
-    public static function restaurants(int $category_id, array $zone_id, int $limit,int $offset, $type)
+    public static function restaurants($category_id, array $zone_id, int $limit,int $offset, $type,$longitude=0,$latitude=0)
     {
-        $paginator = Restaurant::withOpen()->whereIn('zone_id', $zone_id)
+        $paginator = Restaurant::withOpen($longitude,$latitude)->whereIn('zone_id', $zone_id)
         ->whereHas('foods.category', function($query)use($category_id){
             return $query->whereId($category_id)->orWhere('parent_id', $category_id);
         })
-        // ->whereHas('category',function($q)use($category_id){
-        //     return $q->whereId($category_id)->orWhere('parent_id', $category_id);
-        // })
         ->active()->type($type)->latest()->paginate($limit, ['*'], 'page', $offset);
 
         return [
@@ -67,7 +64,23 @@ class CategoryLogic
                 array_push($cate_ids,$ch2['id']);
             }
         }
-
         return Food::whereIn('category_id', $cate_ids)->get();
+    }
+
+
+    public static function export_categories($collection){
+        $data = [];
+        foreach($collection as $key=>$item){
+            $data[] = [
+                'Id'=>$item->id,
+                'Name'=>$item->name,
+                'Image'=>$item->image,
+                'ParentId'=>$item->parent_id,
+                'Position'=>$item->position,
+                'Priority'=>$item->priority,
+                'Status'=>$item->status == 1 ? 'active' : 'inactive',
+            ];
+        }
+        return $data;
     }
 }

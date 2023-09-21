@@ -124,10 +124,10 @@
                                 <div class="col-sm-9">
                                     <div class="input-group input-group-sm-down-break">
                                         <input type="text" class="form-control h--45px" name="f_name" id="firstNameLabel"
-                                               placeholder="{{ translate('messages.Ex :') }} Jhone" aria-label="{{translate('messages.your_first_name')}}"
+                                               placeholder="{{ translate('messages.Ex:_Jhon') }} " aria-label="{{translate('messages.your_first_name')}}"
                                                value="{{auth('admin')->user()->f_name}}">
                                         <input type="text" class="form-control h--45px" name="l_name" id="lastNameLabel"
-                                               placeholder="{{ translate('messages.Ex :') }} Doe" aria-label="{{translate('messages.your_last_name')}}"
+                                               placeholder="{{ translate('messages.Ex:_Doe') }} " aria-label="{{translate('messages.your_last_name')}}"
                                                value="{{auth('admin')->user()->l_name}}">
                                     </div>
                                 </div>
@@ -141,7 +141,7 @@
 
                                 <div class="col-sm-9">
                                     <input type="text" class="js-masked-input form-control h--45px" name="phone" id="phoneLabel"
-                                           placeholder="{{ translate('messages.Ex :') }} +x(xxx)xxx-xx-xx" aria-label="+(xxx)xx-xxx-xxxxx"
+                                           placeholder="{{ translate('messages.Ex:_+x(xxx)xxx-xx-xx') }} " aria-label="+(xxx)xx-xxx-xxxxx"
                                            value="{{auth('admin')->user()->phone}}"
                                            data-hs-mask-options='{
                                            "template": "+(880)00-000-00000"
@@ -156,12 +156,12 @@
                                 <div class="col-sm-9">
                                     <input type="email" class="form-control h--45px" name="email" id="newEmailLabel"
                                            value="{{auth('admin')->user()->email}}"
-                                           placeholder="{{ translate('messages.Ex :') }} jhone@company.com" aria-label="{{translate('messages.enter_new_email_address')}}">
+                                           placeholder="{{ translate('messages.Ex:_jhone@company.com') }} " aria-label="{{translate('messages.enter_new_email_address')}}">
                                 </div>
                             </div>
 
                             <div class="d-flex justify-content-end">
-                                <button type="button" onclick="{{env('APP_MODE')!='demo'?"form_alert('admin-settings-form','".translate('Want to update admin info ?')."')":"call_demo()"}}" class="btn btn--primary">{{translate('messages.save')}}</button>
+                                <button type="button" onclick="{{env('APP_MODE')!='demo'?"form_alert('admin-settings-form','".translate('Want_to_update_admin_info_?')."')":"call_demo()"}}" class="btn btn--primary">{{translate('messages.save')}}</button>
                             </div>
 
                             <!-- End Form -->
@@ -180,17 +180,21 @@
                     <!-- Body -->
                     <div class="card-body">
                         <!-- Form -->
-                        <form id="changePasswordForm" action="{{env('APP_MODE')!='demo'?route('admin.settings-password'):'javascript:'}}" method="post"
+                        <form id="changePasswordForm" class="js-validate" action="{{env('APP_MODE')!='demo'?route('admin.settings-password'):'javascript:'}}" method="post"
                               enctype="multipart/form-data">
                         @csrf
 
                         <!-- Form Group -->
-                            <div class="row form-group">
-                                <label for="newPassword" class="col-sm-3 col-form-label input-label">{{translate('messages.new_password')}}</label>
+                            <div class="row js-form-message form-group">
+                                <label for="signupSrPassword" class="col-sm-3 col-form-label input-label">{{translate('messages.new_password')}}
+                                    <span class="input-label-secondary ps-1" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span>
+                                </label>
 
                                 <div class="col-sm-9">
-                                    <input type="password" class="js-pwstrength form-control h--45px" name="password"
-                                           id="newPassword" placeholder="{{ translate('messages.Ex :') }} 5+ characters required"
+                                    {{-- <input type="password" class="js-pwstrength form-control h--45px" name="password"
+                                           id="newPassword" placeholder="{{ translate('messages.Ex :') }} 8+ characters required"
+                                           pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+
                                            aria-label="{{translate('messages.enter_new_password')}}"
                                            data-hs-pwstrength-options='{
                                            "ui": {
@@ -200,8 +204,25 @@
                                                "verdict": "#passwordStrengthVerdict"
                                              }
                                            }
-                                         }' required>
-
+                                         }' required> --}}
+                                         <input type="password" class="js-toggle-password form-control h--45px" name="password"
+                                         id="signupSrPassword"
+                                         pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                            required
+                                         placeholder="{{translate('messages.password_length_8+')}}"
+                                         aria-label="8+ characters required"
+                                         data-msg="Your password is invalid. Please try again."
+                                         data-hs-toggle-password-options='{
+                                                        "target": [".js-toggle-password-target-1", ".js-toggle-password-target-2"],
+                                                        "defaultClass": "tio-hidden-outlined",
+                                                        "showClass": "tio-visible-outlined",
+                                                        "classChangeTarget": ".js-toggle-passowrd-show-icon-1"
+                                                        }'>
+                                     {{-- <div class="js-toggle-password-target-1 input-group-append">
+                                         <a class="input-group-text" href="javascript:;">
+                                             <i class="js-toggle-passowrd-show-icon-1 tio-visible-outlined"></i>
+                                         </a>
+                                     </div> --}}
                                     <p id="passwordStrengthVerdict" class="form-text mb-2"></p>
 
                                     <div id="passwordStrengthProgress"></div>
@@ -210,21 +231,42 @@
                             <!-- End Form Group -->
 
                             <!-- Form Group -->
-                            <div class="row form-group">
+                            <div class="row js-form-message form-group">
                                 <label for="confirmNewPasswordLabel" class="col-sm-3 col-form-label input-label">{{translate('messages.confirm_password')}}</label>
 
                                 <div class="col-sm-9">
                                     <div class="mb-3">
-                                        <input type="password" class="form-control h--45px" name="confirm_password"
-                                               id="confirmNewPasswordLabel" placeholder="{{ translate('messages.Ex :') }} 5+ characters required"
-                                               aria-label="{{translate('messages.confirm_new_password')}}" required>
-                                    </div>
+                                        {{-- <input type="password" class="form-control h--45px" name="confirm_password"
+                                        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                            id="confirmNewPasswordLabel" placeholder="{{ translate('messages.Ex :') }} 8+ characters required"
+                                            aria-label="{{translate('messages.confirm_new_password')}}" required> --}}
+
+
+                                            <input type="password" class="js-toggle-password form-control h--45px"
+                                            name="confirm_password" id="signupSrConfirmPassword"
+                                            pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                            required
+                                            placeholder="{{translate('messages.password_length_8+')}}"
+                                            aria-label="8+ characters required"
+                                            data-msg="Password does not match the confirm password."
+                                            data-hs-toggle-password-options='{
+                                                                "target": [".js-toggle-password-target-1", ".js-toggle-password-target-2"],
+                                                                "defaultClass": "tio-hidden-outlined",
+                                                                "showClass": "tio-visible-outlined",
+                                                                "classChangeTarget": ".js-toggle-passowrd-show-icon-2"
+                                                                }'>
+                                        </div>
                                 </div>
                             </div>
                             <!-- End Form Group -->
 
                             <div class="d-flex justify-content-end">
-                                <button type="button" onclick="{{env('APP_MODE')!='demo'?"form_alert('changePasswordForm','".translate('messages.want_to_update_admin_password')."')":"call_demo()"}}" class="btn btn--primary">{{translate('messages.save')}}</button>
+                                @if (env('APP_MODE')!='demo')
+                                    <button type="submit" class="btn btn--primary">{{translate('messages.save')}}</button>
+                                @else
+                                    <button type="button" onclick="call_demo()" class="btn btn--primary">{{translate('messages.save')}}</button>
+
+                                @endif
                             </div>
                         </form>
                         <!-- End Form -->
@@ -262,6 +304,21 @@
     </script>
 
     <script>
+            $('.js-toggle-password').each(function() {
+                new HSTogglePassword(this).init()
+            });
+            $('.js-validate').each(function() {
+                $.HSCore.components.HSValidation.init($(this), {
+                    rules: {
+                        confirmPassword: {
+                            equalTo: '#signupSrPassword'
+                        }
+                    }
+                });
+            });
+
+
+
         $("#generalSection").click(function() {
             $("#passwordSection").removeClass("active");
             $("#generalSection").addClass("active");

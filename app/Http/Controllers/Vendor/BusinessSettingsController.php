@@ -2,17 +2,13 @@
 
 namespace App\Http\Controllers\Vendor;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\Restaurant;
-use App\Models\RestaurantSchedule;
-use App\Models\Currency;
-use App\Models\BusinessSetting;
-use Brian2694\Toastr\Facades\Toastr;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
+use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
+use App\Models\BusinessSetting;
+use App\Models\RestaurantSchedule;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Validator;
 
 class BusinessSettingsController extends Controller
@@ -22,7 +18,7 @@ class BusinessSettingsController extends Controller
 
     public function restaurant_index()
     {
-        $restaurant = Helpers::get_restaurant_data();
+        $restaurant =  Restaurant::withoutGlobalScope('translate')->with('translations')->findOrFail(Helpers::get_restaurant_id());
         return view('vendor-views.business-settings.restaurant-index', compact('restaurant'));
     }
 
@@ -30,11 +26,19 @@ class BusinessSettingsController extends Controller
     {
         $request->validate([
             'gst' => 'required_if:gst_status,1',
-            'per_km_delivery_charge'=>'required_with:minimum_delivery_charge',
-            'minimum_delivery_charge'=>'required_with:per_km_delivery_charge'
+            'per_km_delivery_charge'=>'required_with:minimum_delivery_charge|numeric|between:1,999999999999.99',
+            'minimum_delivery_charge'=>'required_with:per_km_delivery_charge|numeric|between:1,999999999999.99',
+            'maximum_shipping_charge'=>'nullable|gt:minimum_delivery_charge',
         ], [
             'gst.required_if' => translate('messages.gst_can_not_be_empty'),
         ]);
+
+        $data =0;
+        if (($restaurant->restaurant_model == 'subscription' && $restaurant?->restaurant_sub?->self_delivery == 1)  || ($restaurant->restaurant_model == 'commission' &&  $restaurant->self_delivery_system == 1) ){
+            $data =1;
+        }
+        $cuisine_ids = [];
+        $cuisine_ids=$request->cuisine_ids;
 
         $off_day = $request->off_day?implode('',$request->off_day):'';
         $restaurant->minimum_order = $request->minimum_order;
@@ -42,9 +46,14 @@ class BusinessSettingsController extends Controller
         $restaurant->closeing_time = $request->closeing_time;
         $restaurant->off_day = $off_day;
         $restaurant->gst = json_encode(['status'=>$request->gst_status, 'code'=>$request->gst]);
-        $restaurant->minimum_shipping_charge = $restaurant->self_delivery_system?$request->minimum_delivery_charge??0: $restaurant->minimum_shipping_charge;
-        $restaurant->per_km_shipping_charge = $restaurant->self_delivery_system?$request->per_km_delivery_charge??0: $restaurant->per_km_shipping_charge;
+        $restaurant->minimum_shipping_charge = $data?$request->minimum_delivery_charge??0: $restaurant->minimum_shipping_charge;
+        $restaurant->per_km_shipping_charge = $data?$request->per_km_delivery_charge??0: $restaurant->per_km_shipping_charge;
+        $restaurant->maximum_shipping_charge = $request->maximum_shipping_charge ?? null;
+        // $restaurant->delivery_time = $request?->minimum_delivery_time .'-'. $request?->maximum_delivery_time.'-'.$request?->delivery_time_type;
+
         $restaurant->save();
+        $restaurant->cuisine()->sync($cuisine_ids);
+
         Toastr::success(translate('messages.restaurant_settings_updated'));
         return back();
     }
@@ -57,6 +66,17 @@ class BusinessSettingsController extends Controller
             return back();
         }
 
+        $home_delivery = BusinessSetting::where('key', 'home_delivery')->first()?->value ?? null;
+        if ($request->menu == "delivery" && !$home_delivery) {
+            Toastr::warning(translate('messages.Home_delivery_is_disabled_by_admin'));
+            return back();
+        }
+        $take_away = BusinessSetting::where('key', 'take_away')->first()?->value ?? null;
+        if ($request->menu == "take_away" && !$take_away) {
+            Toastr::warning(translate('messages.Take_away_is_disabled_by_admin'));
+            return back();
+
+        }
         if((($request->menu == "delivery" && $restaurant->take_away==0) || ($request->menu == "take_away" && $restaurant->delivery==0)) &&  $request->status == 0 )
         {
             Toastr::warning(translate('messages.can_not_disable_both_take_away_and_delivery'));
@@ -66,6 +86,11 @@ class BusinessSettingsController extends Controller
         if((($request->menu == "veg" && $restaurant->non_veg==0) || ($request->menu == "non_veg" && $restaurant->veg==0)) &&  $request->status == 0 )
         {
             Toastr::warning(translate('messages.veg_non_veg_disable_warning'));
+            return back();
+        }
+
+        if($request->menu == 'free_delivery' &&(($restaurant->restaurant_model == 'subscription' && $restaurant?->restaurant_sub?->self_delivery == 0) || ($restaurant->restaurant_model == 'unsubscribed'))){
+            Toastr::error(translate('your_subscription_plane_does_not_have_this_feature'));
             return back();
         }
 
@@ -80,7 +105,7 @@ class BusinessSettingsController extends Controller
         $restaurant = Helpers::get_restaurant_data();
         $restaurant->active = $restaurant->active?0:1;
         $restaurant->save();
-        return response()->json(['message' => $restaurant->active?translate('messages.restaurant_opened'):translate('messages.restaurant_temporarily_closed')], 200);
+        return response()->json(['message' => !$restaurant->active?translate('messages.restaurant_temporarily_closed'):translate('messages.restaurant_opened')], 200);
     }
 
     public function add_schedule(Request $request)
@@ -88,6 +113,7 @@ class BusinessSettingsController extends Controller
         $validator = Validator::make($request->all(),[
             'start_time'=>'required|date_format:H:i',
             'end_time'=>'required|date_format:H:i|after:start_time',
+            'day'=>'required',
         ],[
             'end_time.after'=>translate('messages.End time must be after the start time')
         ]);
@@ -131,5 +157,35 @@ class BusinessSettingsController extends Controller
         return response()->json([
             'view' => view('vendor-views.business-settings.partials._schedule', compact('restaurant'))->render(),
         ]);
+    }
+
+    public function site_direction_vendor(Request $request){
+        session()->put('site_direction_vendor', ($request->status == 1?'ltr':'rtl'));
+        return response()->json();
+    }
+
+    public function updateStoreMetaData(Restaurant $restaurant, Request $request)
+    {
+        $request->validate([
+            'meta_title.0' => 'required',
+            'meta_description.0' => 'required',
+            'meta_title.*' => 'max:100',
+
+        ],[
+            'meta_title.0.required'=>translate('default_meta_title_is_required'),
+            'meta_title.max'=>translate('Title_must_be_within_100_character'),
+            'meta_description.0.required'=>translate('default_meta_description_is_required'),
+        ]);
+
+        $restaurant->meta_image = $request->has('meta_image') ? Helpers::update('restaurant/', $restaurant->meta_image, 'png', $request->file('meta_image')) : $restaurant->meta_image;
+        $restaurant->meta_title = $request->meta_title[array_search('default', $request->lang)];
+        $restaurant->meta_description = $request->meta_description[array_search('default', $request->lang)];
+        $restaurant->save();
+
+        Helpers::add_or_update_translations(request:$request,key_data: 'meta_title', name_field:'meta_title' , model_name:'Restaurant' ,data_id:$restaurant->id,data_value:$restaurant->meta_title);
+        Helpers::add_or_update_translations(request:$request,key_data: 'meta_description', name_field:'meta_description' , model_name:'Restaurant' ,data_id:$restaurant->id,data_value:$restaurant->meta_description);
+
+        Toastr::success(translate('messages.meta_data_updated'));
+        return back();
     }
 }

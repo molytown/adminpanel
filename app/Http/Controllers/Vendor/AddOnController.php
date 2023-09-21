@@ -33,22 +33,35 @@ class AddOnController extends Controller
         ]);
 
         $addon = new AddOn();
-        $addon->name = $request->name[array_search('en', $request->lang)];
+        $addon->name = $request->name[array_search('default', $request->lang)];
         $addon->price = $request->price;
         $addon->restaurant_id = \App\CentralLogics\Helpers::get_restaurant_id();
         $addon->save();
         $data = [];
+        $default_lang = str_replace('_', '-', app()->getLocale());
+
         foreach($request->lang as $index=>$key)
         {
-            if($request->name[$index] && $key != 'en')
-            {
-                array_push($data, Array(
-                    'translationable_type'  => 'App\Models\AddOn',
-                    'translationable_id'    => $addon->id,
-                    'locale'                => $key,
-                    'key'                   => 'name',
-                    'value'                 => $request->name[$index],
-                ));
+            if($default_lang == $key && !($request->name[$index])){
+                if ($key != 'default') {
+                    array_push($data, array(
+                        'translationable_type' => 'App\Models\AddOn',
+                        'translationable_id' => $addon->id,
+                        'locale' => $key,
+                        'key' => 'name',
+                        'value' => $addon->name,
+                    ));
+                }
+            }else{
+                if ($request->name[$index] && $key != 'default') {
+                    array_push($data, Array(
+                        'translationable_type'  => 'App\Models\AddOn',
+                        'translationable_id'    => $addon->id,
+                        'locale'                => $key,
+                        'key'                   => 'name',
+                        'value'                 => $request->name[$index],
+                    ));
+                }
             }
         }
         if(count($data))
@@ -85,21 +98,36 @@ class AddOnController extends Controller
         ]);
 
         $addon = AddOn::find($id);
-        $addon->name = $request->name[array_search('en', $request->lang)];
+        $addon->name = $request->name[array_search('default', $request->lang)];
         $addon->price = $request->price;
-        $addon->save();
+        $addon?->save();
+        $default_lang = str_replace('_', '-', app()->getLocale());
 
         foreach($request->lang as $index=>$key)
         {
-            if($request->name[$index] && $key != 'en')
-            {
-                Translation::updateOrInsert(
-                    ['translationable_type'  => 'App\Models\AddOn',
-                        'translationable_id'    => $addon->id,
-                        'locale'                => $key,
-                        'key'                   => 'name'],
-                    ['value'                 => $request->name[$index]]
-                );
+            if($default_lang == $key && !($request->name[$index])){
+                if ($key != 'default') {
+                    Translation::updateOrInsert(
+                        [
+                            'translationable_type' => 'App\Models\AddOn',
+                            'translationable_id' => $addon->id,
+                            'locale' => $key,
+                            'key' => 'name'
+                        ],
+                        ['value' => $addon->name]
+                    );
+                }
+            }else{
+
+                if ($request->name[$index] && $key != 'default') {
+                    Translation::updateOrInsert(
+                        ['translationable_type'  => 'App\Models\AddOn',
+                            'translationable_id'    => $addon->id,
+                            'locale'                => $key,
+                            'key'                   => 'name'],
+                        ['value'                 => $request->name[$index]]
+                    );
+                }
             }
         }
 
@@ -115,7 +143,7 @@ class AddOnController extends Controller
             return back();
         }
         $addon = AddOn::find($request->id);
-        $addon->delete();
+        $addon?->delete();
         Toastr::success(translate('messages.addon_deleted_successfully'));
         return back();
     }

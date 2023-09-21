@@ -182,10 +182,15 @@
 
                         <!-- Form Group -->
                             <div class="row form-group">
-                                <label for="newPassword" class="col-sm-3 col-form-label input-label">{{translate('messages.new_password')}}</label>
+                                <label for="newPassword" class="col-sm-3 col-form-label input-label">{{translate('messages.new_password')}}
+                                    <span class="input-label-secondary ps-1" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span>
+
+                                </label>
 
                                 <div class="col-sm-9">
                                     <input type="password" class="js-pwstrength form-control" name="password"
+                                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+
                                            id="newPassword" placeholder="{{translate('messages.enter_new_password')}}"
                                            aria-label="{{translate('messages.enter_new_password')}}"
                                            data-hs-pwstrength-options='{
@@ -212,7 +217,8 @@
                                 <div class="col-sm-9">
                                     <div class="mb-3">
                                         <input type="password" class="form-control" name="confirm_password"
-                                               id="confirmNewPasswordLabel" placeholder="{{translate('messages.confirm_new_password')}}"
+                                        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                        id="confirmNewPasswordLabel" placeholder="{{translate('messages.confirm_new_password')}}"
                                                aria-label="{{translate('messages.confirm_new_password')}}" required>
                                     </div>
                                 </div>
@@ -220,7 +226,12 @@
                             <!-- End Form Group -->
 
                             <div class="d-flex justify-content-end">
-                                <button type="button" onclick="@if(env('APP_MODE')!='demo') form_alert('changePasswordForm', '{{translate('messages.want_to_update_password')}}') @else call_demo() @endif" class="btn btn-primary">{{translate('messages.save_changes')}}</button>
+                                @if (env('APP_MODE')!='demo')
+                                <button type="submit" class="btn btn--primary">{{translate('messages.Save_changes')}}</button>
+                                @else
+                                    <button type="button" onclick="call_demo()" class="btn btn--primary">{{translate('messages.Save_changes')}}</button>
+                                @endif
+
                             </div>
                         </form>
                         <!-- End Form -->

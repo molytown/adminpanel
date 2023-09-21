@@ -2,19 +2,21 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\CentralLogics\Helpers;
-use App\Http\Controllers\Controller;
-use App\Models\CustomerAddress;
-use App\Models\Order;
 use App\Models\Food;
-use App\Models\OrderDetail;
 use App\Models\User;
-use App\Models\UserInfo;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Validator;
 use App\Models\Zone;
-use Grimzy\LaravelMysqlSpatial\Types\Point;
+use App\Models\Order;
+use App\Models\UserInfo;
+use App\Models\OrderDetail;
+use Illuminate\Http\Request;
+use App\CentralLogics\Helpers;
+use App\Models\CustomerAddress;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+
 class CustomerController extends Controller
 {
     public function address_list(Request $request)
@@ -22,7 +24,7 @@ class CustomerController extends Controller
         $limit = $request['limit']??10;
         $offset = $request['offset']??1;
 
-        $addresses = CustomerAddress::where('user_id', $request->user()->id)->latest()->paginate($limit, ['*'], 'page', $offset);
+        $addresses = CustomerAddress::where('user_id', $request?->user()?->id)->latest()->paginate($limit, ['*'], 'page', $offset);
 
         $data =  [
             'total_size' => $addresses->total(),
@@ -31,18 +33,6 @@ class CustomerController extends Controller
             'addresses' => Helpers::address_data_formatting($addresses->items())
         ];
         return response()->json($data, 200);
-    }
-
-    public function get_mogo_code(Request $request)
-    {
-        $validator = Validator::make($request->all(), [
-            'mogo_code' => 'required'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json(['errors' => Helpers::error_processor($validator)], 403);
-        }
-        return response()->json(CustomerAddress::where('mogo_code', $request->mogo_code)->first(), 200);
     }
 
     public function add_new_address(Request $request)
@@ -60,8 +50,7 @@ class CustomerController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $point = new Point($request->latitude,$request->longitude);
-        $zone = Zone::contains('coordinates', $point)->get(['id','zone_country']);
+        $zone = Zone::whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))->get(['id']);
         if(count($zone) == 0)
         {
             $errors = [];
@@ -72,7 +61,7 @@ class CustomerController extends Controller
         }
 
         $address = [
-            'user_id' => $request->user()->id,
+            'user_id' => $request?->user()?->id,
             'contact_person_name' => $request->contact_person_name,
             'contact_person_number' => $request->contact_person_number,
             'address_type' => $request->address_type,
@@ -83,7 +72,6 @@ class CustomerController extends Controller
             'longitude' => $request->longitude,
             'latitude' => $request->latitude,
             'zone_id' => $zone[0]->id,
-            'mogo_code' => Helpers::generate_mogo_code($zone),
             'created_at' => now(),
             'updated_at' => now()
         ];
@@ -105,9 +93,7 @@ class CustomerController extends Controller
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
-        $point = new Point($request->latitude,$request->longitude);
-        $zone = Zone::contains('coordinates', $point)->first();
-        if(!$zone)
+        $zone = Zone::whereContains('coordinates', new Point($request->latitude, $request->longitude, POINT_SRID))->first();        if(!$zone)
         {
             $errors = [];
             array_push($errors, ['code' => 'coordinates', 'message' => translate('messages.service_not_available_in_this_area')]);
@@ -116,7 +102,7 @@ class CustomerController extends Controller
             ], 403);
         }
         $address = [
-            'user_id' => $request->user()->id,
+            'user_id' => $request?->user()?->id,
             'contact_person_name' => $request->contact_person_name,
             'contact_person_number' => $request->contact_person_number,
             'address_type' => $request->address_type,
@@ -144,8 +130,8 @@ class CustomerController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        if (DB::table('customer_addresses')->where(['id' => $request['address_id'], 'user_id' => $request->user()->id])->first()) {
-            DB::table('customer_addresses')->where(['id' => $request['address_id'], 'user_id' => $request->user()->id])->delete();
+        if (DB::table('customer_addresses')->where(['id' => $request['address_id'], 'user_id' => $request?->user()?->id])->first()) {
+            DB::table('customer_addresses')->where(['id' => $request['address_id'], 'user_id' => $request?->user()?->id])->delete();
             return response()->json(['message' => translate('messages.successfully_removed')], 200);
         }
         return response()->json(['message' => translate('messages.not_found')], 404);
@@ -153,7 +139,7 @@ class CustomerController extends Controller
 
     public function get_order_list(Request $request)
     {
-        $orders = Order::with('restaurant')->where(['user_id' => $request->user()->id])->get();
+        $orders = Order::with('restaurant')->where(['user_id' => $request?->user()?->id])->get();
         return response()->json($orders, 200);
     }
 
@@ -177,10 +163,10 @@ class CustomerController extends Controller
 
     public function info(Request $request)
     {
-        $data = $request->user();
-        $data['userinfo'] = $data->userinfo;
-        $data['order_count'] =(integer)$request->user()->orders->count();
-        $data['member_since_days'] =(integer)$request->user()->created_at->diffInDays();
+        $data = $request?->user();
+        $data['userinfo'] = $data?->userinfo;
+        $data['order_count'] =(integer)$request?->user()?->orders?->count();
+        $data['member_since_days'] =(integer)$request?->user()?->created_at?->diffInDays();
         unset($data['orders']);
         return response()->json($data, 200);
     }
@@ -189,57 +175,46 @@ class CustomerController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'f_name' => 'required',
-            // 'l_name' => 'required',
-            // 'email' => 'required|unique:users,email,'.$request->user()->id,
+            'l_name' => 'required',
+            'email' => 'required|unique:users,email,'.$request?->user()?->id,
+            'image' => 'nullable|max:2048',
+            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+
         ], [
             'f_name.required' => 'First name is required!',
-            // 'l_name.required' => 'Last name is required!',
+            'l_name.required' => 'Last name is required!',
         ]);
-
-        $f_name = '';
-        $l_name = '';
 
         if ($validator->fails()) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        if(count(explode(' ',$request->f_name))>1)
-        {
-            $f_name = implode(' ',explode(' ',$request->f_name,-1));
-            $temp = explode(' ',$request->f_name);
-            $l_name = end($temp);
-        }
-        else
-        {
-            $f_name = $request->f_name;
-        }
-
         $image = $request->file('image');
 
         if ($request->has('image')) {
-            $imageName = Helpers::update('profile/', $request->user()->image, 'png', $request->file('image'));
+            $imageName = Helpers::update(dir:'profile/',old_image: $request?->user()?->image, format:'png', image:$request->file('image'));
         } else {
-            $imageName = $request->user()->image;
+            $imageName = $request?->user()?->image;
         }
 
         if ($request['password'] != null && strlen($request['password']) > 5) {
             $pass = bcrypt($request['password']);
         } else {
-            $pass = $request->user()->password;
+            $pass = $request?->user()?->password;
         }
 
         $userDetails = [
-            'f_name' => $f_name,
-            'l_name' => $l_name,
+            'f_name' => $request->f_name,
+            'l_name' => $request->l_name,
             'email' => $request->email,
             'image' => $imageName,
             'password' => $pass,
             'updated_at' => now()
         ];
 
-        User::where(['id' => $request->user()->id])->update($userDetails);
-        if($request->user()->userinfo) {
-            UserInfo::where(['user_id' => $request->user()->id])->update([
+        User::where(['id' => $request?->user()?->id])->update($userDetails);
+        if($request?->user()?->userinfo) {
+            UserInfo::where(['user_id' => $request?->user()?->id])->update([
                 'f_name' => $request->f_name,
                 'l_name' => $request->l_name,
                 'email' => $request->email,
@@ -264,7 +239,7 @@ class CustomerController extends Controller
             'interest' => json_encode($request->interest),
         ];
 
-        User::where(['id' => $request->user()->id])->update($userDetails);
+        User::where(['id' => $request?->user()?->id])->update($userDetails);
 
         return response()->json(['message' => translate('messages.interest_updated_successfully')], 200);
     }
@@ -279,7 +254,7 @@ class CustomerController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        DB::table('users')->where('id',$request->user()->id)->update([
+        DB::table('users')->where('id',$request?->user()?->id)->update([
             'cm_firebase_token'=>$request['cm_firebase_token']
         ]);
 
@@ -299,7 +274,7 @@ class CustomerController extends Controller
 
         $zone_id= json_decode($request->header('zoneId'), true);
 
-        $interest = $request->user()->interest;
+        $interest = $request?->user()?->interest;
         $interest = isset($interest) ? json_decode($interest):null;
         // return response()->json($interest, 200);
 
@@ -338,11 +313,11 @@ class CustomerController extends Controller
 
         if(Order::where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count())
         {
-            return response()->json(['errors'=>[['code'=>'on-going', 'message'=>translate('messages.user_account_delete_warning')]]],203);
+            return response()->json(['errors'=>[['code'=>'on-going', 'message'=>translate('messages.user_account_delete_warning')]]],403);
         }
-        $request->user()->token()->revoke();
-        if($user->userinfo){
-            $user->userinfo->delete();
+        $request?->user()?->token()->revoke();
+        if($user?->userinfo){
+            $user?->userinfo?->delete();
         }
         $user->delete();
         return response()->json([]);

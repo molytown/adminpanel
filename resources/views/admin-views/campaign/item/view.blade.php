@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Item Campaign Preview'))
+@section('title',translate('Food_Campaign_Preview'))
 
 @push('css_or_js')
 
@@ -29,20 +29,28 @@
                     </div>
                     <div class="col-md-6">
                         <span class="d-block mb-1">
-                            {{translate('messages.campaign')}} {{translate('messages.starts')}} {{translate('messages.from')}} :
-                            <strong class="text--title">{{$campaign->start_date->format('Y-M-d')}}</strong>
+                            {{translate('messages.campaign_starts_from')}} :
+                            <strong class="text--title">
+                            {{ \App\CentralLogics\Helpers::date_format($campaign->start_date) }}
+                            </strong>
                         </span>
                         <span class="d-block mb-1">
-                            {{translate('messages.campaign')}} {{translate('messages.ends')}} {{translate('messages.at')}} :
-                            <strong class="text--title">{{$campaign->end_date->format('Y-M-d')}}</strong>
+                            {{translate('messages.campaign_ends_at')}} :
+                            <strong class="text--title">
+                                {{ \App\CentralLogics\Helpers::date_format($campaign->end_date) }}
+                            </strong>
                         </span>
                         <span class="d-block mb-1">
-                            {{translate('messages.available')}} {{translate('messages.time')}} {{translate('messages.starts')}} :
-                            <strong class="text--title">{{$campaign->start_time->format(config('timeformat'))}}</strong>
+                            {{translate('messages.available_time_starts')}} :
+                            <strong class="text--title">
+                                {{ \App\CentralLogics\Helpers::time_format($campaign->start_time) }}
+                            </strong>
                         </span>
                         <span class="d-block">
-                            {{translate('messages.available')}} {{translate('messages.time')}} {{translate('messages.ends')}} :
-                            <strong class="text--title">{{$campaign->end_time->format(config('timeformat'))}}</strong>
+                            {{translate('messages.available_time_ends')}} :
+                            <strong class="text--title">
+                                {{ \App\CentralLogics\Helpers::time_format($campaign->end_time) }}
+                            </strong>
                         </span>
                     </div>
                 </div>
@@ -56,7 +64,7 @@
                         <div class="text-center">
                             <span class="mb-3">{{translate('restaurant_info')}}</span>
                             @if($campaign->restaurant)
-                            <a href="{{route('admin.vendor.view', $campaign->restaurant_id)}}" class="d-block">
+                            <a href="{{route('admin.restaurant.view', $campaign->restaurant_id)}}" class="d-block">
                                 <img
                                     class="avatar-img avatar-circle initial-17"
                                     onerror="this.src='{{asset('/public/assets/admin/img/100x100/restaurant-default-image.png')}}'"
@@ -65,7 +73,7 @@
                                 <h2 class="m-0">{{$campaign->restaurant['name']}}</h2>
                             </a>
                             @else
-                            <span class="badge-info">{{translate('messages.restaurant')}} {{translate('messages.deleted')}}</span>
+                            <span class="badge-info">{{translate('messages.restaurant_deleted')}}</span>
                             @endif
                         </div>
                     </div>
@@ -113,15 +121,54 @@
                                             </div>
                                         </td>
                                         <td class="px-4">
-                                            @foreach(json_decode($campaign['variations'],true) as $variation)
+                                            {{-- @foreach(json_decode($campaign['variations'],true) as $variation)
                                                 <small class="d-block text-capitalize">
                                                 {{$variation['type']}} :
                                                 <strong>{{\App\CentralLogics\Helpers::format_currency($variation['price'])}}</strong>
                                                 </small>
+                                            @endforeach --}}
+                                            @foreach(json_decode($campaign->variations,true) as $variation)
+                                            @if(isset($variation["price"]))
+                                            <span class="d-block mb-1 text-capitalize">
+                                                <strong>
+                                                    {{ translate('please_update_the_food_variations.') }}
+                                                </strong>
+                                                </span>
+                                                @break
+                                                @else
+                                                <span class="d-block text-capitalize">
+                                                        <strong>
+                                                {{$variation['name']}} -
+                                            </strong>
+                                            @if ($variation['type'] == 'multi')
+                                            {{ translate('messages.multiple_select') }}
+                                            @elseif($variation['type'] =='single')
+                                            {{ translate('messages.single_select') }}
+
+                                            @endif
+                                                {{-- <strong>{{\App\CentralLogics\Helpers::format_currency($variation['price'])}}</strong> --}}
+                                                @if ($variation['required'] == 'on')
+                                                - ({{ translate('messages.required') }})
+                                                @endif
+                                                </span>
+
+                                                @if ($variation['min'] != 0 && $variation['max'] != 0)
+                                            ({{ translate('messages.Min_select') }}: {{ $variation['min'] }} - {{ translate('messages.Max_select') }}: {{ $variation['max'] }})
+                                                @endif
+
+                                                @if (isset($variation['values']))
+                                                @foreach ($variation['values'] as $value)
+                                                  <span class="d-block text-capitalize">
+                                                    &nbsp;   &nbsp; {{ $value['label']}} :
+                                                    <strong>{{\App\CentralLogics\Helpers::format_currency( $value['optionPrice'])}}</strong>
+                                                    </span>
+                                                @endforeach
+                                                @endif
+                                                @endif
                                             @endforeach
                                         </td>
                                         <td class="px-4">
-                                            @foreach(\App\Models\AddOn::whereIn('id',json_decode($campaign['add_ons'],true))->get() as $addon)
+                                            @foreach(\App\Models\AddOn::withOutGlobalScope(App\Scopes\RestaurantScope::class)->whereIn('id',json_decode($campaign['add_ons'],true))->get() as $addon)
                                                 <small class="text-capitalize d-block">
                                                 {{$addon['name']}} : {{\App\CentralLogics\Helpers::format_currency($addon['price'])}}
                                                 </small>
@@ -136,7 +183,6 @@
             </div>
         </div>
         <!-- End Card -->
-        @php($orders = $campaign->orderdetails()->paginate(config('default_pagination')))
         <!-- Card -->
         <div class="card mt-3">
             <div class="card-header py-2">
@@ -150,35 +196,43 @@
                     </h5>
                     <form>
                         <div class="input--group input-group">
-                            <input type="text" class="form-control" placeholder="{{ translate('Search here by restaurants') }}">
+                            <input type="text" name="search" value="{{ request()?->search ?? null }}" class="form-control" placeholder="{{ translate('Search_here_by_restaurants') }}">
                             <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                         </div>
                     </form>
                     <!-- Unfold -->
                     <div class="hs-unfold">
-                        <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle btn export-btn export--btn btn-outline-primary btn--primary font--sm" href="javascript:;"
-                            data-hs-unfold-options='{
-                                "target": "#usersExportDropdown",
-                                "type": "css-animation"
-                            }'>
-                            <i class="tio-download-to mr-1"></i> {{translate('messages.export')}}
-                        </a>
 
-                        <div id="usersExportDropdown"
+
+                        <div class="hs-unfold mr-2">
+                            <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                data-hs-unfold-options='{
+                                        "target": "#usersExportDropdown",
+                                        "type": "css-animation"
+                                    }'>
+                                <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                            </a>
+
+                            <div id="usersExportDropdown"
                                 class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                            <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                            <a id="export-excel" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
+
+                                <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                <a id="export-excel" class="dropdown-item" href="
+                                    {{ route('admin.campaign.food_campaign_list_export', ['type' => 'excel', 'campaign_id' =>$campaign['id'] , request()->getQueryString()]) }}
+                                    ">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
                                         alt="Image Description">
-                                {{translate('messages.excel')}}
-                            </a>
-                            <a id="export-csv" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
+                                    {{ translate('messages.excel') }}
+                                </a>
+                                <a id="export-csv" class="dropdown-item" href="
+                                {{ route('admin.campaign.food_campaign_list_export', ['type' => 'csv', 'campaign_id' =>$campaign['id'] , request()->getQueryString()]) }}">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
                                         alt="Image Description">
-                                .{{translate('messages.csv')}}
-                            </a>
+                                    {{ translate('messages.csv') }}
+                                </a>
+                            </div>
                         </div>
                     </div>
                     <!-- End Unfold -->
@@ -207,38 +261,43 @@
                         <thead class="thead-light">
                         <tr>
                             <th>
-                                SL
+                                {{translate('sl')}}
                             </th>
                             <th class="table-column-pl-0">{{translate('messages.order')}}</th>
                             <th>{{translate('messages.date')}}</th>
                             <th>{{translate('messages.customer')}}</th>
                             <th>{{translate('messages.vendor')}}</th>
-                            <th>{{translate('messages.payment')}} {{translate('messages.status')}}</th>
+                            <th>{{translate('messages.payment_status')}}</th>
                             <th>{{translate('messages.total')}}</th>
-                            <th>{{translate('messages.order')}} {{translate('messages.status')}}</th>
+                            <th>{{translate('messages.order_status')}}</th>
                         </tr>
                         </thead>
 
                         <tbody id="set-rows">
+                            {{-- {{ dd($orders) }} --}}
                         @foreach($orders as $key=>$order)
+
 
                             <tr class="status-{{$order['order_status']}} class-all">
                                 <td class="">
                                     {{$key+1}}
                                 </td>
                                 <td class="table-column-pl-0">
-                                    <a href="{{route('admin.order.details',['id'=>$order['order_id']])}}">{{$order->order['id']}}</a>
+                                    <a href="{{ route('admin.order.details',['id'=>$order->order_id])}}">{{$order->order['id']}}</a>
                                 </td>
-                                <td>{{date('d M Y',strtotime($order->order['created_at']))}}</td>
+                                <td>
+                                    {{  Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat('d M Y') }}
+
+                                    {{-- {{date('d M Y',strtotime($order->order['created_at']))}}</td> --}}
                                 <td>
                                     @if($order->order->customer)
                                         <a class="text-body text-capitalize" href="{{route('admin.customer.view',[$order->order['user_id']])}}">{{$order->order->customer['f_name'].' '.$order->order->customer['l_name']}}</a>
                                     @else
-                                        <label class="badge badge-danger">{{translate('messages.invalid')}} {{translate('messages.customer')}} {{translate('messages.data')}}</label>
+                                        <label class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
                                     @endif
                                 </td>
                                 <td>
-                                    <label class="badge badge-soft-primary">{{Str::limit($order->order->restaurant?$order->order->restaurant->name:translate('messages.Restaurant deleted!'),20,'...')}}</label>
+                                    <label class="badge badge-soft-primary">{{Str::limit($order->order->restaurant?$order->order->restaurant->name:translate('messages.Restaurant_deleted!'),20,'...')}}</label>
                                 </td>
                                 <td>
                                     @if($order->order->payment_status=='paid')

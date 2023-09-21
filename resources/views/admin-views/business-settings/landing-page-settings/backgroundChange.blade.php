@@ -19,51 +19,16 @@
         </h1>
         <!-- End Page Header -->
             <!-- Nav Scroller -->
-            <div class="js-nav-scroller hs-nav-scroller-horizontal">
-                <!-- Nav -->
-                <ul class="nav nav-tabs page-header-tabs">
-                    <li class="nav-item">
-                        <a class="nav-link"
-                            href="{{ route('admin.business-settings.landing-page-settings', 'index') }}">{{ translate('messages.text') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link"
-                            href="{{ route('admin.business-settings.landing-page-settings', 'links') }}"
-                            aria-disabled="true">{{ translate('messages.button_links') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link "
-                            href="{{ route('admin.business-settings.landing-page-settings', 'speciality') }}"
-                            aria-disabled="true">{{ translate('messages.speciality') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link"
-                            href="{{ route('admin.business-settings.landing-page-settings', 'testimonial') }}"
-                            aria-disabled="true">{{ translate('messages.testimonial') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link"
-                            href="{{ route('admin.business-settings.landing-page-settings', 'feature') }}"
-                            aria-disabled="true">{{ translate('messages.feature') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link"
-                            href="{{ route('admin.business-settings.landing-page-settings', 'image') }}"
-                            aria-disabled="true">{{ translate('messages.image') }}</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link active"
-                            href="{{ route('admin.business-settings.landing-page-settings', 'backgroundChange') }}"
-                            aria-disabled="true">{{ translate('messages.header_footer_bg') }}</a>
-                    </li>
-                </ul>
-                <!-- End Nav -->
+                <div class="js-nav-scroller hs-nav-scroller-horizontal">
+                    <!-- Nav -->
+                    @include('admin-views.business-settings.landing-page-settings.top-menu-links.top-menu-links')
+                    <!-- End Nav -->
             </div>
             <!-- End Nav Scroller -->
         </div>
         <!-- End Page Header -->
         <!-- Page Heading -->
-        <div class="card my-2">
+        {{-- <div class="card my-2">
             <div class="card-body">
                 <form action="{{ route('admin.business-settings.landing-page-settings', 'backgroundChange') }}"
                     method="POST">
@@ -90,7 +55,33 @@
                     </div>
                 </form>
             </div>
+        </div> --}}
+
+        <div class="card my-2">
+            <div class="card-body">
+                <form action="{{ route('admin.business-settings.landing-page-settings', 'background-change') }}"
+                    method="POST">
+                    @php($backgroundChange = \App\Models\BusinessSetting::where(['key' => 'backgroundChange'])->first())
+                    @php($backgroundChange = isset($backgroundChange->value) ? json_decode($backgroundChange->value, true) : null)
+                    @csrf
+                    <div class="row">
+                        <div class="col-sm-4">
+                            <label class="form-label d-block text-center">{{ translate('Primary Color 1') }}</label>
+                            <input name="header-bg" type="color" class="form-control form-control-color" value="{{ isset($backgroundChange['primary_1_hex']) ? $backgroundChange['primary_1_hex'] : '#EF7822' }}" required>
+                        </div>
+                        <div class="col-sm-6">
+                            <label class="form-label d-block text-center">{{ translate('Primary Color 2') }}</label>
+                            <input name="footer-bg" type="color" class="form-control form-control-color" value="{{ isset($backgroundChange['primary_2_hex']) ? $backgroundChange['primary_2_hex'] :'#333E4F'}}" required>
+                        </div>
+
+                    </div>
+                    <div class="form-group text-right mt-3 mb-0">
+                        <button type="submit" class="btn btn--primary">{{ translate('messages.submit') }}</button>
+                    </div>
+                </form>
+            </div>
         </div>
+
     </div>
 @endsection
 @push('script_2')

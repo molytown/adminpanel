@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.Delivery Man Preview'))
+@section('title',translate('messages.Delivery_Man_Preview'))
 
 @push('css_or_js')
 
@@ -40,11 +40,48 @@
         <!-- Card -->
         <div class="card mb-3 mb-lg-5 mt-2">
             <div class="card-header flex-wrap border-0">
-                <h5 class="card-header-title">{{ translate('messages.order')}} {{ translate('messages.transactions')}}</h5>
+                <div class="search--button-wrapper">
+
+                <h5 class="card-header-title">{{ translate('messages.order_transactions')}}</h5>
                 <div>
                     <input type="date" class="form-control" onchange="set_filter('{{route('admin.delivery-man.preview',['id'=>$dm->id, 'tab'=> 'transaction'])}}',this.value, 'date')" value="{{$date}}">
                 </div>
             </div>
+                            <!-- Unfold -->
+                            <div class="hs-unfold mr-2">
+                                <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                    data-hs-unfold-options='{
+                                            "target": "#usersExportDropdown",
+                                            "type": "css-animation"
+                                        }'>
+                                    <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                                </a>
+
+                                <div id="usersExportDropdown"
+                                    class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                                    <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                    <a id="export-excel" class="dropdown-item" href="{{route('admin.delivery-man.earning-export', ['type'=>'excel','id'=>$dm->id,request()->getQueryString()])}}">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                            alt="Image Description">
+                                        {{ translate('messages.excel') }}
+                                    </a>
+                                    <a id="export-csv" class="dropdown-item" href="{{route('admin.delivery-man.earning-export', ['type'=>'csv','id'=>$dm->id,request()->getQueryString()])}}">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                            alt="Image Description">
+                                        .{{ translate('messages.csv') }}
+                                    </a>
+                                    {{-- <a id="export-pdf" class="dropdown-item" href="javascript:;">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/pdf.svg"
+                                            alt="Image Description">
+                                        {{ translate('messages.pdf') }}
+                                    </a> --}}
+                                </div>
+                            </div>
+                        </div>
+                            <!-- End Unfold -->
             <!-- Body -->
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -53,8 +90,8 @@
                         <thead class="thead-light">
                             <tr>
                                 <th>{{ translate('messages.sl') }}</th>
-                                <th>{{translate('messages.order')}} {{translate('messages.id')}}</th>
-                                <th>{{translate('messages.delivery_fee')}} {{translate('messages.earned')}}</th>
+                                <th>{{translate('messages.order_id')}}</th>
+                                <th>{{translate('messages.delivery_fee_earned')}}</th>
                                 <th>{{translate('messages.date')}}</th>
                             </tr>
                         </thead>
@@ -103,14 +140,14 @@
 <script>
     function request_alert(url, message) {
         Swal.fire({
-            title: 'Are you sure?',
+            title: '{{ translate('Are_you_sure?') }}',
             text: message,
             type: 'warning',
             showCancelButton: true,
             cancelButtonColor: 'default',
             confirmButtonColor: '#FC6A57',
-            cancelButtonText: 'No',
-            confirmButtonText: 'Yes',
+            cancelButtonText: '{{ translate('no') }}',
+            confirmButtonText: '{{ translate('yes') }}',
             reverseButtons: true
         }).then((result) => {
             if (result.value) {

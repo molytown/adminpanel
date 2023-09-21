@@ -14,13 +14,13 @@
             </thead>
             <tbody>
             @php($account_transaction = \App\Models\AccountTransaction::where('from_type', 'restaurant')->where('from_id', $restaurant->vendor->id)->paginate(25))
-            @php($zone_currency= $restaurant->zone->zone_currency ?? null)
             @foreach($account_transaction as $k=>$at)
                 <tr>
                     <td scope="row">{{$k+$account_transaction->firstItem()}}</td>
-                    <td>{{$at->created_at->format('Y-m-d '.config('timeformat'))}}</td>
-                    <td>{{\App\CentralLogics\Helpers::format_currency($at['current_balance'],$zone_currency)}}</td>
-                    <td>{{\App\CentralLogics\Helpers::format_currency($at['amount'],$zone_currency)}}</td>
+
+                    <td>{{ \App\CentralLogics\Helpers::time_date_format($at->created_at)  }}</td>
+                    <td>{{\App\CentralLogics\Helpers::format_currency($at['current_balance'])}}</td>
+                    <td>{{\App\CentralLogics\Helpers::format_currency($at['amount'])}}</td>
                     <td>{{$at['ref']}}</td>
                     <td>
                         <div class="btn--container justify-content-center">

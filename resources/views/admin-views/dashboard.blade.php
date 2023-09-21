@@ -4,6 +4,11 @@
 
 
 @section('content')
+<style>
+    .bg-dddd{
+    background-color: #44f279 !important;
+  }
+</style>
     <div class="content container-fluid">
         @if(auth('admin')->user()->role_id == 1)
         <!-- Page Header -->
@@ -11,25 +16,14 @@
             <div class="d-flex flex-wrap justify-content-between align-items-center">
                 <div class="page--header-title">
                     <h1 class="page-header-title">{{translate('messages.welcome')}}, {{auth('admin')->user()->f_name}}.</h1>
-                    <p class="page-header-text">{{translate('messages.welcome_message')}}</p>
+                    <p class="page-header-text">{{translate('messages.Hello,_here_you_can_manage_your_orders_by_zone.')}}</p>
                 </div>
-                <div class="page--header-select" id="country_code">
-                    <select name="country_code" class="form-control country_code js-select2-custom"
-                        onchange="set_country_filter('{{ url()->full() }}',this.value)">
-                        <option value="all">{{translate('all_country')}}</option>
-                        @foreach(\App\Models\Zone::distinct()->pluck('zone_country') as $country)
-                        <option
-                            value="{{$country}}" {{$params['country_code'] == $country?'selected':''}}>
-                            {{$country}}
-                        </option>
-                    @endforeach
-                    </select>
-                </div>
+
                 <div class="page--header-select">
                     <select name="zone_id" class="form-control js-select2-custom"
-                        onchange="set_zone_filter('{{ url()->current() }}',this.value)">
+                            onchange="fetch_data_zone_wise(this.value)">
                         <option value="all">{{translate('all_zones')}}</option>
-                        @foreach($zone_lists as $zone)
+                        @foreach(\App\Models\Zone::orderBy('name')->get() as $zone)
                             <option
                                 value="{{$zone['id']}}" {{$params['zone_id'] == $zone['id']?'selected':''}}>
                                 {{$zone['name']}}
@@ -40,7 +34,7 @@
             </div>
         </div>
         <!-- End Page Header -->
-        {{-- {{ dd($currency_symbol) }} --}}
+
 
         <!-- Stats -->
         <div class="card mb-3">
@@ -61,7 +55,8 @@
                 <!-- Card -->
                 <div class="card h-100" id="monthly-earning-graph">
                     <!-- Body -->
-                @include('admin-views.partials._monthly-earning-graph',['total_sell'=>$total_sell,'commission'=>$commission])
+
+                @include('admin-views.partials._monthly-earning-graph',['total_sell'=>$total_sell,'total_subs' =>$total_subs,'commission'=>$commission])
                 <!-- End Body -->
                 </div>
                 <!-- End Card -->
@@ -94,7 +89,7 @@
                                         onchange="user_overview_stats_update(this.value)">
                                     <option
                                         value="this_month" {{$params['user_overview'] == 'this_month'?'selected':''}}>
-                                        {{translate('This month')}}
+                                        {{translate('This_month')}}
                                     </option>
                                     <option
                                         value="overall" {{$params['user_overview'] == 'overall'?'selected':''}}>
@@ -106,7 +101,20 @@
                         </div>
                         <div class="position-relative" >
                             <div id="user-overview-board">
-                                @include('admin-views.partials._user-overview-chart')
+                                {{-- @include('admin-views.partials._user-overview-chart') --}}
+                                @php($params = session('dash_params'))
+                                @if ($params['zone_id'] != 'all')
+                                    @php($zone_name = \App\Models\Zone::where('id', $params['zone_id'])->first()->name)
+                                @else
+                                @php($zone_name=translate('All'))
+                                @endif
+                                <div class="chartjs-custom mx-auto">
+                                    <canvas id="user-overview" class="mt-2"></canvas>
+                                </div>
+                                <div class="total--users">
+                                    <span>{{translate('messages.total_users')}}</span>
+                                    <h3>{{ $data['customer'] + $data['restaurants'] + $data['delivery_man'] }}</h3>
+                                </div>
                             </div>
                         </div>
                         <div class="d-flex flex-wrap justify-content-center mt-4 pt-xl-5">
@@ -183,7 +191,7 @@
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
                     <h1 class="page-header-title">{{translate('messages.welcome')}}, {{auth('admin')->user()->f_name}}.</h1>
-                    <p class="page-header-text">{{translate('messages.employee_welcome_message')}}</p>
+                    <p class="page-header-text">{{translate('messages.Hello,_here_you_can_manage_your_restaurants.')}}</p>
                 </div>
             </div>
         </div>
@@ -193,57 +201,62 @@
 @endsection
 
 @push('script')
-    <!-- <script src="{{asset('public/assets/admin')}}/vendor/chart.js/dist/Chart.min.js"></script>
-    <script src="{{asset('public/assets/admin')}}/vendor/chart.js.extensions/chartjs-extensions.js"></script> -->
-    <script
-        src="{{asset('public/assets/admin')}}/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
+    <script src="{{asset('public/assets/admin')}}/vendor/chart.js/dist/Chart.min.js"></script>
+    <script src="{{asset('public/assets/admin')}}/vendor/chart.js.extensions/chartjs-extensions.js"></script>
+    <script src="{{asset('public/assets/admin')}}/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
 @endpush
 
 
 @push('script_2')
+<script>
+    // INITIALIZATION OF CHARTJS
+    // =======================================================
+    Chart.plugins.unregister(ChartDataLabels);
+
+    $('.js-chart').each(function () {
+        $.HSCore.components.HSChartJS.init($(this));
+    });
+
+    var updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
+</script>
+
+<script>
+    var ctx = document.getElementById('user-overview');
+    var myChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            datasets: [{
+                label: 'User',
+                data: ['{{$data['customer']}}', '{{$data['restaurants']}}', '{{$data['delivery_man']}}'],
+                backgroundColor: [
+                    '#FFC960',
+                    '#0661CB',
+                    '#7ECAFF'
+                ],
+                hoverOffset: 3
+            }],
+            labels: [
+                '{{translate('messages.customer')}}',
+                '{{translate('messages.restaurant')}}',
+                '{{ translate('messages.delivery_man')}}'
+            ],
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            legend: {
+                display: false,
+                position: 'chartArea',
+            }
+        }
+    });
+</script>
+
 
     <script>
-        // INITIALIZATION OF CHARTJS
-        // =======================================================
-        Chart.plugins.unregister(ChartDataLabels);
-
-        $('.js-chart').each(function () {
-            $.HSCore.components.HSChartJS.init($(this));
-        });
-
-        var updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
-    </script>
-
-    <script>
-            function set_zone_filter(url, id) {
-                var nurl = new URL(url);
-                nurl.searchParams.set('zone_id', id);
-                location.href = nurl;
-            }
-
-            function set_country_filter(url, id) {
-                var nurl = new URL(url);
-                nurl.searchParams.set('country_code', id);
-                location.href = nurl;
-            }
-
-            function order_stats_set_filter(url, id) {
-                var nurl = new URL(url);
-                nurl.searchParams.set('statistics_type', id);
-                location.href = nurl;
-            }
-
-            
-            function user_overview_set_filter(url, id) {
-                var nurl = new URL(url);
-                nurl.searchParams.set('statistics_type', id);
-                location.href = nurl;
-            }
-
-    </script>
-
-    <script>
-        
         function order_stats_update(type) {
             $.ajaxSetup({
                 headers: {
@@ -262,6 +275,39 @@
                     insert_param('statistics_type',type);
                     $('#order_stats').html(data.view)
                     $('#order_stats_top').html(data.order_stats_top)
+                },
+                complete: function () {
+                    $('#loading').hide()
+                }
+            });
+        }
+
+        function fetch_data_zone_wise(zone_id) {
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                }
+            });
+            $.post({
+                url: '{{route('admin.dashboard-stats.zone')}}',
+                data: {
+                    zone_id: zone_id
+                },
+                beforeSend: function () {
+                    $('#loading').show()
+                },
+                success: function (data) {
+                    insert_param('zone_id', zone_id);
+                    $('#order_stats_top').html(data.order_stats_top);
+                    $('#order_stats').html(data.order_stats);
+                    $('#stat_zone').html(data.stat_zone);
+                    $('#user-overview-board').html(data.user_overview);
+                    $('#monthly-earning-graph').html(data.monthly_graph);
+                    $('#popular-restaurants-view').html(data.popular_restaurants);
+                    $('#top-deliveryman-view').html(data.top_deliveryman);
+                    $('#top-rated-foods-view').html(data.top_rated_foods);
+                    $('#top-restaurants-view').html(data.top_restaurants);
+                    $('#top-selling-foods-view').html(data.top_selling_foods);
                 },
                 complete: function () {
                     $('#loading').hide()
@@ -292,57 +338,6 @@
                 }
             });
         }
-
-
-        var zone_all = '{{$params['zone_id']}}'
-
-        if (zone_all == 'all') {
-                $('#country_code').show();
-            }else{
-                $('#country_code').hide();
-            }
-
-        function fetch_data_zone_wise(zone_id) {
-            if (zone_id == 'all') {
-                $('#country_code').show();
-            }else{
-                $('#country_code').hide();
-            }
-
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.dashboard-stats.zone')}}',
-                data: {
-                    zone_id: zone_id,
-                },
-                beforeSend: function () {
-                    $('#loading').show()
-                },
-                success: function (data) {
-                    insert_param('zone_id', zone_id);
-                    $('#order_stats_top').html(data.order_stats_top);
-                    $('#order_stats').html(data.order_stats);
-                    $('#stat_zone').html(data.stat_zone);
-                    $('#user-overview-board').html(data.user_overview);
-                    $('#monthly-earning-graph').html(data.monthly_graph);
-                    $('#popular-restaurants-view').html(data.popular_restaurants);
-                    $('#top-deliveryman-view').html(data.top_deliveryman);
-                    $('#top-rated-foods-view').html(data.top_rated_foods);
-                    $('#top-restaurants-view').html(data.top_restaurants);
-                    $('#top-selling-foods-view').html(data.top_selling_foods);
-                },
-                complete: function () {
-                    $('#loading').hide()
-                }
-            });
-        }
-
-        // $('#country_code').hide();
-
     </script>
 
     <script>

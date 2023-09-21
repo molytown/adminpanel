@@ -344,8 +344,8 @@
             }
 
             .px-6 {
-                padding-left: 1.5rem;
-                padding-right: 1.5rem;
+                padding-inline-start: 1.5rem;
+                padding-inline-end: 1.5rem;
             }
 
             .pb-full {
@@ -362,9 +362,9 @@
 
             .pin {
                 top: 0;
-                right: 0;
+                inset-inline-end: 0;
                 bottom: 0;
-                left: 0;
+                inset-inline-start: 0;
             }
 
             .text-black {

@@ -30,7 +30,7 @@
                         <div class="col-md-4">
                             <div class="form-group">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.title')}}</label>
-                                <input id="notification_title" type="text" name="notification_title" class="form-control" placeholder="{{ translate('Ex: Notification Title') }}" required maxlength="191">
+                                <input id="notification_title" type="text" name="notification_title" class="form-control" placeholder="{{ translate('Ex:_Notification_Title') }}" required maxlength="191">
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -38,7 +38,7 @@
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.zone')}}</label>
                                 <select id="zone" name="zone" class="form-control js-select2-custom" >
                                     <option value="all">{{translate('messages.all')}}</option>
-                                    @foreach(\App\Models\Zone::orderBy('name')->get() as $z)
+                                    @foreach(\App\Models\Zone::orderBy('name')->get(['id','name']) as $z)
                                         <option value="{{$z['id']}}">{{$z['name']}}</option>
                                     @endforeach
                                 </select>
@@ -48,7 +48,7 @@
                             <div class="form-group">
                                 <label class="input-label" for="tergat">{{translate('messages.send_to')}}</label>
 
-                                <select name="tergat" class="form-control" id="tergat" data-placeholder="{{ translate('messages.Ex :') }} contact@company.com" required>
+                                <select name="tergat" class="form-control" id="tergat" data-placeholder="{{ translate('messages.Ex:_contact@company.com') }} " required>
                                     <option value="customer">{{translate('messages.customer')}}</option>
                                     <option value="deliveryman">{{translate('messages.deliveryman')}}</option>
                                     <option value="restaurant">{{translate('messages.restaurant')}}</option>
@@ -65,24 +65,24 @@
                                         src="{{asset('public/assets/admin/img/900x400/img1.png')}}" alt="image"/>
                                 </center>
 
-                                <label>{{translate('messages.notification')}} {{translate('messages.banner')}}</label><small class="text-danger">* ( {{translate('messages.ratio')}} 3:1 )</small>
+                                <label>{{translate('messages.notification_banner')}}</label><small class="text-danger">* ( {{translate('messages.ratio_3:1')}}  )</small>
                                 <div class="custom-file">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                 </div>
                             </div>
                         </div>
                         <div class="col-md-8">
                             <div class="form-group">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.description')}}</label>
-                                <textarea id="description" name="description" class="form-control h--md-200px" placeholder="{{ translate('Ex : Notification Descriptions ') }}" required></textarea>
+                                <textarea id="description" name="description" class="form-control h--md-200px" placeholder="{{ translate('Ex:_Notification_Descriptions') }}" required></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="btn--container justify-content-end mb-0">
                         <button type="button" id="reset_btn" class="btn btn--reset">{{translate('messages.reset')}}</button>
-                        <button type="submit" id="submit" class="btn btn--primary">{{translate('messages.send')}} {{translate('messages.notification')}}</button>
+                        <button type="submit" id="submit" class="btn btn--primary">{{translate('messages.send_notification')}}</button>
                     </div>
                 </form>
             </div>
@@ -98,8 +98,8 @@
                     <form>
                     <!-- Search -->
                         <div class="input--group input-group input-group-merge input-group-flush">
-                            <input type="search" id="column1_search" class="form-control"
-                                placeholder="{{ translate('Search by title') }}">
+                            <input type="search"  value="{{ request()?->search ?? null }}" name="search" id="column1_search" class="form-control"
+                                placeholder="{{ translate('Search_by_title') }}">
                             <button type="submit" class="btn btn--secondary">
                                 <i class="tio-search"></i>
                             </button>
@@ -118,18 +118,18 @@
 
                     <div id="usersExportDropdown"
                             class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                        <a target="_blank" id="export-excel" class="dropdown-item" href="{{route('admin.notification.export', ['type'=>'excel'])}}">
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                        <a  id="export-excel" class="dropdown-item" href="{{route('admin.notification.export', ['type'=>'excel', request()->getQueryString()])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                     alt="Image Description">
                             {{translate('messages.excel')}}
                         </a>
-                        <a target="_blank" id="export-csv" class="dropdown-item" href="{{route('admin.notification.export', ['type'=>'excel'])}}">
+                        <a  id="export-csv" class="dropdown-item" href="{{route('admin.notification.export', ['type'=>'csv', request()->getQueryString()])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
                     </div>
                 </div>
@@ -173,7 +173,7 @@
                                 <img class="initial-31" src="{{asset('storage/app/public/notification')}}/{{$notification['image']}}" onerror="src='{{asset('public/assets/admin/img/900x400/img1.jpg')}}'">
                             </td>
                             <td>
-                                {{$notification->zone_id==null?translate('messages.all'):($notification->zone?$notification->zone->name:translate('messages.zone').' '.translate('messages.deleted'))}}
+                                {{$notification->zone_id==null?translate('messages.all'):($notification->zone?$notification->zone->name:translate('messages.zone_deleted'))}}
                             </td>
                             @if ($notification->tergat == 'customer')
                             <td class="text-capitalize">
@@ -199,10 +199,10 @@
                             <td>
                                 <div class="btn--container justify-content-center">
                                     <a class="btn btn--primary btn-outline-primary action-btn"
-                                        href="{{route('admin.notification.edit',[$notification['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.notification')}}"><i class="tio-edit"></i>
+                                        href="{{route('admin.notification.edit',[$notification['id']])}}" title="{{translate('messages.edit_notification')}}"><i class="tio-edit"></i>
                                     </a>
                                     <a class="btn btn--danger btn-outline-danger action-btn" href="javascript:"
-                                        onclick="form_alert('notification-{{$notification['id']}}','{{ translate('Want to delete this notification ?') }}')" title="{{translate('messages.delete')}} {{translate('messages.notification')}}"><i class="tio-delete-outlined"></i>
+                                        onclick="form_alert('notification-{{$notification['id']}}','{{ translate('Want_to_delete_this_notification?') }}')" title="{{translate('messages.delete_notification')}}"><i class="tio-delete-outlined"></i>
                                     </a>
                                 </div>
                                 <form action="{{route('admin.notification.delete',[$notification['id']])}}" method="post" id="notification-{{$notification['id']}}">
@@ -289,8 +289,8 @@
             var formData = new FormData(this);
 
             Swal.fire({
-                title: '{{translate('messages.are_you_sure')}}',
-                text: '{{translate('You want to sent notification?')}}',
+                title: '{{translate('messages.Are_you_sure?')}}',
+                text: '{{translate('You_want_to_sent_notification?')}}',
                 type: 'info',
                 showCancelButton: true,
                 cancelButtonColor: 'default',
@@ -320,7 +320,7 @@
                                     });
                                 }
                             } else {
-                                toastr.success('{{ translate('Notifiction sent successfully!') }}', {
+                                toastr.success('{{ translate('Notifiction_sent_successfully!') }}', {
                                     CloseButton: true,
                                     ProgressBar: true
                                 });

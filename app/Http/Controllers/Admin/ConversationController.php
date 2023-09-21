@@ -11,7 +11,6 @@ use App\Models\User;
 use App\Models\Admin;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class ConversationController extends Controller
@@ -48,7 +47,7 @@ class ConversationController extends Controller
     public function view($conversation_id,$user_id)
     {
         $conversation = Conversation::find($conversation_id);
-        $lastmessage = $conversation->last_message;
+        $lastmessage = $conversation?->last_message;
         if($lastmessage && $lastmessage->sender_id == $user_id ) {
             $conversation->unread_message_count = 0;
             $conversation->save();
@@ -56,7 +55,6 @@ class ConversationController extends Controller
         Message::where(['conversation_id' => $conversation->id])->where('sender_id','!=',$user_id)->update(['is_seen' => 1]);
         $convs = Message::where(['conversation_id' => $conversation_id])->get();
         $receiver = UserInfo::find($user_id);
-        // $user = User::find($receiver->user_id);
         $user = $receiver;
         return response()->json([
             'view' => view('admin-views.messages.partials._conversations', compact('convs', 'user', 'receiver'))->render()
@@ -65,13 +63,19 @@ class ConversationController extends Controller
 
     public function store(Request $request, $user_id)
     {
-
-
         if ($request->has('images')) {
+            $validator = Validator::make($request->all(), [
+                'images.*' => 'max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                $validator->getMessageBag()->add('images', 'Max Image Upload limit is 2mb');
+                return response()->json(['errors' => Helpers::error_processor($validator)]);
+            }
             $image_name=[];
             foreach($request->images as $key=>$img)
             {
-                $name = Helpers::upload('conversation/', 'png', $img);
+                $name = Helpers::upload(dir:'conversation/', format:'png', image:$img);
                 array_push($image_name,$name);
             }
         } else {
@@ -155,7 +159,7 @@ class ConversationController extends Controller
             }
 
         } catch (\Exception $e) {
-            info($e);
+            info($e->getMessage());
         }
 
         $convs = Message::where(['conversation_id' => $conversation->id])->get();

@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class DMReview extends Model
 {
@@ -16,6 +17,11 @@ class DMReview extends Model
         'updated_at' => 'datetime'
     ];
 
+    public function translations()
+    {
+        return $this->morphMany(Translation::class, 'translationable');
+    }
+    
     public function customer()
     {
         return $this->belongsTo(User::class,'user_id');
@@ -34,5 +40,27 @@ class DMReview extends Model
     public function scopeActive($query)
     {
         return $query->where('status',1);
+    }
+
+
+    public function getTypeAttribute($value){
+        if (count($this->translations) > 0) {
+            foreach ($this->translations as $translation) {
+                if ($translation['key'] == 'type') {
+                    return $translation['value'];
+                }
+            }
+        }
+
+        return $value;
+    }
+
+    protected static function booted()
+    {
+        static::addGlobalScope('translate', function (Builder $builder) {
+            $builder->with(['translations' => function ($query) {
+                return $query->where('locale', app()->getLocale());
+            }]);
+        });
     }
 }

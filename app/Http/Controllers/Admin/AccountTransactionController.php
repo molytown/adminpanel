@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\AccountTransaction;
-use App\Models\Restaurant;
-use App\Models\DeliveryMan;
-use App\Models\AdminWallet;
 use App\Models\Admin;
-use Illuminate\Support\Facades\Validator;
+use App\Models\Restaurant;
+use App\Models\AdminWallet;
+use App\Models\DeliveryMan;
+use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
-use Brian2694\Toastr\Facades\Toastr;
+use App\Models\AccountTransaction;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 use Rap2hpoutre\FastExcel\FastExcel;
+use Illuminate\Support\Facades\Validator;
+use App\Exports\CollectCashTransactionExport;
 
 class AccountTransactionController extends Controller
 {
@@ -22,20 +25,19 @@ class AccountTransactionController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $account_transaction = AccountTransaction::latest()->paginate(config('default_pagination'));
+        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $account_transaction = AccountTransaction::
+        when(isset($key), function ($query) use ($key) {
+            return $query->where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhere('ref', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->latest()->paginate(config('default_pagination'));
         return view('admin-views.account.index', compact('account_transaction'));
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
     }
 
     /**
@@ -63,14 +65,14 @@ class AccountTransactionController extends Controller
         if($request['type']=='restaurant' && $request['restaurant_id'])
         {
             $restaurant = Restaurant::findOrFail($request['restaurant_id']);
-            $data = $restaurant->vendor;
-            $current_balance = $data->wallet?$data->wallet->collected_cash:0;
+            $data = $restaurant?->vendor;
+            $current_balance = $data?->wallet?->collected_cash ?? 0;
         }
         else if($request['type']=='deliveryman' && $request['deliveryman_id'])
         {
             $data = DeliveryMan::findOrFail($request['deliveryman_id']);
 
-            $current_balance = $data->wallet?$data->wallet->collected_cash:0;
+            $current_balance = $data?->wallet?->collected_cash ?? 0;
         }
 
         if ($current_balance < $request['amount']) {
@@ -94,14 +96,20 @@ class AccountTransactionController extends Controller
         {
             DB::beginTransaction();
             $account_transaction->save();
-            $data->wallet->decrement('collected_cash', $request['amount']);
+            $data?->wallet?->decrement('collected_cash', $request['amount']);
             AdminWallet::where('admin_id', Admin::where('role_id', 1)->first()->id)->increment('manual_received', $request['amount']);
+            if($request['type']=='deliveryman' && $request['deliveryman_id']){
+                $mail_status = Helpers::get_mail_status('cash_collect_mail_status_dm');
+                if (config('mail.status') && $mail_status == '1') {
+                    Mail::to($data['email'])->send(new \App\Mail\CollectCashMail($account_transaction,$data['f_name']));
+                }
+            }
             DB::commit();
         }
         catch(\Exception $e)
         {
             DB::rollBack();
-            return $e;
+            return response()->json($e->getMessage());
         }
 
         return response()->json(200);
@@ -119,28 +127,6 @@ class AccountTransactionController extends Controller
         return view('admin-views.account.view', compact('account_transaction'));
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
 
     /**
      * Remove the specified resource from storage.
@@ -156,12 +142,34 @@ class AccountTransactionController extends Controller
     }
 
     public function export_account_transaction(Request $request){
-        $account_transaction = AccountTransaction::all();
-        if($request->type == 'excel'){
-            return (new FastExcel($account_transaction))->download('Account_transactions.xlsx');
-        }elseif($request->type == 'csv'){
-            return (new FastExcel($account_transaction))->download('Account_transactions.csv');
-        }
+        try{
+                $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+                $account_transaction = AccountTransaction::
+                when(isset($key), function ($query) use ($key) {
+                    return $query->where(function ($q) use ($key) {
+                        foreach ($key as $value) {
+                            $q->orWhere('ref', 'like', "%{$value}%");
+                        }
+                    });
+                })->latest()->get();
+
+                $data = [
+                    'account_transactions'=>$account_transaction,
+                    'search'=>$request->search??null,
+
+                ];
+
+                if ($request->type == 'excel') {
+                    return Excel::download(new CollectCashTransactionExport($data), 'CollectCashTransactions.xlsx');
+                } else if ($request->type == 'csv') {
+                    return Excel::download(new CollectCashTransactionExport($data), 'CollectCashTransactions.csv');
+                }
+
+            } catch(\Exception $e) {
+                Toastr::error("line___{$e->getLine()}",$e->getMessage());
+                info(["line___{$e->getLine()}",$e->getMessage()]);
+                return back();
+            }
     }
 
     public function search_account_transaction(Request $request){

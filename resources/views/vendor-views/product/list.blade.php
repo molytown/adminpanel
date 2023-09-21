@@ -11,7 +11,7 @@
         <!-- Page Header -->
         <div class="page-header">
             <div class="mb-2 mb-sm-0">
-                <h1 class="page-header-title"><i class="tio-filter-list"></i> {{translate('messages.food')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$foods->total()}}</span></h1>
+                <h1 class="page-header-title"><i class="tio-filter-list"></i> {{translate('messages.food_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$foods->total()}}</span></h1>
             </div>
             <div class="my-2">
                 <div class="row g-2 align-items-center justify-content-end">
@@ -28,7 +28,7 @@
                     @endif
                     <div class="col-auto">
                         <a href="{{route('vendor.food.add-new')}}" class="btn max-sm-12 btn--primary w-100"><i
-                                    class="tio-add-circle"></i> {{translate('messages.add')}} {{translate('messages.new')}} {{translate('messages.food')}}</a>
+                                    class="tio-add-circle"></i> {{translate('messages.add_new_food')}}</a>
                     </div>
 
                 </div>
@@ -182,6 +182,7 @@
                         <th class="w-20p">{{translate('messages.name')}}</th>
                         <th class="w-20p">{{translate('messages.category')}}</th>
                         <th class="text-center">{{translate('messages.price')}}</th>
+                        <th class="text-center">{{translate('messages.Recommended')}}</th>
                         <th class="text-center">{{translate('messages.status')}}</th>
                         <th class="text-center">{{translate('messages.action')}}</th>
                     </tr>
@@ -201,7 +202,8 @@
                                 </a>
                             </td>
                             <td>
-                            {{Str::limit($food->category,20,'...')}}
+                                {{ Str::limit(($food?->category?->parent ? $food?->category?->parent?->name : $food?->category?->name )  ?? translate('messages.uncategorize')
+                                , 20, '...') }}
                             </td>
                             <td>
                                 <div class="text-right mx-auto mw-36px">
@@ -214,8 +216,20 @@
                             <td>
                                 <div class="d-flex">
                                     <div class="mx-auto">
-                                        <label class="toggle-switch toggle-switch-sm mr-2" for="stocksCheckbox{{$food->id}}">
-                                            <input type="checkbox" onclick="location.href='{{route('vendor.food.status',[$food['id'],$food->status?0:1])}}'"class="toggle-switch-input" id="stocksCheckbox{{$food->id}}" {{$food->status?'checked':''}}>
+                                        <label class="toggle-switch toggle-switch-sm mr-2"  data-toggle="tooltip" data-placement="top" title="{{ translate('messages.Recommend_to_customers') }}" for="stocksCheckbox{{$food->id}}">
+                                            <input type="checkbox" onclick="location.href='{{route('vendor.food.recommended',[$food['id'],$food->recommended?0:1])}}'"class="toggle-switch-input" id="stocksCheckbox{{$food->id}}" {{$food->recommended?'checked':''}}>
+                                            <span class="toggle-switch-label">
+                                                <span class="toggle-switch-indicator"></span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="d-flex">
+                                    <div class="mx-auto">
+                                        <label class="toggle-switch toggle-switch-sm mr-2" data-toggle="tooltip" data-placement="top" title="{{ translate('messages.Change_food_visibility_to_customers') }}" for="statusCheckbox{{$food->id}}">
+                                            <input type="checkbox" onclick="location.href='{{route('vendor.food.status',[$food['id'],$food->status?0:1])}}'"class="toggle-switch-input" id="statusCheckbox{{$food->id}}" {{$food->status?'checked':''}}>
                                             <span class="toggle-switch-label">
                                                 <span class="toggle-switch-indicator"></span>
                                             </span>
@@ -226,10 +240,10 @@
                             <td>
                                 <div class="btn--container justify-content-center">
                                     <a class="btn action-btn btn--primary btn-outline-primary"
-                                        href="{{route('vendor.food.edit',[$food['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.food')}}"><i class="tio-edit"></i>
+                                        href="{{route('vendor.food.edit',[$food['id']])}}" title="{{translate('messages.edit_food')}}"><i class="tio-edit"></i>
                                     </a>
                                     <a class="btn action-btn btn--danger btn-outline-danger" href="javascript:"
-                                        onclick="form_alert('food-{{$food['id']}}','{{ translate('Want to delete this item ?') }}')" title="{{translate('messages.delete')}} {{translate('messages.food')}}"><i class="tio-delete-outlined"></i>
+                                        onclick="form_alert('food-{{$food['id']}}','{{ translate('Want to delete this item ?') }}')" title="{{translate('messages.delete_food')}}"><i class="tio-delete-outlined"></i>
                                     </a>
                                     <form action="{{route('vendor.food.delete',[$food['id']])}}"
                                             method="post" id="food-{{$food['id']}}">
@@ -281,7 +295,7 @@
           language: {
             zeroRecords: '<div class="text-center p-4">' +
                 '<img class="mb-3 w-7rem" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="Image Description">' +
-                '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                 '</div>'
           }
         });

@@ -20,15 +20,14 @@
                         <small class="d-block">{{$order->customer['phone']}}</small>
                     </a>
                 @else
-                    <label class="badge badge-danger">{{translate('messages.invalid')}} {{translate('messages.customer')}} {{translate('messages.data')}}</label>
+                    <label class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
                 @endif
             </div>
         </td>
         <td>
-            @php($zone_currency= $order->restaurant->zone->zone_currency ?? null)
             <div class="d-inline-block text-right total-amount-table-data">
                 <div class="paid--amount-status">
-                    {{\App\CentralLogics\Helpers::format_currency($order['order_amount'],$zone_currency)}}
+                    {{\App\CentralLogics\Helpers::format_currency($order['order_amount'])}}
                 </div>
                 @if($order->payment_status=='paid')
                     <strong class="text--success order--status">
@@ -68,7 +67,7 @@
                 </span>
             @else
                 <span class="badge badge-soft-danger badge--cancel">
-                    {{str_replace('_',' ',$order['order_status'])}}
+                    {{translate(str_replace('_',' ',$order['order_status']))}}
                 </span>
             @endif
         </td>

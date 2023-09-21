@@ -21,7 +21,7 @@ class AccountTransaction extends Model
     public function getRestaurantAttribute()
     {
         if($this->from_type == 'restaurant'){
-            return Restaurant::find($this->from_id);
+            return Restaurant::with('translations')->find($this->from_id);
         }
         return null;
     }
@@ -33,5 +33,5 @@ class AccountTransaction extends Model
         }
         return null;
     }
-    
+
 }

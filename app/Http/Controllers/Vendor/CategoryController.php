@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Vendor;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
-use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -54,7 +53,7 @@ class CategoryController extends Controller
 
         return response()->json([
             'view'=>view('vendor-views.category.partials._sub_table',compact('categories'))->render(),
-            'count'=>$categories->count()
+            'count'=>$categories?->count()
         ]);
     }
 }

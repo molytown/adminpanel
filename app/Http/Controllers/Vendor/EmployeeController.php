@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Vendor;
 
-use App\CentralLogics\Helpers;
-use App\Http\Controllers\Controller;
-use App\Models\VendorEmployee;
 use App\Models\EmployeeRole;
-use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
+use App\CentralLogics\Helpers;
+use App\Models\VendorEmployee;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
+use Maatwebsite\Excel\Facades\Excel;
 use Rap2hpoutre\FastExcel\FastExcel;
+use Illuminate\Validation\Rules\Password;
+use App\Exports\RestaurantEmployeeListExport;
 
 class EmployeeController extends Controller
 {
@@ -26,10 +29,12 @@ class EmployeeController extends Controller
             'f_name' => 'required',
             'l_name' => 'nullable|max:100',
             'role_id' => 'required',
-            'image' => 'required',
+            'image' => 'required|max:2048',
             'email' => 'required|unique:vendor_employees',
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|max:20|unique:vendor_employees',
-            'password' => 'required|min:8',
+            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+
+
         ]);
 
         DB::table('vendor_employees')->insert([
@@ -41,7 +46,7 @@ class EmployeeController extends Controller
             'password' => bcrypt($request->password),
             'vendor_id'=> Helpers::get_vendor_id(),
             'restaurant_id'=>Helpers::get_restaurant_id(),
-            'image' => Helpers::upload('vendor/', 'png', $request->file('image')),
+            'image' => Helpers::upload(dir:'vendor/', format:'png', image: $request->file('image')),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -50,15 +55,32 @@ class EmployeeController extends Controller
         return redirect()->route('vendor.employee.list');
     }
 
-    function list()
+    function list(Request $request)
     {
-        $em = VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->with(['role'])->latest()->paginate(config('default_pagination'));
+        $key = explode(' ', $request['search']);
+        $em = VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->with(['role'])
+
+        ->when(isset($key) , function($query) use($key) {
+            $query->where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhere('f_name', 'like', "%{$value}%");
+                    $q->orWhere('l_name', 'like', "%{$value}%");
+                    $q->orWhere('phone', 'like', "%{$value}%");
+                    $q->orWhere('email', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->latest()->paginate(config('default_pagination'));
         return view('vendor-views.employee.list', compact('em'));
     }
 
     public function edit($id)
     {
         $e = VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->where(['id' => $id])->first();
+        if (auth('vendor_employee')->id()  == $e['id']){
+            Toastr::error(translate('messages.You_can_not_edit_your_own_info'));
+            return redirect()->route('vendor.employee.list');
+        }
         $rls = EmployeeRole::where('restaurant_id',Helpers::get_restaurant_id())->get();
         return view('vendor-views.employee.edit', compact('rls', 'e'));
     }
@@ -71,23 +93,29 @@ class EmployeeController extends Controller
             'role_id' => 'required',
             'email' => 'required|unique:vendor_employees,email,'.$id,
             'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|max:20|unique:vendor_employees,phone,'.$id,
+            'image' => 'nullable|max:2048',
+            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
         ]);
 
         $e = VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->find($id);
+
+        if (auth('vendor_employee')->id()  == $e['id']){
+            Toastr::error(translate('messages.You_can_not_edit_your_own_info'));
+            return redirect()->route('vendor.employee.list');
+        }
+
         if ($request['password'] == null) {
             $pass = $e['password'];
         } else {
-            if (strlen($request['password']) < 7) {
-                Toastr::warning(translate('messages.password_length_warning',['length'=>'8']));
-                return back();
-            }
+
             $pass = bcrypt($request['password']);
         }
 
         if ($request->has('image')) {
-            $e['image'] = Helpers::update('vendor/', $e->image, 'png', $request->file('image'));
+            $e['image'] = Helpers::update(dir:'vendor/', old_image: $e->image, format:'png',  image:$request->file('image'));
         }
 
         DB::table('vendor_employees')->where(['id' => $id])->update([
@@ -109,7 +137,12 @@ class EmployeeController extends Controller
 
     public function distroy($id)
     {
-        $role=VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->where(['id'=>$id])->delete();
+        $role=VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->where(['id'=>$id])->first();
+        if (auth('vendor_employee')->id()  == $role['id']){
+            Toastr::error(translate('messages.You_can_not_edit_your_own_info'));
+            return redirect()->route('vendor.employee.list');
+        }
+        $role->delete();
         Toastr::info(translate('messages.employee_deleted_successfully'));
         return back();
     }
@@ -132,11 +165,27 @@ class EmployeeController extends Controller
     }
 
     public function list_export(Request $request){
-        $em = VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->with(['role'])->get();
-        if($request->type == 'excel'){
-            return (new FastExcel($em))->download('Employee.xlsx');
-        }elseif($request->type == 'csv'){
-            return (new FastExcel($em))->download('Employee.csv');
+        $key = explode(' ', $request['search']);
+        $em=VendorEmployee::where('restaurant_id', Helpers::get_restaurant_id())->with(['role'])
+        ->when(isset($key) , function($query) use($key) {
+            $query->where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhere('f_name', 'like', "%{$value}%");
+                    $q->orWhere('l_name', 'like', "%{$value}%");
+                    $q->orWhere('phone', 'like', "%{$value}%");
+                    $q->orWhere('email', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->latest()->get();
+        $data = [
+            'employees'=>$em,
+            'search'=>$request->search??null,
+        ];
+        if ($request->type == 'excel') {
+            return Excel::download(new RestaurantEmployeeListExport($data), 'Employees.xlsx');
+        } else if ($request->type == 'csv') {
+            return Excel::download(new RestaurantEmployeeListExport($data), 'Employees.csv');
         }
     }
 }

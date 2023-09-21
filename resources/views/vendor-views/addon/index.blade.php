@@ -10,7 +10,7 @@
     <div class="content container-fluid">
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-header-title"><i class="tio-add-circle-outlined"></i> {{translate('messages.add')}} {{translate('messages.new')}} {{translate('messages.addon')}}</h1>
+            <h1 class="page-header-title"><i class="tio-add-circle-outlined"></i> {{translate('messages.add_new_addon')}}</h1>
         </div>
         <!-- End Page Header -->
         <div class="card">
@@ -19,31 +19,38 @@
                     @csrf
                     @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                     @php($language = $language->value ?? null)
-                    @php($default_lang = 'en')
+                    @php($default_lang = str_replace('_', '-', app()->getLocale()))
                     @if($language)
-                        @php($default_lang = json_decode($language)[0])
                         <div class="col-12">
                             <ul class="nav nav-tabs mb-4">
+                                <li class="nav-item">
+                                    <a class="nav-link lang_link active" href="#" id="default-link">{{ translate('Default')}}</a>
+                                </li>
                                 @foreach(json_decode($language) as $lang)
                                     <li class="nav-item">
-                                        <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                        <a class="nav-link lang_link" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                                     </li>
                                 @endforeach
                             </ul>
                         </div>
+                        <div class="form-group col-md-6 lang_form" id="default-form">
+                            <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
+                            <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Ex :') }} {{translate('Water')}}" required maxlength="191">
+                        </div>
+                        <input type="hidden" name="lang[]" value="default">
                         @foreach(json_decode($language) as $lang)
-                            <div class="form-group col-md-6 {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
+                            <div class="form-group col-md-6 d-none lang_form" id="{{$lang}}-form">
                                 <label class="form-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{strtoupper($lang)}})</label>
-                                <input type="text" name="name[]" class="form-control h--45px" placeholder="{{translate('Ex : New Addon ')}}" maxlength="191" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
+                                <input type="text" name="name[]" class="form-control h--45px" placeholder="{{translate('Ex : New Addon ')}}" maxlength="191"  oninvalid="document.getElementById('en-link').click()">
                             </div>
                             <input type="hidden" name="lang[]" value="{{$lang}}">
                         @endforeach
                     @else
-                        <div class="form-group col-md-6">
-                            <label class="form-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                            <input type="text" name="name" class="form-control h--45px" placeholder="{{translate('Ex : New Addon ')}}" value="{{old('name')}}" required maxlength="191">
-                        </div>
-                        <input type="hidden" name="lang[]" value="{{$lang}}">
+                            <div class="form-group col-md-6 lang_form" id="default-form">
+                                <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
+                                <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Ex :') }} {{translate('Water')}}"  required maxlength="191">
+                            </div>
+                            <input type="hidden" name="lang[]" value="default">
                     @endif
 
                     <div class="form-group col-md-6">
@@ -64,7 +71,7 @@
             <div class="card-header py-2 border-0">
                 <div class="search--button-wrapper">
                     <h5 class="card-title">
-                        {{translate('messages.addon')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$addons->total()}}</span>
+                        {{translate('messages.addon_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$addons->total()}}</span>
                     </h5>
                     <div id="search-form">
                         <div class="input-group input--group">
@@ -107,9 +114,9 @@
                             <td>
                                 <div class="btn--container justify-content-center">
                                     <a class="btn action-btn btn--primary btn-outline-primary"
-                                            href="{{route('vendor.addon.edit',[$addon['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.addon')}}"><i class="tio-edit"></i></a>
+                                            href="{{route('vendor.addon.edit',[$addon['id']])}}" title="{{translate('messages.edit_addon')}}"><i class="tio-edit"></i></a>
                                     <a class="btn action-btn btn--danger btn-outline-danger" href="javascript:"
-                                        onclick="form_alert('addon-{{$addon['id']}}','{{ translate('Want to delete this addon ?') }}')" title="{{translate('messages.delete')}} {{translate('messages.addon')}}"><i class="tio-delete-outlined"></i></a>
+                                        onclick="form_alert('addon-{{$addon['id']}}','{{ translate('Want to delete this addon ?') }}')" title="{{translate('messages.delete_addon')}}"><i class="tio-delete-outlined"></i></a>
                                     <form action="{{route('vendor.addon.delete',[$addon['id']])}}"
                                                 method="post" id="addon-{{$addon['id']}}">
                                         @csrf @method('delete')

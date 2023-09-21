@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Vendor;
 
-use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Models\Review;
 use App\Http\Controllers\Controller;

@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.deliverymen_earning_provide'))
+@section('title',translate('messages.Provide_Delivery_Man_Earning'))
 
 @push('css_or_js')
 
@@ -16,11 +16,11 @@
     <div class="card">
         <div class="card-header">
             <h4 class="card-title">
-                <san class="card-header-icon">
+                <span class="card-header-icon">
                     <i class="tio-money"></i>
-                </san>
+                </span>
                 <span>
-                    {{translate('Provide Delivery Man Earning')}}
+                    {{translate('Provide_Delivery_Man_Earning')}}
                 </span>
             </h4>
         </div>
@@ -31,7 +31,7 @@
                     <div class="col-sm-6 col-12">
                         <div class="form-group">
                             <label class="input-label" for="deliveryman">{{translate('messages.deliveryman')}}<span class="input-label-secondary"></span></label>
-                            <select id="deliveryman" name="deliveryman_id" data-placeholder="{{translate('messages.select')}} {{translate('messages.deliveryman')}}" onchange="getAccountData('{{url('/')}}/admin/delivery-man/get-account-data/',this.value,'deliveryman')" class="form-control h--45px" title="Select deliveryman">
+                            <select id="deliveryman" name="deliveryman_id" data-placeholder="{{translate('messages.select_deliveryman')}}" onchange="getAccountData('{{url('/')}}/admin/delivery-man/get-account-data/',this.value,'deliveryman')" class="form-control h--45px" title="Select deliveryman">
 
                             </select>
                         </div>
@@ -39,7 +39,7 @@
                     <div class="col-sm-6 col-12">
                         <div class="form-group">
                             <label class="input-label" for="amount">{{translate('messages.amount')}}<span class="input-label-secondary" id="account_info"></span></label>
-                            <input class="form-control h--45px" type="number" min="1" step="0.01" name="amount" id="amount" max="999999999999.99" placeholder="{{ translate('Ex : 100') }}">
+                            <input class="form-control h--45px" type="number" min="1" step="0.01" name="amount" id="amount" max="999999999999.99" placeholder="{{ translate('Ex:_100') }}">
                         </div>
                     </div>
                 </div>
@@ -48,13 +48,13 @@
                     <div class="col-sm-6 col-12">
                         <div class="form-group">
                             <label class="input-label" for="method">{{translate('messages.method')}}<span class="input-label-secondary"></span></label>
-                            <input class="form-control h--45px" type="text" name="method" id="method" required maxlength="191" placeholder="{{ translate('Ex : Cash') }}">
+                            <input class="form-control h--45px" type="text" name="method" id="method" required maxlength="191" placeholder="{{ translate('Ex:_Cash') }}">
                         </div>
                     </div>
                     <div class="col-sm-6 col-12">
                         <div class="form-group">
-                            <label class="input-label" for="ref">{{translate('messages.info')}}<span class="input-label-secondary"></span></label>
-                            <input  class="form-control h--45px" type="text" name="ref" id="ref" maxlength="191" placeholder="{{ translate('Ex : Collect Cash') }}">
+                            <label class="input-label" for="ref">{{translate('messages.reference')}}<span class="input-label-secondary"></span></label>
+                            <input  class="form-control h--45px" type="text" name="ref" id="ref" maxlength="191" placeholder="{{ translate('Ex:_Collect_Cash') }}">
                         </div>
                     </div>
                 </div>
@@ -76,18 +76,16 @@
                             <span class="card-header-icon">
                                 <i class="tio-file-text-outlined"></i>
                             </span>
-                            <span>{{ translate('messages.deliverymen_earning_provide')}} {{ translate('messages.table')}}</span>
+                            <span>{{ translate('messages.Distribute_DM_Earning_table')}}</span>
                         </h5>
                         <!-- Static Search Form -->
-                        <form id="search-form" action="javascript:">
+                        <form>
                             <div class="input--group input-group">
-                                <input type="text" name="search" class="form-control" placeholder="{{ translate('Ex: Search here by Name...') }}">
+                                <input type="text" name="search"  value="{{ request()?->search ?? null}}" class="form-control" placeholder="{{ translate('Ex:_Search_here_by_Name') }}">
                                 <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                             </div>
                         </form>
-                        <!-- Static Search Form -->
 
-                        <!-- Static Export Button -->
                         <div class="hs-unfold ml-3">
                             <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle btn export-btn btn-outline-primary btn--primary font--sm" href="javascript:;"
                                 data-hs-unfold-options='{
@@ -99,19 +97,21 @@
 
                             <div id="usersExportDropdown"
                                     class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                                <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                                <a id="export-excel" class="dropdown-item" href="{{route('admin.export-deliveryman-earning', ['type'=>'excel'])}}">
+
+                                <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                                <a id="export-excel" class="dropdown-item" href="{{route('admin.export-deliveryman-earning',  ['type'=>'excel',request()->getQueryString()])}}">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                             alt="Image Description">
                                     {{translate('messages.excel')}}
                                 </a>
-                                <a id="export-csv" class="dropdown-item" href="{{route('admin.export-deliveryman-earning', ['type'=>'csv'])}}">
+                                <a id="export-csv" class="dropdown-item" href="{{route('admin.export-deliveryman-earning', ['type'=>'csv',request()->getQueryString()])}}">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                             alt="Image Description">
-                                    .{{translate('messages.csv')}}
+                                    {{translate('messages.csv')}}
                                 </a>
+
                             </div>
                         </div>
                         <!-- Static Export Button -->
@@ -127,41 +127,21 @@
                                     <th>{{translate('messages.name')}}</th>
                                     <th>{{translate('messages.received_at')}}</th>
                                     <th>{{translate('messages.amount')}}</th>
-                                    <th>{{translate('messages.type')}}</th>
                                     <th>{{translate('messages.method')}}</th>
                                     <th>{{translate('messages.reference')}}</th>
-                                    <th>{{translate('messages.status')}}</th>
                                 </tr>
                             </thead>
                             <tbody id="set-rows">
                             @foreach($provide_dm_earning as $k=>$at)
                                 <tr>
                                     <td scope="row">{{$k+$provide_dm_earning->firstItem()}}</td>
-                                    <td>@if($at->delivery_man)<a href="{{route('admin.delivery-man.preview', $at->delivery_man_id)}}">{{$at->delivery_man->f_name.' '.$at->delivery_man->l_name}}</a> @else <label class="text-capitalize text-danger">{{translate('messages.deliveryman')}} {{translate('messages.deleted')}}</label> @endif </td>
-                                    <td>{{$at->created_at->format('Y-m-d '.config('timeformat'))}}</td>
+                                    <td>@if($at->delivery_man)<a href="{{route('admin.delivery-man.preview', $at->delivery_man_id)}}">{{$at->delivery_man->f_name.' '.$at->delivery_man->l_name}}</a> @else <label class="text-capitalize text-danger">{{translate('messages.deliveryman_deleted')}}</label> @endif </td>
+                                    <td>
+                                        {{  \App\CentralLogics\Helpers::time_date_format($at->created_at) }}
+                                    </td>
                                     <td>{{$at['amount']}}</td>
-                                    <td>{{ str_replace('_', ' ', $at['type']) }}</td>
                                     <td>{{$at['method']}}</td>
                                     <td>{{$at['ref']}}</td>
-                                    <td>
-                                        @if ($at->type == 'earning_request')
-                                        @if ($at->status == 'pending')
-                                        <a class="btn btn--primary fz--13 px-2"
-                                            onclick="route_alert('{{ route('admin.earning-request-status', ['id' => $at['id'], 'status' => 'accepted']) }}','{{ translate('messages.confirm_this_request') }}')"
-                                        href="javascript:">{{ translate('messages.Approve') }}</a>
-                                        <a class="btn btn--danger fz--13 px-2"
-                                        onclick="route_alert('{{ route('admin.earning-request-status', ['id' => $at['id'], 'status' => 'denied']) }}','{{ translate('messages.deny_this_request') }}')"
-                                        href="javascript:">{{ translate('messages.Deny') }}</a>
-                                        @elseif ($at->status == 'denied')
-                                            <a class="badge badge-danger">{{translate('messages.denied')}}</a>
-                                        @endif
-                                         @if ($at->status == 'accepted')
-                                         <a class="badge badge-success">{{translate('messages.Already_Approved')}}</a>
-                                         @endif
-                                        @else
-                                            <a class="badge badge-success">{{translate('messages.Already_Approved')}}</a>
-                                        @endif   
-                                    </td>
                                 </tr>
                             @endforeach
                             </tbody>
@@ -248,32 +228,7 @@
     }
 </script>
 <script>
-        $('#search-form').on('submit', function () {
-        var formData = new FormData(this);
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-        $.post({
-            url: '{{route('admin.search-deliveryman-earning')}}',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            beforeSend: function () {
-                $('#loading').show();
-            },
-            success: function (data) {
-                $('#set-rows').html(data.view);
-                // $('#itemCount').html(data.total);
-                $('.page-area').hide();
-            },
-            complete: function () {
-                $('#loading').hide();
-            },
-        });
-    });
+
     $('#add_transaction').on('submit', function (e) {
         e.preventDefault();
         var formData = new FormData(this);

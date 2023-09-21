@@ -2,21 +2,30 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Models\Notification;
+use Illuminate\Http\Request;
 use App\CentralLogics\Helpers;
 use App\Http\Controllers\Controller;
-use App\Models\Notification;
 use Brian2694\Toastr\Facades\Toastr;
-use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\PushNotificationExport;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
-use Rap2hpoutre\FastExcel\Facades\FastExcel;
-use Rap2hpoutre\FastExcel\FastExcel as FastExcelFastExcel;
 
 class NotificationController extends Controller
 {
-    function index()
+    function index(Request $request)
     {
-        $notifications = Notification::latest()->paginate(config('default_pagination'));
+        $key = explode(' ', $request['search']);
+        $notifications = Notification::with('zone')->latest()
+        ->when(isset($key), function ($q) use ($key){
+            $q->where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhere('title', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->paginate(config('default_pagination'));
         return view('admin-views.notification.index', compact('notifications'));
     }
 
@@ -29,7 +38,8 @@ class NotificationController extends Controller
             'notification_title' => 'required|max:191',
             'description' => 'required|max:1000',
             'tergat' => 'required',
-            'zone'=>'required'
+            'zone'=>'required',
+            'image' => 'nullable|max:2048',
         ], [
             'notification_title.required' => 'Title is required!',
         ]);
@@ -39,7 +49,7 @@ class NotificationController extends Controller
         }
 
         if ($request->has('image')) {
-            $image_name = Helpers::upload('notification/', 'png', $request->file('image'));
+            $image_name = Helpers::upload(dir:'notification/', format:'png', image: $request->file('image'));
         } else {
             $image_name = null;
         }
@@ -74,6 +84,7 @@ class NotificationController extends Controller
         try {
             Helpers::send_push_notif_to_topic($notification, $topic, 'general');
         } catch (\Exception $e) {
+            info($e->getMessage());
             Toastr::warning(translate('messages.push_notification_faild'));
         }
 
@@ -96,12 +107,13 @@ class NotificationController extends Controller
             'notification_title' => 'required|max:191',
             'description' => 'required|max:1000',
             'tergat' => 'required',
+            'image' => 'nullable|max:2048',
         ]);
 
         $notification = Notification::findOrFail($id);
 
         if ($request->has('image')) {
-            $image_name = Helpers::update('notification/', $notification->image, 'png', $request->file('image'));
+            $image_name = Helpers::update(dir:'notification/', old_image: $notification->image, format: 'png', image:$request->file('image'));
         } else {
             $image_name = $notification['image'];
         }
@@ -126,18 +138,17 @@ class NotificationController extends Controller
             'restaurant'=>'zone_'.$request->zone.'_restaurant',
         ];
         $topic = $request->zone == 'all'?$topic_all_zone[$request->tergat]:$topic_zone_wise[$request->tergat];
-
-        if($request->has('image'))
-        {
-            $notification->image = url('/').'/storage/app/public/notification/'.$image_name;
-        }
+            if($image_name){
+                $notification->image = url('/').'/storage/app/public/notification/'.$image_name;
+            }
 
         try {
             Helpers::send_push_notif_to_topic($notification, $topic, 'general');
         } catch (\Exception $e) {
+            info($e->getMessage());
             Toastr::warning(translate('messages.push_notification_faild'));
         }
-        Toastr::success(translate('messages.notification').' '.translate('messages.updated_successfully'));
+        Toastr::success(translate('messages.notification_updated_successfully'));
         return back();
     }
 
@@ -145,7 +156,7 @@ class NotificationController extends Controller
     {
         $notification = Notification::findOrFail($request->id);
         $notification->status = $request->status;
-        $notification->save();
+        $notification?->save();
         Toastr::success(translate('messages.notification_status_updated'));
         return back();
     }
@@ -156,24 +167,36 @@ class NotificationController extends Controller
         if (Storage::disk('public')->exists('notification/' . $notification['image'])) {
             Storage::disk('public')->delete('notification/' . $notification['image']);
         }
-        $notification->delete();
+        $notification?->delete();
         Toastr::success(translate('messages.notification_deleted_successfully'));
         return back();
     }
 
     public function export(Request $request){
-        $notifications = Notification::with('zone')->get();
-        //dd($notifications);
-
-        $data = Helpers::push_notification_export_data($notifications);
-
-/*         foreach($notifications as $notification){
-            echo $notification;
-        } */
-        if($request->type == 'excel'){
-            return (new FastExcelFastExcel($data))->download('Notifications.xlsx');
-        }elseif($request->type == 'csv'){
-            return (new FastExcelFastExcel($data))->download('Notifications.csv');
-        }
+        try{
+            $key = explode(' ', $request['search']);
+            $Notification =  Notification::
+                when(isset($key ), function ($q) use ($key){
+                    $q->where(function ($q) use ($key) {
+                        foreach ($key as $value) {
+                            $q->orWhere('title', 'like', "%{$value}%");
+                        }
+                    });
+                })->latest()
+            ->latest()->get();
+            $data=[
+                'data' =>$Notification,
+                'search' =>$request['search'] ?? null
+            ];
+            if($request->type == 'csv'){
+                return Excel::download(new PushNotificationExport($data), 'PushNotification.csv');
+            }
+            return Excel::download(new PushNotificationExport($data), 'PushNotification.xlsx');
+        }  catch(\Exception $e)
+            {
+                Toastr::error("line___{$e->getLine()}",$e->getMessage());
+                info(["line___{$e->getLine()}",$e->getMessage()]);
+                return back();
+            }
     }
 }

@@ -10,7 +10,8 @@ use App\Models\AccountTransaction;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Brian2694\Toastr\Facades\Toastr;
-use Rap2hpoutre\FastExcel\FastExcel;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DeliverymanPaymentExport;
 use Illuminate\Support\Facades\Validator;
 
 class ProvideDMEarningController extends Controller
@@ -20,21 +21,20 @@ class ProvideDMEarningController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $provide_dm_earning = ProvideDMEarning::latest()->paginate(config('default_pagination'));
+        $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+        $provide_dm_earning = ProvideDMEarning::when(isset($key), function ($query) use ($key) {
+            return $query->whereHas('delivery_man',function($query)use($key){
+                foreach ($key as $value) {
+                    $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->with('delivery_man')->latest()->paginate(config('default_pagination'));
         return view('admin-views.deliveryman-earning-provide.index', compact('provide_dm_earning'));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -54,9 +54,9 @@ class ProvideDMEarningController extends Controller
 
         $dm = DeliveryMan::findOrFail($request['deliveryman_id']);
 
-        $current_balance = $dm->wallet?$dm->wallet->total_earning - $dm->wallet->total_withdrawn:0;
+        $current_balance = $dm?->wallet?->total_earning - $dm?->wallet?->total_withdrawn ?? 0;
 
-        if ($current_balance < $request['amount']) {
+        if (round($current_balance,2) < round( $request['amount'],2)) {
             $validator->getMessageBag()->add('amount', 'Insufficient balance!');
             return response()->json(['errors' => Helpers::error_processor($validator)]);
         }
@@ -76,13 +76,13 @@ class ProvideDMEarningController extends Controller
         {
             DB::beginTransaction();
             $provide_dm_earning->save();
-            $dm->wallet->increment('total_withdrawn', $request['amount']);
+            $dm?->wallet?->increment('total_withdrawn', $request['amount']);
             DB::commit();
         }
         catch(\Exception $e)
         {
             DB::rollBack();
-            return response()->json(['error'=>$e],200);
+            return response()->json(['error'=>$e->getMessage()],200);
         }
 
         return response()->json(200);
@@ -101,29 +101,6 @@ class ProvideDMEarningController extends Controller
     }
 
     /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      *
      * @param  int  $id
@@ -138,11 +115,32 @@ class ProvideDMEarningController extends Controller
 
 
     public function dm_earning_list_export(Request $request){
-        $withdraw_request = ProvideDMEarning::all();
-        if($request->type == 'excel'){
-            return (new FastExcel($withdraw_request))->download('ProvideDMEarning.xlsx');
-        }elseif($request->type == 'csv'){
-            return (new FastExcel($withdraw_request))->download('ProvideDMEarning.csv');
+        try{
+            $key = isset($request['search']) ? explode(' ', $request['search']) : [];
+            $dm_earnings = ProvideDMEarning::when(isset($key), function ($query) use ($key) {
+                return $query->whereHas('delivery_man',function($query)use($key){
+                    foreach ($key as $value) {
+                        $query->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
+                    }
+                });
+            })->with('delivery_man')
+            ->latest()->get();
+
+            $data = [
+                'dm_earnings'=>$dm_earnings,
+                'search'=>$request->search??null,
+
+            ];
+
+            if ($request->type == 'excel') {
+                return Excel::download(new DeliverymanPaymentExport($data), 'ProvideDMEarning.xlsx');
+            } else if ($request->type == 'csv') {
+                return Excel::download(new DeliverymanPaymentExport($data), 'ProvideDMEarning.csv');
+            }
+        } catch(\Exception $e) {
+            Toastr::error("line___{$e->getLine()}",$e->getMessage());
+            info(["line___{$e->getLine()}",$e->getMessage()]);
+            return back();
         }
     }
 
@@ -158,36 +156,5 @@ class ProvideDMEarningController extends Controller
             'view'=>view('admin-views.deliveryman-earning-provide.partials._table', compact('provide_dm_earning'))->render(),
             'total'=>$provide_dm_earning->count()
         ]);
-    }
-
-    public function status(Request $request)
-    {
-        $request->validate([
-            'id' => 'required',
-            'status' => 'required|in:denied,accepted'
-        ]);
-
-        $dm = ProvideDMEarning::with('delivery_man')->where('id', $request->id)->has('delivery_man')
-        ->where('type','earning_request')
-        ->first();
-
-        if(!$dm)
-        {
-            Toastr::warning(translate('messages.deilivery_man_not_found'));
-            return back();
-        }
-
-
-        $dm->delivery_man->wallet->decrement('pending_withdraw', $dm->amount);
-
-        if($request->status == 'accepted'){
-            $dm->delivery_man->wallet->increment('total_withdrawn', $dm->amount);
-        }
-
-        $dm->status = $request->status;
-        $dm->save();
-
-        Toastr::success(translate('messages.dm_earning_request').' '.translate('messages.status_updated'));
-        return back();
     }
 }

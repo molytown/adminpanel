@@ -17,14 +17,14 @@ class WalletPaymentController extends Controller
      */
     public function make_payment(Request $request)
     {
-        if(BusinessSetting::where('key','wallet_status')->first()->value != 1) return Toastr::error(translate('messages.customer_wallet_disable_warning'));
+        if(BusinessSetting::where('key','wallet_status')->first()?->value != 1) return Toastr::error(translate('messages.customer_wallet_disable_warning'));
         $order = Order::with('customer')->where(['id' => $request->order_id, 'user_id'=>$request->user_id])->first();
-        if($order->customer->wallet_balance < $order->order_amount)
+        if($order?->customer?->wallet_balance < $order?->order_amount)
         {
             Toastr::error(translate('messages.insufficient_balance'));
             return back();
         }
-        $transaction = CustomerLogic::create_wallet_transaction($order->user_id, $order->order_amount, 'order_place', $order->id);
+        $transaction = CustomerLogic::create_wallet_transaction(user_id:$order->user_id,amount: $order->order_amount, transaction_type:'order_place',referance: $order->id);
         if ($transaction != false) {
             try {
                 $order->transaction_reference = $transaction->transaction_id;
@@ -32,10 +32,10 @@ class WalletPaymentController extends Controller
                 $order->payment_status = 'paid';
                 $order->order_status = 'confirmed';
                 $order->confirmed = now();
-                $order->save();
+                $order?->save();
                 Helpers::send_order_notification($order);
             } catch (\Exception $e) {
-                info($e);
+                info($e->getMessage());
             }
 
             if ($order->callback != null) {
@@ -48,7 +48,7 @@ class WalletPaymentController extends Controller
             $order->payment_method = 'wallet';
             $order->order_status = 'failed';
             $order->failed = now();
-            $order->save();
+            $order?->save();
             if ($order->callback != null) {
                 return redirect($order->callback . '&status=fail');
             }else{

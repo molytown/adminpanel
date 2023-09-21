@@ -26,11 +26,11 @@
             <div class="card-header py-2">
                 <div class="search--button-wrapper">
                     <h5 class="card-title"></h5>
-                    <form action="javascript:" id="search-form">
+                    <form method="GET">
                         <!-- Search -->
                         <div class="input--group input-group input-group-merge input-group-flush">
-                            <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                    placeholder="{{translate('search_by_order_id')}}" aria-label="{{translate('messages.search')}}" required>
+                            <input id="" type="search" name="search" class="form-control"
+                                    placeholder="{{translate('search_by_order_id')}}" aria-label="{{translate('messages.search')}}" value="{{ request()->search ?? null }}">
                             <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
 
                         </div>
@@ -49,18 +49,18 @@
                             <div id="usersExportDropdown"
                                     class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
                                 <div class="dropdown-divider"></div>
-                                <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                                <a id="export-excel" class="dropdown-item" href="javascript:;">
+                                <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                                <a id="export-excel" class="dropdown-item" href="{{route("admin.order.export",['status'=>$status,'type'=>'excel' , request()->getQueryString() ])}}">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                             alt="Image Description">
                                     {{translate('messages.excel')}}
                                 </a>
-                                <a id="export-csv" class="dropdown-item" href="javascript:;">
+                                <a id="export-csv" class="dropdown-item" href="{{route("admin.order.export",['status'=>$status,'type'=>'csv' , request()->getQueryString() ])}}">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                             alt="Image Description">
-                                    .{{translate('messages.csv')}}
+                                    {{translate('messages.csv')}}
                                 </a>
                             </div>
                         </div>
@@ -158,7 +158,7 @@
                                             <!-- End Checkbox Switch -->
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="mr-2">{{translate('messages.order')}} {{translate('messages.status')}}</span>
+                                            <span class="mr-2">{{translate('messages.order_status')}}</span>
 
                                             <!-- Checkbox Switch -->
                                             <label class="toggle-switch toggle-switch-sm" for="toggleColumn_order_status">
@@ -222,15 +222,15 @@
                         <th>{{translate('messages.date')}}</th>
                         <th class="w-140px">{{translate('messages.customer')}}</th>
                         <th>{{translate('messages.restaurant')}}</th>
-                        <th>{{translate('messages.total')}} {{translate('messages.amount')}}</th>
-                        <th class="text-center">{{translate('messages.order')}} {{translate('messages.status')}}</th>
+                        <th>{{translate('messages.total_amount')}}</th>
+                        <th class="text-center">{{translate('messages.order_status')}}</th>
                         <th class="text-center">{{translate('messages.actions')}}</th>
                     </tr>
                     </thead>
 
                     <tbody id="set-rows">
                     @foreach($orders as $key=>$order)
-                    @php($zone_currency=$order->zone_currency ?? null)
+
                         <tr class="status-{{$order['order_status']}} class-all">
                             <td class="">
                                 {{$key+$orders->firstItem()}}
@@ -240,10 +240,13 @@
                             </td>
                             <td class="text-uppercase">
                                 <div>
-                                    {{date('d M Y',strtotime($order['created_at']))}}
+                                    {{-- {{date('d M Y',strtotime($order['created_at']))}} --}}
+                                    {{  Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat('d M Y ') }}
                                 </div>
                                 <div>
-                                    {{date(config('timeformat'),strtotime($order['created_at']))}}
+
+                                    {{  Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat(config('timeformat')) }}
+                                    {{-- {{date(config('timeformat'),strtotime($order['created_at']))}} --}}
                                 </div>
                             </td>
                             <td>
@@ -254,7 +257,7 @@
                                         {{$order->customer['phone']}}
                                    </p>
                                 @else
-                                    <label class="badge badge-danger">{{translate('messages.invalid')}} {{translate('messages.customer')}} {{translate('messages.data')}}</label>
+                                    <label class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
                                 @endif
                             </td>
                             <td>
@@ -263,7 +266,7 @@
                             <td>
                                 <div class="text-right mw-85">
                                     <div>
-                                        {{\App\CentralLogics\Helpers::format_currency($order['order_amount'],$zone_currency)}}
+                                        {{\App\CentralLogics\Helpers::format_currency($order['order_amount'])}}
                                     </div>
                                     @if($order->payment_status=='paid')
                                         <strong class="text-success">{{translate('messages.paid')}}</strong>
@@ -295,7 +298,7 @@
                                     </span>
                                 @else
                                     <span class="badge badge-soft-danger">
-                                      {{str_replace('_',' ',$order['order_status'])}}
+                                      {{translate(str_replace('_',' ',$order['order_status']))}}
                                     </span>
                                 @endif
 
@@ -306,7 +309,7 @@
                                     </span>
                                     @else
                                     <span>
-                                        {{translate('messages.home')}} {{translate('messages.delivery')}}
+                                        {{translate('messages.home_delivery')}}
                                     </span>
                                     @endif
                                 </div>
@@ -323,7 +326,8 @@
                     </tbody>
                 </table>
             </div>
-            @if(!$orders)
+            {{-- {{ dd($orders) }} --}}
+            @if (count($orders) === 0)
             <div class="empty--data">
                 <img src="{{asset('/public/assets/admin/img/empty.png')}}" alt="public">
                 <h5>
@@ -352,7 +356,7 @@
         <div id="datatableFilterSidebar" class="hs-unfold-content_ sidebar sidebar-bordered sidebar-box-shadow initial-hidden">
             <div class="card card-lg sidebar-card sidebar-footer-fixed">
                 <div class="card-header">
-                    <h4 class="card-header-title">{{translate('messages.order')}} {{translate('messages.filter')}}</h4>
+                    <h4 class="card-header-title">{{translate('messages.order_filter')}}</h4>
 
                     <!-- Toggle Button -->
                     <a class="js-hs-unfold-invoker_ btn btn-icon btn-xs btn-ghost-dark ml-2" href="javascript:;"
@@ -369,7 +373,7 @@
 
                     <div class="mb-2 initial-36">
                         <select name="zone[]" id="zone_ids" class="form-control js-select2-custom" multiple="multiple">
-                        @foreach(\App\Models\Zone::all() as $zone)
+                        @foreach(\App\Models\Zone::orderBy('name')->get(['id','name']) as $zone)
                             <option value="{{$zone->id}}" {{isset($zone_ids)?(in_array($zone->id, $zone_ids)?'selected':''):''}}>{{$zone->name}}</option>
                         @endforeach
                         </select>
@@ -378,7 +382,7 @@
                     <small class="text-cap mb-3">{{translate('messages.restaurant')}}</small>
                     <div class="mb-2 initial-36">
                         <select name="vendor[]" id="vendor_ids" class="form-control js-select2-custom" multiple="multiple">
-                        @foreach(\App\Models\Restaurant::whereIn('id', $vendor_ids)->get() as $restaurant)
+                        @foreach(\App\Models\Restaurant::whereIn('id', $vendor_ids)->get(['id','name']) as $restaurant)
                             <option value="{{$restaurant->id}}" selected >{{$restaurant->name}}</option>
                         @endforeach
                         </select>
@@ -386,7 +390,7 @@
 
                     <hr class="my-4">
                     @if($status == 'all')
-                    <small class="text-cap mb-3">{{translate('messages.order')}} {{translate('messages.status')}}</small>
+                    <small class="text-cap mb-3">{{translate('messages.order_status')}}</small>
 
                     <!-- Custom Checkbox -->
                     <div class="custom-control custom-radio mb-2">
@@ -437,7 +441,7 @@
                         <label class="custom-control-label text-uppercase" for="scheduled">{{translate('messages.scheduled')}}</label>
                     </div>
                     <hr class="my-4">
-                    <small class="text-cap mb-3">{{translate('messages.order')}} {{translate('messages.type')}}</small>
+                    <small class="text-cap mb-3">{{translate('messages.order_type')}}</small>
                     <div class="custom-control custom-radio mb-2">
                         <input type="radio" id="take_away" name="order_type" class="custom-control-input" value="take_away" {{isset($order_type)?($order_type=='take_away'?'checked':''):''}}>
                         <label class="custom-control-label text-uppercase" for="take_away">{{translate('messages.take_away')}}</label>
@@ -448,7 +452,7 @@
                     </div>
                     <hr class="my-4">
                     @endif
-                    <small class="text-cap mb-3">{{translate('messages.date')}} {{translate('messages.between')}}</small>
+                    <small class="text-cap mb-3">{{translate('messages.date_between')}}</small>
 
                     <div class="row">
                         <div class="col-12">
@@ -529,7 +533,7 @@
 
             $('#vendor_ids').select2({
                 ajax: {
-                    url: '{{url('/')}}/admin/vendor/get-restaurants',
+                    url: '{{url('/')}}/admin/restaurant/get-restaurants',
                     data: function (params) {
                         return {
                             q: params.term, // search term
@@ -591,30 +595,12 @@
                 language: {
                     zeroRecords: '<div class="text-center p-4">' +
                         '<img class="mb-3 w-7rem" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description">' +
-                        '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                        '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                         '</div>'
                 }
             });
 
-            $('#export-copy').click(function () {
-                datatable.button('.buttons-copy').trigger()
-            });
 
-            $('#export-excel').click(function () {
-                datatable.button('.buttons-excel').trigger()
-            });
-
-            $('#export-csv').click(function () {
-                datatable.button('.buttons-csv').trigger()
-            });
-
-            $('#export-pdf').click(function () {
-                datatable.button('.buttons-pdf').trigger()
-            });
-
-            $('#export-print').click(function () {
-                datatable.button('.buttons-print').trigger()
-            });
 
             $('#datatableSearch').on('mouseup', function (e) {
                 var $input = $(this),
@@ -683,31 +669,5 @@
         });
     </script>
 
-    <script>
-        $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.order.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.card-footer').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
-    </script>
+
 @endpush

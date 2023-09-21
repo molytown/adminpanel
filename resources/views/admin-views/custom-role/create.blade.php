@@ -1,5 +1,5 @@
 @extends('layouts.admin.app')
-@section('title',translate('messages.custom_role'))
+@section('title',translate('messages.Custom_Role'))
 @push('css_or_js')
 
 @endpush
@@ -14,7 +14,7 @@
                 <img src="{{asset('/public/assets/admin/img/role.png')}}" alt="public">
             </div>
             <span>
-                {{translate('messages.employee')}} {{translate('messages.Role')}}
+                {{translate('messages.Employee_Role')}}
             </span>
         </h1>
     </div>
@@ -25,11 +25,41 @@
                 @csrf
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="form-group">
-                            <label class="form-label input-label qcont" for="name">{{ translate('Role Name') }}</label>
-                            <input type="text" name="name" class="form-control" id="name" aria-describedby="emailHelp"
-                                    placeholder="{{ translate('Role Name') }}" required value="{{old('name')}}">
+                        @php($language=\App\Models\BusinessSetting::where('key','language')->first())
+                        @php($language = $language->value ?? null)
+                        @php($default_lang = str_replace('_', '-', app()->getLocale()))
+                        @if ($language)
+                        <ul class="nav nav-tabs mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link lang_link active"
+                                href="#"
+                                id="default-link">{{translate('messages.default')}}</a>
+                            </li>
+                            @foreach (json_decode($language) as $lang)
+                                <li class="nav-item">
+                                    <a class="nav-link lang_link"
+                                        href="#"
+                                        id="{{ $lang }}-link">{{ \App\CentralLogics\Helpers::get_language_name($lang) . '(' . strtoupper($lang) . ')' }}</a>
+                                </li>
+                            @endforeach
+                        </ul>
+                        @endif
+                        <input type="hidden" name="lang[]" value="default">
+
+                        <div class="form-group lang_form" id="default-form">
+                            <label class="form-label input-label " for="name">{{ translate('messages.role_name') }} ({{ translate('messages.default') }})</label>
+                            <input type="text" name="name[]" class="form-control" placeholder="{{translate('role_name_example')}}" maxlength="191"  oninvalid="document.getElementById('en-link').click()">
                         </div>
+
+                        @if ($language)
+                            @foreach(json_decode($language) as $lang)
+                                <div class="form-group d-none lang_form" id="{{$lang}}-form">
+                                    <label class="input-label" for="exampleFormControlInput1">{{translate('messages.role_name')}} ({{strtoupper($lang)}})</label>
+                                    <input type="text" name="name[]" class="form-control" placeholder="{{translate('role_name_example')}}" maxlength="191" oninvalid="document.getElementById('en-link').click()">
+                                </div>
+                                <input type="hidden" name="lang[]" value="{{$lang}}">
+                            @endforeach
+                        @endif
                     </div>
                 </div>
 
@@ -39,7 +69,7 @@
                         <div class="form-group form-check form--check m-0 ml-2">
                             <input type="checkbox" name="modules[]" value="account" class="form-check-input"
                                     id="select-all">
-                            <label class="form-check-label ml-2" for="select-all">{{ translate('Select All') }}</label>
+                            <label class="form-check-label ml-2" for="select-all">{{ translate('Select_All') }}</label>
                         </div>
                     </div>
                 </div>
@@ -48,126 +78,135 @@
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="account" class="form-check-input"
                                     id="account">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="account">{{translate('messages.collect')}} {{translate('messages.cash')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="account">{{translate('messages.collect_cash')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="addon" class="form-check-input"
                                     id="addon">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="addon">{{translate('messages.addon')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="addon">{{translate('messages.addon')}}</label>
                         </div>
                     </div>
-                    <div class="check-item">
+                    {{-- <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="attribute" class="form-check-input"
                                     id="attribute">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="attribute">{{translate('messages.attribute')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="attribute">{{translate('messages.attribute')}}</label>
                         </div>
-                    </div>
+                    </div> --}}
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="banner" class="form-check-input"
                                     id="banner">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="banner">{{translate('messages.banner')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="banner">{{translate('messages.banner')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="campaign" class="form-check-input"
                                     id="campaign">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="campaign">{{translate('messages.campaign')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="campaign">{{translate('messages.campaign')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="category" class="form-check-input"
                                     id="category">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="category">{{translate('messages.category')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="category">{{translate('messages.category')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="coupon" class="form-check-input"
                                     id="coupon">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="coupon">{{translate('messages.coupon')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="coupon">{{translate('messages.coupon')}}</label>
                         </div>
                     </div>
-                    <div class="check-item">
+                    {{-- <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="custom_role" class="form-check-input"
                                     id="custom_role">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="custom_role">{{translate('messages.custom_role')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="custom_role">{{ translate('messages.employee_Role') }}</label>
                         </div>
-                    </div>
+                    </div> --}}
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="customerList" class="form-check-input"
                                     id="customerList">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="customerList">{{translate('messages.customers')}} {{translate('messages.section')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="customerList">{{translate('messages.customers_section')}}</label>
                         </div>
                     </div>
+
+                    <div class="check-item">
+                        <div class="form-group form-check form--check">
+                            <input type="checkbox" name="modules[]" value="customer_wallet" class="form-check-input"
+                                    id="customer_wallet">
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="customer_wallet">{{translate('messages.customer_Wallet')}}</label>
+                        </div>
+                    </div>
+
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="deliveryman" class="form-check-input"
                                     id="deliveryman">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="deliveryman">{{translate('messages.deliveryman')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="deliveryman">{{translate('messages.deliveryman')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="provide_dm_earning" class="form-check-input"
                                     id="provide_dm_earning">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="provide_dm_earning">{{translate('messages.deliverymen_earning_provide')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="provide_dm_earning">{{translate('messages.deliverymen_earning_provide')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="employee" class="form-check-input"
                                     id="employee">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="employee">{{translate('messages.Employee')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="employee">{{translate('messages.Employee')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="food" class="form-check-input"
                                     id="food">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="food">{{translate('messages.food')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="food">{{translate('messages.food')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="notification" class="form-check-input"
                                     id="notification">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="notification">{{translate('messages.push')}} {{translate('messages.notification')}} </label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="notification">{{translate('messages.push_notification')}} </label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="order" class="form-check-input"
                                     id="order">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="order">{{translate('messages.order')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="order">{{translate('messages.order')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="restaurant" class="form-check-input"
                                     id="restaurant">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="restaurant">{{translate('messages.restaurants')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="restaurant">{{translate('messages.restaurants')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="report" class="form-check-input"
                                     id="report">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="report">{{translate('messages.report')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="report">{{translate('messages.report')}}</label>
                         </div>
                     </div>
                     <div class="check-item">
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="settings" class="form-check-input"
                                     id="settings">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="settings">{{translate('messages.business')}} {{translate('messages.settings')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="settings">{{translate('messages.business_settings')}}</label>
                         </div>
                     </div>
 
@@ -175,7 +214,7 @@
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="withdraw_list" class="form-check-input"
                                     id="withdraw_list">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="withdraw_list">{{translate('messages.restaurant')}} {{translate('messages.withdraws')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="withdraw_list">{{translate('messages.restaurant_withdraws')}}</label>
                         </div>
                     </div>
 
@@ -183,7 +222,7 @@
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="pos" class="form-check-input"
                                     id="pos">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="pos">{{translate('messages.pos_system')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="pos">{{translate('messages.pos_system')}}</label>
                         </div>
                     </div>
 
@@ -191,10 +230,25 @@
                         <div class="form-group form-check form--check">
                             <input type="checkbox" name="modules[]" value="zone" class="form-check-input"
                                     id="zone">
-                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="zone">{{translate('messages.zone')}}</label>
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="zone">{{translate('messages.zone')}}</label>
+                        </div>
+                    </div>
+                    {{-- <div class="check-item">
+                        <div class="form-group form-check form--check">
+                            <input type="checkbox" name="modules[]" value="subscription" class="form-check-input"
+                                    id="subscription">
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="subscription">{{translate('messages.subscription')}}</label>
+                        </div>
+                    </div> --}}
+                    <div class="check-item">
+                        <div class="form-group form-check form--check">
+                            <input type="checkbox" name="modules[]" value="contact_message" class="form-check-input"
+                                    id="contact_message">
+                            <label class="form-check-label ml-2 ml-sm-3  text-dark" for="contact_message">{{translate('messages.contact_messages')}}</label>
                         </div>
                     </div>
                 </div>
+
                 <div class="mt-4 pb-3">
                     <div class="btn--container justify-content-end">
                         <button type="reset" id="reset_btn" class="btn btn--reset">
@@ -215,7 +269,7 @@
                     @csrf
                     <!-- Search -->
                     <div class="input--group input-group input-group-merge input-group-flush">
-                        <input id="datatableSearch_" type="search" name="search" class="form-control" placeholder="Search by Name" aria-label="Search">
+                        <input id="datatableSearch_" type="search" name="search" class="form-control" placeholder="{{translate('messages.Search_by_Name')}}" aria-label="Search">
                         <button type="submit" class="btn btn--secondary">
                             <i class="tio-search"></i>
                         </button>
@@ -234,21 +288,7 @@
 
                     <div id="usersExportDropdown"
                             class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                        <a id="export-copy" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                    alt="Image Description">
-                            {{translate('messages.copy')}}
-                        </a>
-                        <a id="export-print" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                    alt="Image Description">
-                            {{translate('messages.print')}}
-                        </a>
-                        <div class="dropdown-divider"></div>--}}
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
                         <a id="export-excel" class="dropdown-item" href="{{route('admin.custom-role.export-employee-role', ['type'=>'excel'])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
@@ -259,14 +299,8 @@
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
-                        {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                    alt="Image Description">
-                            {{translate('messages.pdf')}}
-                        </a>--}}
                     </div>
                 </div>
             </div>
@@ -283,7 +317,7 @@
                     <thead class="thead-light">
                     <tr>
                         <th scope="col" class="w-50px">{{ translate('messages.sl') }}</th>
-                        <th scope="col" class="w-50px">{{ translate('Employee Role List') }}</th>
+                        <th scope="col" class="w-50px">{{ translate('Employee_Role_List') }}</th>
                         <th scope="col" class="w-200px">{{translate('messages.modules')}}</th>
                         <th scope="col" class="w-50px">{{translate('messages.created_at')}}</th>
                         {{--<th scope="col" class="w-50px">{{translate('messages.status')}}</th>--}}
@@ -298,21 +332,23 @@
                             <td class="text-capitalize">
                                 @if($r['modules']!=null)
                                     @foreach((array)json_decode($r['modules']) as $key=>$m)
-                                        {{str_replace('_',' ',$m)}},
+                                        {{translate(str_replace('_',' ',$m)) }},
                                     @endforeach
                                 @endif
                             </td>
-                            <td>{{date('d-M-y',strtotime($r['created_at']))}}</td>
+                            <td>
+                                {{   \App\CentralLogics\Helpers::date_format($r['created_at']) }}
+                            </td>
                             {{--<td>
                                 {{$r->status?'Active':'Inactive'}}
                             </td>--}}
                             <td>
                                 <div class="btn--container justify-content-center">
                                     <a class="btn btn--primary btn-outline-primary action-btn"
-                                        href="{{route('admin.custom-role.edit',[$r['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.role')}}"><i class="tio-edit"></i>
+                                        href="{{route('admin.custom-role.edit',[$r['id']])}}" title="{{translate('messages.edit_role')}}"><i class="tio-edit"></i>
                                     </a>
                                     <a class="btn btn--danger btn-outline-danger action-btn" href="javascript:"
-                                        onclick="form_alert('role-{{$r['id']}}','{{translate('messages.Want_to_delete_this_role')}}')" title="{{translate('messages.delete')}} {{translate('messages.role')}}"><i class="tio-delete-outlined"></i>
+                                        onclick="form_alert('role-{{$r['id']}}','{{translate('messages.Want_to_delete_this_role_?')}}')" title="{{translate('messages.delete_role')}}"><i class="tio-delete-outlined"></i>
                                     </a>
                                 </div>
                                 <form action="{{route('admin.custom-role.delete',[$r['id']])}}"
@@ -396,6 +432,35 @@
         }
     })
 
+    $('.check--item-wrapper .check-item .form-check-input').on('change', function(){
+            if(this.checked === true) {
+                $(this).attr('checked', true)
+            } else {
+                $(this).attr('checked', false)
+            }
+        })
+    </script>
+
+<script>
+    $(".lang_link").click(function(e){
+        e.preventDefault();
+        $(".lang_link").removeClass('active');
+        $(".lang_form").addClass('d-none');
+        $(this).addClass('active');
+
+        let form_id = this.id;
+        let lang = form_id.substring(0, form_id.length - 5);
+        console.log(lang);
+        $("#"+lang+"-form").removeClass('d-none');
+        if(lang == '{{$default_lang}}')
+        {
+            $(".from_part_2").removeClass('d-none');
+        }
+        else
+        {
+            $(".from_part_2").addClass('d-none');
+        }
+    });
 </script>
 
 @endpush

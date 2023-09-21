@@ -10652,9 +10652,9 @@ var core_helpers = function() {
 		// Scale mouse coordinates into canvas coordinates
 		// by following the pattern laid out by 'jerryj' in the comments of
 		// https://www.html5canvastutorials.com/advanced/html5-canvas-mouse-coordinates/
-		var paddingLeft = parseFloat(helpers$1.getStyle(canvas, 'padding-left'));
+		var paddingLeft = parseFloat(helpers$1.getStyle(canvas, 'padding-inline-start'));
 		var paddingTop = parseFloat(helpers$1.getStyle(canvas, 'padding-top'));
-		var paddingRight = parseFloat(helpers$1.getStyle(canvas, 'padding-right'));
+		var paddingRight = parseFloat(helpers$1.getStyle(canvas, 'padding-inline-end'));
 		var paddingBottom = parseFloat(helpers$1.getStyle(canvas, 'padding-bottom'));
 		var width = boundingRect.right - boundingRect.left - paddingLeft - paddingRight;
 		var height = boundingRect.bottom - boundingRect.top - paddingTop - paddingBottom;
@@ -10753,8 +10753,8 @@ var core_helpers = function() {
 		}
 
 		var clientWidth = container.clientWidth;
-		var paddingLeft = helpers$1._calculatePadding(container, 'padding-left', clientWidth);
-		var paddingRight = helpers$1._calculatePadding(container, 'padding-right', clientWidth);
+		var paddingLeft = helpers$1._calculatePadding(container, 'padding-inline-start', clientWidth);
+		var paddingRight = helpers$1._calculatePadding(container, 'padding-inline-end', clientWidth);
 
 		var w = clientWidth - paddingLeft - paddingRight;
 		var cw = helpers$1.getConstraintWidth(domNode);

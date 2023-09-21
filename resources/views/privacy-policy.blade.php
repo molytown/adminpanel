@@ -1,24 +1,27 @@
 @extends('layouts.landing.app')
-
-@section('title','Privacy Policy')
+@section('privacy-policy','active')
+@section('title',translate('messages.privacy_policy'))
 
 @section('content')
-    <main>
-        <div class="main-body-div">
-            <!-- Top Start -->
-            <section class="top-start min-h-100px">
-                <div class="container">
-                    <div class="row">
-                        <div class="col-12 mt-2 text-center">
-                            <h1>{{translate('messages.privacy_policy')}}</h1>
+
+        <!-- Page Header Gap -->
+        <div class="h-148px"></div>
+        <!-- Page Header Gap -->
+
+        <!-- ======= Privacy Section ======= -->
+        <section class="privacy-section">
+            <div class="container">
+                <div class="section-wrapper">
+                    <div class="section-wrapper-inner">
+                        <div class="section-header mw-100">
+                            <h2 class="title"> <span class="text-base">{{translate('messages.privacy_policy')}}</span></h2>
                         </div>
-                        <div class="col-12">
+                        <div class="about--content">
                             {!! $data !!}
                         </div>
                     </div>
                 </div>
-            </section>
-            <!-- Top End -->
-        </div>
-    </main>
+            </div>
+        </section>
+        <!-- ======= Privacy Section ======= -->
 @endsection

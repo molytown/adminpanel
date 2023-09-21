@@ -22,7 +22,7 @@
                             onerror="this.src='{{asset('public/assets/admin/img/100x100/food.png')}}'" alt="{{$item->name}} image">
                     </div>
                     <div class="text-center mt-2">
-                        <span>{{$item['name']}}</span>
+                        <span>{{Str::limit($item->name??translate('messages.Food_deleted!'),20,'...')}}</span>
                     </div>
                 </div>
             </div>

@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Update Banner'))
+@section('title',translate('messages.update_banner'))
 
 
 @section('content')
@@ -9,7 +9,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title"><i class="tio-edit"></i>{{translate('messages.update')}} {{translate('messages.banner')}}</h1>
+                    <h1 class="page-header-title"><i class="tio-edit"></i>{{translate('messages.update_banner')}}</h1>
                 </div>
             </div>
         </div>
@@ -23,14 +23,66 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.title')}}</label>
-                                        <input id="banner_title" type="text" name="title" class="form-control" placeholder="{{translate('messages.new_banner')}}" value="{{$banner->title}}">
+                                        @php($language=\App\Models\BusinessSetting::where('key','language')->first())
+                                        @php($language = $language->value ?? null)
+                                        @php($default_lang = str_replace('_', '-', app()->getLocale()))
+                                        @if($language)
+                                            <ul class="nav nav-tabs mb-4">
+                                                <li class="nav-item">
+                                                    <a class="nav-link lang_link active"
+                                                    href="#"
+                                                    id="default-link">{{translate('messages.default')}}</a>
+                                                </li>
+                                                @foreach (json_decode($language) as $lang)
+                                                    <li class="nav-item">
+                                                        <a class="nav-link lang_link"
+                                                            href="#"
+                                                            id="{{ $lang }}-link">{{ \App\CentralLogics\Helpers::get_language_name($lang) . '(' . strtoupper($lang) . ')' }}</a>
+                                                    </li>
+                                                @endforeach
+                                            </ul>
+                                            <div class="lang_form" id="default-form">
+                                                <div class="form-group">
+                                                    <label class="input-label" for="default_title">{{translate('messages.title')}} ({{translate('messages.default')}})</label>
+                                                    <input type="text" name="title[]" id="default_title" class="form-control" placeholder="{{translate('messages.new_banner')}}" value="{{$banner->getRawOriginal('title')}}" oninvalid="document.getElementById('en-link').click()">
+                                                </div>
+                                                <input type="hidden" name="lang[]" value="default">
+                                            </div>
+                                            @foreach(json_decode($language) as $lang)
+                                                <?php
+                                                    if(count($banner['translations'])){
+                                                        $translate = [];
+                                                        foreach($banner['translations'] as $t)
+                                                        {
+                                                            if($t->locale == $lang && $t->key=="title"){
+                                                                $translate[$lang]['title'] = $t->value;
+                                                            }
+                                                        }
+                                                    }
+                                                ?>
+                                                <div class="d-none lang_form" id="{{$lang}}-form">
+                                                    <div class="form-group">
+                                                        <label class="input-label" for="{{$lang}}_title">{{translate('messages.title')}} ({{strtoupper($lang)}})</label>
+                                                        <input type="text" name="title[]" id="{{$lang}}_title" class="form-control" placeholder="{{translate('messages.new_banner')}}" value="{{$translate[$lang]['title']??''}}" oninvalid="document.getElementById('en-link').click()">
+                                                    </div>
+                                                    <input type="hidden" name="lang[]" value="{{$lang}}">
+                                                </div>
+                                            @endforeach
+                                        @else
+                                        <div id="default-form">
+                                            <div class="form-group">
+                                                <label class="input-label" for="exampleFormControlInput1">{{translate('messages.title')}} ({{ translate('messages.default') }})</label>
+                                                <input type="text" name="title[]" class="form-control" placeholder="{{translate('messages.new_banner')}}"  value="{{$banner->getRawOriginal('title')}}" maxlength="100" >
+                                            </div>
+                                            <input type="hidden" name="lang[]" value="default">
+                                        </div>
+                                        @endif
                                     </div>
                                     <div class="form-group">
                                         <label class="input-label" for="title">{{translate('messages.zone')}}</label>
                                         <select name="zone_id" id="zone" class="form-control js-select2-custom" onchange="getRequest('{{url('/')}}/admin/food/get-foods?zone_id='+this.value,'choice_item')">
                                             <option  disabled selected>---{{translate('messages.select')}}---</option>
-                                            @php($zones=\App\Models\Zone::all())
+                                            @php($zones=\App\Models\Zone::active()->get(['id','name']))
                                             @foreach($zones as $zone)
                                                 @if(isset(auth('admin')->user()->zone_id))
                                                     @if(auth('admin')->user()->zone_id == $zone->id)
@@ -43,10 +95,10 @@
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.banner')}} {{translate('messages.type')}}</label>
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.banner_type')}}</label>
                                         <select id="banner_type" name="banner_type" class="form-control" onchange="banner_type_change(this.value)">
-                                            <option value="restaurant_wise" {{$banner->type == 'restaurant_wise'? 'selected':'' }}>{{translate('messages.restaurant')}} {{translate('messages.wise')}}</option>
-                                            <option value="item_wise" {{$banner->type == 'item_wise'? 'selected':'' }}>{{translate('messages.food')}} {{translate('messages.wise')}}</option>
+                                            <option value="restaurant_wise" {{$banner->type == 'restaurant_wise'? 'selected':'' }}>{{translate('messages.restaurant_wise')}}</option>
+                                            <option value="item_wise" {{$banner->type == 'item_wise'? 'selected':'' }}>{{translate('messages.food_wise')}}</option>
                                         </select>
                                     </div>
                                     <div class="form-group" id="restaurant_wise">
@@ -62,7 +114,7 @@
                                         </select>
                                     </div>
                                     <div class="form-group" id="item_wise">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.select')}} {{translate('messages.food')}}</label>
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.select_food')}}</label>
                                         <select name="item_id" id="choice_item" class="form-control js-select2-custom" placeholder="{{translate('messages.select_food')}}">
 
                                         </select>
@@ -71,8 +123,8 @@
                                 <div class="col-md-6">
                                     <div class="form-group h-100 mb-0 d-flex flex-column">
                                         <label class="d-block text-center mt-auto">
-                                            {{translate('messages.campaign')}} {{translate('messages.image')}}
-                                            <small class="text-danger">* ( {{translate('messages.ratio')}} 3:1 )</small>
+                                            {{translate('messages.campaign_image')}}
+                                            <small class="text-danger">* ( {{translate('messages.ratio_3_:_1')}}  )</small>
                                         </label>
                                         <center class="my-auto">
                                             <img class="initial-2" id="viewer" onerror="this.src='{{asset('public/assets/admin/img/900x400/img1.jpg')}}'" src="{{asset('storage/app/public/banner')}}/{{$banner['image']}}" alt="campaign image"/>
@@ -81,7 +133,7 @@
                                             <div class="custom-file">
                                                 <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                                     accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                             </div>
                                         </div>
                                     </div>
@@ -145,7 +197,7 @@
 
         $('.js-data-example-ajax').select2({
             ajax: {
-                url: '{{url('/')}}/admin/vendor/get-restaurants',
+                url: '{{url('/')}}/admin/restaurant/get-restaurants',
                 data: function (params) {
                     return {
                         q: params.term, // search term
@@ -252,5 +304,25 @@
 
         </script>
 
+<script>
+    $(".lang_link").click(function(e){
+        e.preventDefault();
+        $(".lang_link").removeClass('active');
+        $(".lang_form").addClass('d-none');
+        $(this).addClass('active');
 
+        let form_id = this.id;
+        let lang = form_id.substring(0, form_id.length - 5);
+        console.log(lang);
+        $("#"+lang+"-form").removeClass('d-none');
+        if(lang == 'en')
+        {
+            $("#from_part_2").removeClass('d-none');
+        }
+        else
+        {
+            $("#from_part_2").addClass('d-none');
+        }
+    })
+</script>
 @endpush

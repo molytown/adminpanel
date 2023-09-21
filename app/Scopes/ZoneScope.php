@@ -24,64 +24,74 @@ class ZoneScope implements Scope
                 case 'App\Models\Food':
                     $builder->whereHas('restaurant',function($query){
                         return $query->where('zone_id', auth('admin')->user()->zone_id);
-                    });        
+                    });
                     break;
-                
+
                 case 'App\Models\ItemCampaign':
                     $builder->whereHas('restaurant',function($query){
                         return $query->where('zone_id', auth('admin')->user()->zone_id);
-                    });        
+                    });
                     break;
-                    
+
                 case 'App\Models\Order':
                     $builder->whereHas('restaurant',function($query){
                         return $query->where('zone_id', auth('admin')->user()->zone_id);
-                    });        
+                    });
                     break;
 
                 case 'App\Models\Restaurant':
-                    $builder->where('zone_id', auth('admin')->user()->zone_id);       
+                    $builder->where('zone_id', auth('admin')->user()->zone_id);
                     break;
-                
+
                 case 'App\Models\AddOn':
                     $builder->whereHas('restaurant',function($query){
                         return $query->where('zone_id', auth('admin')->user()->zone_id);
-                    });  
+                    });
                     break;
 
                 case 'App\Models\WithdrawRequest':
                     $builder->whereHas('vendor.restaurants',function($query){
                         return $query->where('restaurants.zone_id', auth('admin')->user()->zone_id);
-                    });  
+                    });
                     break;
-                    
+
                 case 'App\Models\DeliveryMan':
-                    $builder->where('zone_id', auth('admin')->user()->zone_id);       
+                    $builder->where('zone_id', auth('admin')->user()->zone_id);
                     break;
 
                 case 'App\Models\Banner':
-                    $builder->where('zone_id', auth('admin')->user()->zone_id);       
+                    $builder->where('zone_id', auth('admin')->user()->zone_id);
                     break;
 
                 case 'App\Models\Notification':
-                    $builder->where('zone_id', auth('admin')->user()->zone_id);       
+                    $builder->where('zone_id', auth('admin')->user()->zone_id);
                     break;
 
                 case 'App\Models\Zone':
-                    $builder->where('id', auth('admin')->user()->zone_id);       
+                    $builder->where('id', auth('admin')->user()->zone_id);
                     break;
 
                 case 'App\Models\ProvideDMEarning':
                     $builder->whereHas('delivery_man', function($q){
-                        $q->where('zone_id', auth('admin')->user()->zone_id);   
+                        $q->where('zone_id', auth('admin')->user()->zone_id);
                     });
                     break;
-                    
+                case 'App\Models\RestaurantSubscription':
+                    $builder->whereHas('restaurant', function($q){
+                        $q->where('zone_id', auth('admin')->user()->zone_id);
+                    });
+                    break;
+                case 'App\Models\SubscriptionTransaction':
+                    $builder->whereHas('restaurant', function($q){
+                        $q->where('zone_id', auth('admin')->user()->zone_id);
+                    });
+                    break;
+
                 default:
                     $builder;
                     break;
             }
         }
-        $builder;   
+        $builder;
     }
 }

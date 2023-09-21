@@ -6,10 +6,17 @@
         </span>
     </td>
     <td>
-        <span class="bg-gradient-light text-dark">{{$campaign->start_date?$campaign->start_date->format('d M, Y'). ' - ' .$campaign->end_date->format('d M, Y'): 'N/A'}}</span>
+
+        <span class="bg-gradient-light text-dark">{{$campaign->start_date?  \App\CentralLogics\Helpers::date_format($campaign->start_date)  : 'N/A'}}</span>
+
+        <span class="bg-gradient-light text-dark">-</span>
+
+        <span class="bg-gradient-light text-dark">{{$campaign->start_time?  \App\CentralLogics\Helpers::date_format($campaign->end_date) : 'N/A' }}</span>
     </td>
     <td>
-        <span class="bg-gradient-light text-dark">{{$campaign->start_time?$campaign->start_time->format(config('timeformat')). ' - ' .$campaign->end_time->format(config('timeformat')): 'N/A'}}</span>
+
+        <span class="bg-gradient-light text-dark">{{$campaign->start_time?  \App\CentralLogics\Helpers::time_format($campaign->start_time). ' - ' .\App\CentralLogics\Helpers::time_format($campaign->end_time): 'N/A'}}</span>
+
     </td>
     <td>{{$campaign->price}}</td>
     {{-- <td>
@@ -23,10 +30,10 @@
     <td>
         <div class="btn--container justify-content-center">
             <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                href="{{route('admin.campaign.edit',['item',$campaign['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.campaign')}}"><i class="tio-edit"></i>
+                href="{{route('admin.campaign.edit',['item',$campaign['id']])}}" title="{{translate('messages.edit_campaign')}}"><i class="tio-edit"></i>
             </a>
             <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:"
-                onclick="form_alert('campaign-{{$campaign['id']}}','Want to delete this item ?')" title="{{translate('messages.delete')}} {{translate('messages.campaign')}}"><i class="tio-delete-outlined"></i>
+                onclick="form_alert('campaign-{{$campaign['id']}}','Want to delete this item ?')" title="{{translate('messages.delete_campaign')}}"><i class="tio-delete-outlined"></i>
             </a>
         </div>
         <form action="{{route('admin.campaign.delete-item',[$campaign['id']])}}"

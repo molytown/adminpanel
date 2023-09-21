@@ -34,7 +34,8 @@
                         </div>
                     </div>
                     <div class="pl-1">
-                        <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                        <small>                {{ Carbon\Carbon::parse($con->created_at)->locale(app()->getLocale())->translatedFormat('d M Y')  }} {{ Carbon\Carbon::parse($con->created_at)->locale(app()->getLocale())->translatedFormat(config('timeformat'))}}
+</small>
                     </div>
                 @else
                     <div class="pt-1 pb-1">
@@ -50,7 +51,8 @@
                         </div>
                     </div>
                     <div class="text-right pr-1">
-                        <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                        <small>                {{ Carbon\Carbon::parse($con->created_at)->locale(app()->getLocale())->translatedFormat('d M Y')  }} {{ Carbon\Carbon::parse($con->created_at)->locale(app()->getLocale())->translatedFormat(config('timeformat'))}}
+</small>
                         @if ($con->is_seen == 1)
                         <span class="text-primary"><i class="tio-checkmark-circle"></i></span>
                         @else
@@ -84,6 +86,8 @@
     </div>
 </div>
 <script>
+
+
     $(document).ready(function () {
         $('.scroll-down').animate({
             scrollTop: $('#scroll-here').offset().top
@@ -144,11 +148,20 @@
                 processData: false,
                 success: function(data) {
                     if (data.errors && data.errors.length > 0) {
-                        $('button[type=submit], input[type=submit]').prop('disabled',false);
-                        toastr.error('Write something to send massage!', {
-                            CloseButton: true,
-                            ProgressBar: true
-                        });
+
+                        if (data.errors[1] && data.errors[1].code == 'images') {
+                            toastr.error(data.errors[1].message, {
+                                CloseButton: true,
+                                ProgressBar: true
+                            });
+                        } else {
+
+                            $('button[type=submit], input[type=submit]').prop('disabled',false);
+                            toastr.error('{{ translate('Write something to send massage!') }}', {
+                                CloseButton: true,
+                                ProgressBar: true
+                            });
+                        }
                     }else{
 
                         toastr.success('Message sent', {
@@ -159,7 +172,7 @@
                     }
                 },
                 error() {
-                    toastr.error('Write something to send massage!', {
+                    toastr.error('{{ translate('Write something to send massage!') }}', {
                         CloseButton: true,
                         ProgressBar: true
                     });

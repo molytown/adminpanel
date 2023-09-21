@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title">{{translate('messages.attribute')}} {{translate('messages.setup')}}</h1>
+                    <h1 class="page-header-title">{{translate('messages.attribute_setup')}}</h1>
                 </div>
             </div>
         </div>
@@ -26,7 +26,7 @@
                             <div class="row">
                                 <div class="col-12">
                                     <div class="form-group">
-                                    <label class="input-label text--black" for="exampleFormControlInput1">{{ translate('Attribute') }} {{translate('messages.name')}}</label>
+                                    <label class="input-label text--black" for="exampleFormControlInput1">{{ translate('Attribute_name')}}</label>
                                         <input type="text" name="name" class="form-control h--45px" placeholder="{{ translate('Ex: Attribute Name') }}" maxlength="191" required>
                                     </div>
                                 </div>
@@ -44,7 +44,7 @@
                 <div class="card">
                     <div class="card-header py-2 border-0">
                         <div class="search--button-wrapper">
-                            <h5 class="card-title">{{translate('messages.attribute')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$attributes->total()}}</span></h5>
+                            <h5 class="card-title">{{translate('messages.attribute_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$attributes->total()}}</span></h5>
                             <form action="javascript:" id="search-form" >
                                             <!-- Search -->
                                             @csrf
@@ -82,7 +82,7 @@
                                         {{translate('messages.print')}}
                                     </a>
                                     <div class="dropdown-divider"></div>--}}
-                                    <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
+                                    <span class="dropdown-header">{{translate('messages.download_options')}}</span>
                                     <a id="export-excel" class="dropdown-item" href="{{route('admin.attribute.export-attributes', ['type'=>'excel'])}}">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                                 src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
@@ -93,7 +93,7 @@
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                                 src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                                 alt="Image Description">
-                                        .{{translate('messages.csv')}}
+                                        {{translate('messages.csv')}}
                                     </a>
                                     {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"

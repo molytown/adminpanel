@@ -32,32 +32,8 @@
             </span>
 
             <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', $restaurant->id)}}">{{translate('messages.overview')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'order'])}}"  aria-disabled="true">{{translate('messages.orders')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'product'])}}"  aria-disabled="true">{{translate('messages.foods')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'reviews'])}}"  aria-disabled="true">{{translate('messages.reviews')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'discount'])}}"  aria-disabled="true">{{translate('discounts')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction'])}}"  aria-disabled="true">{{translate('messages.transactions')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'settings'])}}"  aria-disabled="true">{{translate('messages.settings')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'conversations'])}}"  aria-disabled="true">{{translate('messages.conversations')}}</a>
-                </li>
-            </ul>
+            @include('admin-views.vendor.view.partials._header',['restaurant'=>$restaurant])
+
             <!-- End Nav -->
         </div>
         <!-- End Nav Scroller -->
@@ -81,6 +57,8 @@
             @php($user_rating = isset($user_rating) ? ($user_rating)/count($reviews) : 0)
             {{-- {{$review[0]->rating}} --}}
             <h1 class="title">{{ number_format($user_rating, 1)}}<span class="out-of">/5</span></h1>
+
+            {{-- {{ dd(number_format($user_rating, 1))  }} --}}
             @if ($user_rating == 5)
             <div class="rating">
                 <span><i class="tio-star"></i></span>
@@ -265,6 +243,54 @@
     <!-- Reviews -->
     <!-- Page Heading -->
     <div class="card h-100">
+                   <!-- Header -->
+                   <div class="card-header py-2">
+                    <div class="search--button-wrapper">
+                        <h5 class="card-title">{{translate('messages.Review_list')}}</h5>
+                        {{-- <form  class="search-form">
+                                        <!-- Search -->
+                            @csrf
+                            <div class="input-group input--group">
+                                <input id="datatableSearch_" type="search" value="{{ request()?->search ?? null }}" name="search" class="form-control"
+                                        placeholder="{{translate('ex_:_Search_Store_Name')}}" aria-label="{{translate('messages.search')}}" >
+                                <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
+
+                            </div>
+                            <!-- End Search -->
+                        </form> --}}
+                        <!-- Unfold -->
+                        <div class="hs-unfold mr-2">
+                            <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                data-hs-unfold-options='{
+                                        "target": "#usersExportDropdown",
+                                        "type": "css-animation"
+                                    }'>
+                                <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                            </a>
+
+                            <div id="usersExportDropdown"
+                                class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+
+                                <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                <a id="export-excel" class="dropdown-item" href="{{route('admin.restaurant.restaurant_wise_reviwe_export', ['type'=>'excel', 'id' => $restaurant->id,request()->getQueryString()])}}">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                        alt="Image Description">
+                                    {{ translate('messages.excel') }}
+                                </a>
+                                <a id="export-csv" class="dropdown-item" href="{{route('admin.restaurant.restaurant_wise_reviwe_export', ['type'=>'csv','id' => $restaurant->id,request()->getQueryString()])}}">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                        alt="Image Description">
+                                    .{{ translate('messages.csv') }}
+                                </a>
+
+                            </div>
+                        </div>
+                        <!-- End Unfold -->
+                    </div>
+                </div>
+
         <div class="card-body p-0 verticle-align-middle-table">
             <div class="table-responsive datatable-custom">
                 <table id="columnSearchDatatable"
@@ -288,7 +314,8 @@
                     <tbody id="set-rows">
                     @php($reviews = $restaurant->reviews()->with('food',function($query){
                         $query->withoutGlobalScope(\App\Scopes\RestaurantScope::class);
-                    })->latest()->paginate(25))
+                    })->with('customer')
+                    ->latest()->paginate(25))
 
                     @foreach($reviews as $key=>$review)
                         <tr>
@@ -307,7 +334,7 @@
                                     </div>
                                 </a>
                             @else
-                                {{translate('messages.Food deleted!')}}
+                                {{translate('messages.Food_deleted!')}}
                             @endif
                             </td>
                             <td>
@@ -336,7 +363,7 @@
                                 </div>
                             </td>
                             <td>
-                                {{date('d M Y H:i:s',strtotime($review['created_at']))}}
+                                {{ Carbon\Carbon::parse($review['created_at'])->locale(app()->getLocale())->translatedFormat( 'd M Y ' .config('timeformat')) }}
                             </td>
                             <td>
                                 <label class="toggle-switch toggle-switch-sm" for="reviewCheckbox{{$review->id}}">
@@ -415,31 +442,7 @@
             });
         });
 
-        $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.food.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
+
 
         function status_form_alert(id, message, e) {
             e.preventDefault();
@@ -450,8 +453,8 @@
                 showCancelButton: true,
                 cancelButtonColor: 'default',
                 confirmButtonColor: '#FC6A57',
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
+                cancelButtonText: '{{ translate('messages.no') }}',
+                confirmButtonText: '{{ translate('messages.yes') }}',
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {

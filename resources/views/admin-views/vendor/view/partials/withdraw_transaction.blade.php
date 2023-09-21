@@ -13,12 +13,13 @@
             </thead>
             <tbody>
             @php($withdraw_transaction = \App\Models\WithdrawRequest::where('vendor_id', $restaurant->vendor->id)->paginate(25))
-            @php($zone_currency= $restaurant->zone->zone_currency ?? null)
             @foreach($withdraw_transaction as $k=>$wt)
                 <tr>
                     <td scope="row">{{$k+$withdraw_transaction->firstItem()}}</td>
-                    <td>{{date('Y-m-d '.config('timeformat'), strtotime($wt->created_at))}}</td>
-                    <td>{{\App\CentralLogics\Helpers::format_currency($wt->amount,$zone_currency )}}</td>
+                    <td>
+                        {{ \App\CentralLogics\Helpers::time_date_format($wt->created_at)  }}
+                    </td>
+                    <td>{{\App\CentralLogics\Helpers::format_currency($wt->amount)}}</td>
                     <td>
                         @if($wt->approved==0)
                             <label class="badge badge-primary">{{ translate('Pending') }}</label>
@@ -30,7 +31,7 @@
                     </td>
                     <td>
                         <div class="btn--container">
-                            <a href="{{route('admin.vendor.withdraw_view',[$wt['id'],$restaurant->vendor['id']])}}"
+                            <a href="{{route('admin.restaurant.withdraw_view',[$wt['id'],$restaurant->vendor['id']])}}"
                                 class="btn btn-sm btn--warning btn-outline-warning action-btn"><i class="tio-visible"></i>
                             </a>
                     </div>

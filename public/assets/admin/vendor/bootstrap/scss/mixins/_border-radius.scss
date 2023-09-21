@@ -30,7 +30,7 @@
   }
 }
 
-@mixin border-right-radius($radius) {
+@mixin border-inline-end-radius($radius) {
   @if $enable-rounded {
     border-top-right-radius: valid-radius($radius);
     border-bottom-right-radius: valid-radius($radius);
@@ -44,7 +44,7 @@
   }
 }
 
-@mixin border-left-radius($radius) {
+@mixin border-inline-start-radius($radius) {
   @if $enable-rounded {
     border-top-left-radius: valid-radius($radius);
     border-bottom-left-radius: valid-radius($radius);

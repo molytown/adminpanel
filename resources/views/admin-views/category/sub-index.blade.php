@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.Add new sub category'))
+@section('title',translate('messages.Add_new_sub_category'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -16,7 +16,7 @@
                         <div class="card-header-icon d-inline-flex mr-2 img">
                             <img src="{{asset('public/assets/admin/img/sub-category.png')}}" alt="">
                         </div>
-                        <span>{{translate('messages.sub')}} {{translate('messages.category')}} {{translate('messages.setup')}}</span>
+                        <span>{{translate('messages.Sub_Category_Setup')}}</span>
                     </h1>
                 </div>
             </div>
@@ -28,13 +28,15 @@
                 @csrf
                 @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                 @php($language = $language->value ?? null)
-                @php($default_lang = 'en')
+                @php($default_lang = str_replace('_', '-', app()->getLocale()))
                 @if($language)
-                    @php($default_lang = json_decode($language)[0])
                     <ul class="nav nav-tabs mb-4">
+                        <li class="nav-item">
+                            <a class="nav-link lang_link active" href="#" id="default-link">{{translate('Default')}}</a>
+                        </li>
                         @foreach(json_decode($language) as $lang)
                             <li class="nav-item">
-                                <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                <a class="nav-link lang_link" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                             </li>
                         @endforeach
                     </ul>
@@ -42,11 +44,11 @@
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label class="input-label"
-                                    for="parent_id">{{translate('messages.main')}} {{translate('messages.category')}}
+                                    for="parent_id">{{translate('messages.main_category')}}
                                     <span class="input-label-secondary">*</span></label>
                                 <select id="parent_id" name="parent_id" class="form-control js-select2-custom" required>
-                                    <option value="" selected disabled>{{ translate('Select Category') }}</option>
-                                    @foreach(\App\Models\Category::where(['position'=>0])->get() as $cat)
+                                    <option value="" selected disabled>{{ translate('Select_Category') }}</option>
+                                    @foreach(\App\Models\Category::where(['position'=>0])->get(['id','name']) as $cat)
                                         <option value="{{$cat['id']}}" {{isset($category)?($category['parent_id']==$cat['id']?'selected':''):''}} >{{$cat['name']}}</option>
                                     @endforeach
                                 </select>
@@ -54,19 +56,27 @@
                             <input name="position" value="1" type="hidden">
                         </div>
                         <div class="col-md-6">
+
+                            <div class="form-group lang_form" id="default-form">
+                                <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{translate('Default')}}) </label>
+                                <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Sub_Category_Name') }}"   maxlength="191">
+                            </div>
+
+                            <input type="hidden" name="lang[]" value="default">
+
                         @foreach(json_decode($language) as $lang)
-                                <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
+                                <div class="form-group d-none lang_form" id="{{$lang}}-form">
                                     <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{strtoupper($lang)}})</label>
-                                    <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex: Sub Category Name') }}" maxlength="191" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
+                                    <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Sub_Category_Name') }}" maxlength="191" oninvalid="document.getElementById('en-link').click()">
                                 </div>
                                 <input type="hidden" name="lang[]" value="{{$lang}}">
                         @endforeach
                     @else
-                            <div class="form-group">
-                                <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                                <input type="text" name="name" class="form-control" placeholder="{{ translate('Ex: Sub Category Name') }}" value="{{old('name')}}" required maxlength="191">
+                            <div class="form-group" id="default-form">
+                                <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} {{translate('Default')}}</label>
+                                <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Sub_Category_Name') }}"  maxlength="191">
                             </div>
-                            <input type="hidden" name="lang[]" value="{{$lang}}">
+                            <input type="hidden" name="lang[]" value="default">
                             @endif
                         </div>
                         <div class="col-md-12">
@@ -84,11 +94,11 @@
         <div class="card mt-2">
             <div class="card-header py-2 border-0">
                 <div class="search--button-wrapper">
-                    <h5 class="card-title">{{translate('messages.sub_category')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$categories->total()}}</span></h5>
-                    <form id="dataSearch">
+                    <h5 class="card-title">{{translate('messages.sub_category_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$categories->total()}}</span></h5>
+                    <form>
                         <!-- Search -->
                         <div class="input--group input-group input-group-merge input-group-flush">
-                            <input id="datatableSearch" name="search" type="search" class="form-control" placeholder="{{ translate('Ex : Sub Categories') }}" aria-label="{{translate('messages.search_sub_categories')}}">
+                            <input id="datatableSearch" name="search" value="{{ request()?->search ?? null }}" type="search" class="form-control" placeholder="{{ translate('Ex_:_Sub_Categories') }}" aria-label="{{translate('messages.search_sub_categories')}}">
                             <input type="hidden" name="sub_category" value="1">
                             <button type="submit" class="btn btn--secondary">
                                 <i class="tio-search"></i>
@@ -113,7 +123,7 @@
                             <tr>
                                 <th>{{ translate('messages.sl') }}</th>
                                 <th>{{translate('messages.id')}}</th>
-                                <th>{{translate('messages.main')}} {{translate('messages.category')}}</th>
+                                <th>{{translate('messages.main_category')}}</th>
                                 <th>{{translate('messages.sub_category')}}</th>
                                 <th><div class="ml-3"> {{translate('messages.priority')}}</div></th>
                                 <th class="w-100px">{{translate('messages.status')}}</th>
@@ -156,10 +166,10 @@
                                 <td>
                                     <div class="btn--container justify-content-center">
                                         <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                            href="{{route('admin.category.edit',[$category['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.category')}}"><i class="tio-edit"></i>
+                                            href="{{route('admin.category.edit',[$category['id']])}}" title="{{translate('messages.edit_category')}}"><i class="tio-edit"></i>
                                         </a>
                                         <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:"
-                                        onclick="form_alert('category-{{$category['id']}}','{{ translate('Want to delete this category') }}')" title="{{translate('messages.delete')}} {{translate('messages.category')}}"><i class="tio-delete-outlined"></i>
+                                        onclick="form_alert('category-{{$category['id']}}','{{ translate('Want_to_delete_this_category_?') }}')" title="{{translate('messages.delete_category')}}"><i class="tio-delete-outlined"></i>
                                         </a>
                                     </div>
                                     <form action="{{route('admin.category.delete',[$category['id']])}}" method="post" id="category-{{$category['id']}}">
@@ -199,37 +209,6 @@
         $(document).on('ready', function () {
             // INITIALIZATION OF DATATABLES
             // =======================================================
-
-
-            $('#dataSearch').on('submit', function (e) {
-                e.preventDefault();
-                var formData = new FormData(this);
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                $.post({
-                    url: '{{route('admin.category.search')}}',
-                    data: formData,
-                    cache: false,
-                    contentType: false,
-                    processData: false,
-                    beforeSend: function () {
-                        $('#loading').show();
-                    },
-                    success: function (data) {
-                        $('#table-div').html(data.view);
-                        $('#itemCount').html(data.count);
-                        $('.page-area').hide();
-                    },
-                    complete: function () {
-                        $('#loading').hide();
-                    },
-                });
-            });
-
-
             // INITIALIZATION OF SELECT2
             // =======================================================
             $('.js-select2-custom').each(function () {

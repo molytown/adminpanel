@@ -9,14 +9,41 @@ use Illuminate\Database\Eloquent\Builder;
 class Campaign extends Model
 {
     use HasFactory;
-    protected $dates = ['created_at', 'updated_at', 'start_date', 'end_date'];
+    // protected $dates = ['created_at', 'updated_at', 'start_date', 'end_date'];
 
     // protected $casts = ['start_time'=>'datetime', 'end_time'=>'datetime'];
     protected $casts = [
         'status' => 'integer',
         'admin_id' => 'integer',
+        'created_at'=>'datetime',
+        'start_date'=>'datetime',
+        'updated_at'=>'datetime',
+        'end_date'=>'datetime',
     ];
+    public function getTitleAttribute($value){
+        if (count($this->translations) > 0) {
+            foreach ($this->translations as $translation) {
+                if ($translation['key'] == 'title') {
+                    return $translation['value'];
+                }
+            }
+        }
 
+        return $value;
+    }
+
+    public function getDescriptionAttribute($value){
+        if (count($this->translations) > 0) {
+            foreach ($this->translations as $translation) {
+                if ($translation['key'] == 'description') {
+                    return $translation['value'];
+                }
+            }
+        }
+
+        return $value;
+    }
+    
     public function translations()
     {
         return $this->morphMany(Translation::class, 'translationable');
@@ -33,14 +60,15 @@ class Campaign extends Model
     }
     public function restaurants()
     {
-        return $this->belongsToMany(Restaurant::class);
+
+        return $this->belongsToMany(Restaurant::class)->withPivot('campaign_status');
     }
 
     public function scopeActive($query)
     {
         return $query->where('status', 1);
     }
-    
+
     public function scopeRunning($query)
     {
         return $query->where(function($q){
@@ -51,7 +79,7 @@ class Campaign extends Model
                 $q->whereTime('start_time', '<=', date('H:i:s'))->orWhereNull('start_time');
             })->where(function($q){
                 $q->whereTime('end_time', '>=', date('H:i:s'))->orWhereNull('end_time');
-            });       
+            });
     }
 
     protected static function booted()

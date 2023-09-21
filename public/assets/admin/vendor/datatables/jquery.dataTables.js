@@ -5110,7 +5110,7 @@
 							.append(
 								headerClone
 									.removeAttr('id')
-									.css( 'margin-left', 0 )
+									.css( 'margin-inline-start', 0 )
 									.append( captionSide === 'top' ? caption : null )
 									.append(
 										table.children('thead')
@@ -5141,7 +5141,7 @@
 							.append(
 								footerClone
 									.removeAttr('id')
-									.css( 'margin-left', 0 )
+									.css( 'margin-inline-start', 0 )
 									.append( captionSide === 'bottom' ? caption : null )
 									.append(
 										table.children('tfoot')

@@ -15,14 +15,14 @@ class AddOnController extends Controller
     public function list(Request $request)
     {
         $vendor = $request['vendor'];
-        $addons = AddOn::withoutGlobalScope(RestaurantScope::class)->withoutGlobalScope('translate')->with('translations')->where('restaurant_id', $vendor->restaurants[0]->id)->latest()->get();
+        $addons = AddOn::withoutGlobalScope(RestaurantScope::class)->withoutGlobalScope('translate')->with('translations')->where('restaurant_id', $vendor?->restaurants[0]?->id)->latest()->get();
 
         return response()->json(Helpers::addon_data_formatting($addons, true, true, app()->getLocale()),200);
     }
 
     public function store(Request $request)
     {
-        if(!$request->vendor->restaurants[0]->food_section)
+        if(!$request?->vendor?->restaurants[0]?->food_section)
         {
             return response()->json([
                 'errors'=>[
@@ -36,23 +36,19 @@ class AddOnController extends Controller
             'translations' => 'array'
         ]);
 
-        $data = $request->translations;
-
+        $data = $request?->translations;
         if (count($data) < 1) {
             $validator->getMessageBag()->add('translations', translate('messages.Name and description in english is required'));
         }
-
         if ($validator->fails() || count($data) < 1 ) {
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
         $vendor = $request['vendor'];
-
-
         $addon = new AddOn();
         $addon->name = $data[0]['value'];
         $addon->price = $request->price;
-        $addon->restaurant_id = $vendor->restaurants[0]->id;
+        $addon->restaurant_id = $vendor?->restaurants[0]?->id;
         $addon->save();
 
         foreach ($data as $key=>$item) {
@@ -71,7 +67,7 @@ class AddOnController extends Controller
 
     public function update(Request $request)
     {
-        if(!$request->vendor->restaurants[0]->food_section)
+        if(!$request?->vendor?->restaurants[0]?->food_section)
         {
             return response()->json([
                 'errors'=>[
@@ -86,7 +82,7 @@ class AddOnController extends Controller
             'translations' => 'array'
         ]);
 
-        $data = $request->translations;
+        $data = $request?->translations;
 
         if (count($data) < 1) {
             $validator->getMessageBag()->add('translations', translate('messages.Name and description in english is required'));
@@ -97,9 +93,9 @@ class AddOnController extends Controller
         }
 
         $addon = AddOn::withoutGlobalScope(RestaurantScope::class)->find($request->id);
-        $addon->name = $data[0]['value'];;
+        $addon->name = $data[0]['value'];
         $addon->price = $request->price;
-        $addon->save();
+        $addon?->save();
 
         foreach ($data as $key=>$item) {
             Translation::updateOrInsert(
@@ -110,13 +106,12 @@ class AddOnController extends Controller
                 ['value' => $item['value']]
             );
         }
-
         return response()->json(['message' => translate('messages.addon_updated_successfully')], 200);
     }
 
     public function delete(Request $request)
     {
-        if(!$request->vendor->restaurants[0]->food_section)
+        if(!$request?->vendor?->restaurants[0]?->food_section)
         {
             return response()->json([
                 'errors'=>[
@@ -132,15 +127,15 @@ class AddOnController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         $addon = AddOn::withoutGlobalScope(RestaurantScope::class)->withoutGlobalScope('translate')->findOrFail($request->id);
-        $addon->translations()->delete();
-        $addon->delete();
+        $addon?->translations()?->delete();
+        $addon?->delete();
 
         return response()->json(['message' => translate('messages.addon_deleted_successfully')], 200);
     }
 
     public function status(Request $request)
     {
-        if(!$request->vendor->restaurants[0]->food_section)
+        if(!$request?->vendor?->restaurants[0]?->food_section)
         {
             return response()->json([
                 'errors'=>[
@@ -159,7 +154,7 @@ class AddOnController extends Controller
 
         $addon_data = AddOn::withoutGlobalScope(RestaurantScope::class)->findOrFail($request->id);
         $addon_data->status = $request->status;
-        $addon_data->save();
+        $addon_data?->save();
 
         return response()->json(['message' => translate('messages.addon_status_updated')], 200);
     }

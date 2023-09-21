@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
 use App\CentralLogics\FileManagerLogic;
-use App\CentralLogics\Helpers;
 use Brian2694\Toastr\Facades\Toastr;
 use Madnest\Madzipper\Facades\Madzipper;
 
@@ -22,10 +20,8 @@ class FileManagerController extends Controller
     {
         $file = Storage::files(base64_decode($folder_path));
         $directories = Storage::directories(base64_decode($folder_path));
-
-        $folders = FileManagerLogic::format_file_and_folders($directories, 'folder');
-        $files = FileManagerLogic::format_file_and_folders($file, 'file');
-        // dd($files);
+        $folders = FileManagerLogic::format_file_and_folders(files:$directories, type:'folder');
+        $files = FileManagerLogic::format_file_and_folders(files:$file, type:'file');
         $data = array_merge($folders, $files);
         return view('admin-views.file-manager.index', compact('data', 'folder_path'));
     }
@@ -44,7 +40,6 @@ class FileManagerController extends Controller
           ]);
         if ($request->hasfile('images')) {
             $images = $request->file('images');
-
             foreach($images as $image) {
                 $name = $image->getClientOriginalName();
                 Storage::disk('local')->put($request->path.'/'. $name, file_get_contents($image));
@@ -53,10 +48,7 @@ class FileManagerController extends Controller
         if ($request->hasfile('file')) {
             $file = $request->file('file');
             $name = $file->getClientOriginalName();
-
             Madzipper::make($file)->extractTo('storage/app/'.$request->path);
-            // Storage::disk('local')->put($request->path.'/'. $name, file_get_contents($file));
-
         }
         Toastr::success(translate('messages.image_uploaded_successfully'));
         return back()->with('success', translate('messages.image_uploaded_successfully'));
@@ -69,30 +61,6 @@ class FileManagerController extends Controller
     {
         return Storage::download(base64_decode($file_name));
     }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
 
     public function destroy($file_path)
     {

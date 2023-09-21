@@ -23,19 +23,22 @@ class LoyaltyPointController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        if($request->user()->loyalty_point < (int)BusinessSetting::where('key','loyalty_point_minimum_point')->first()->value) return response()->json(['errors' => [ ['code' => 'point', 'message' => translate('messages.insufficient_point')]]], 203);
+        if($request?->user()?->loyalty_point <= 0 || $request?->user()?->loyalty_point < (int)BusinessSetting::where('key','loyalty_point_minimum_point')->first()?->value || $request->point > $request?->user()?->loyalty_point) {
+            return response()->json(['errors' => [ ['code' => 'point', 'message' => trans('messages.insufficient_point')]]], 203);
+        }
 
         try
         {
-            $wallet_transaction = CustomerLogic::create_wallet_transaction($request->user()->id,$request->point,'loyalty_point',$request->reference);
-            CustomerLogic::create_loyalty_point_transaction($request->user()->id, $wallet_transaction->transaction_id, $request->point, 'point_to_wallet');
-            if(config('mail.status')) {
+            $wallet_transaction = CustomerLogic::create_wallet_transaction(user_id:$request?->user()?->id,amount:$request->point,transaction_type:'loyalty_point',referance:$request->reference);
+            CustomerLogic::create_loyalty_point_transaction(user_id:$request?->user()?->id, referance:$wallet_transaction->transaction_id, amount:$request->point, transaction_type:'point_to_wallet');
+            $mail_status = Helpers::get_mail_status('add_fund_mail_status_user');
+
+            if(config('mail.status') && $request?->user()?->email && $mail_status=='1') {
                 Mail::to($request->user()->email)->send(new \App\Mail\AddFundToWallet($wallet_transaction));
             }
-
             return response()->json(['message' => translate('messages.point_to_wallet_transfer_successfully')], 200);
         }catch(\Exception $ex){
-            info($ex);
+            info($ex->getMessage());
         }
 
         return response()->json(['errors' => [ ['code' => 'customer_wallet', 'message' => translate('messages.failed_to_transfer')]]], 203);
@@ -52,7 +55,7 @@ class LoyaltyPointController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $paginator = LoyaltyPointTransaction::where('user_id', $request->user()->id)->latest()->paginate($request->limit, ['*'], 'page', $request->offset);
+        $paginator = LoyaltyPointTransaction::where('user_id', $request?->user()?->id)->latest()->paginate($request->limit, ['*'], 'page', $request->offset);
 
         $data = [
             'total_size' => $paginator->total(),

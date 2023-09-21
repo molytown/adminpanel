@@ -13,7 +13,6 @@ use App\Models\Order;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 
 class ConversationController extends Controller
@@ -21,11 +20,20 @@ class ConversationController extends Controller
     public function messages_store(Request $request)
     {
         if ($request->has('image')) {
+            $validator = Validator::make($request->all(), [
+                'image.*' => 'max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                $validator->getMessageBag()->add('image', 'Max Image Upload limit is 2mb');
+                return response()->json(['errors' => Helpers::error_processor($validator)],403);
+            }
+
             $image_name=[];
             foreach($request->file('image') as $key=>$img)
             {
 
-                $name = Helpers::upload('conversation/', 'png', $img);
+                $name = Helpers::upload(dir:'conversation/',format: 'png', image:$img);
                 array_push($image_name,$name);
             }
         } else {
@@ -40,11 +48,11 @@ class ConversationController extends Controller
         if(!$sender){
             $sender = new UserInfo();
             $sender->vendor_id = $vendor->id;
-            $sender->f_name = $vendor->restaurants[0]->name;
+            $sender->f_name = $vendor?->restaurants[0]?->name;
             $sender->l_name = '';
             $sender->phone = $vendor->phone;
             $sender->email = $vendor->email;
-            $sender->image = $vendor->restaurants[0]->logo;
+            $sender->image = $vendor?->restaurants[0]?->logo;
             $sender->save();
         }
 
@@ -151,7 +159,7 @@ class ConversationController extends Controller
             }
 
         } catch (\Exception $e) {
-            info($e);
+            info($e->getMessage());
         }
 
         $messages = Message::where(['conversation_id' => $conversation->id])->latest()->paginate($limit, ['*'], 'page', $offset);
@@ -160,16 +168,16 @@ class ConversationController extends Controller
 
         if($conv->sender_type == 'customer' && $conversation->sender){
             $user = User::find($conv->sender->user_id);
-            $order = Order::where('restaurant_id',$vendor->restaurants[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+            $order = Order::where('restaurant_id',$vendor?->restaurants[0]?->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
         }else if($conv->receiver_type == 'customer' && $conversation->receiver){
             $user = User::find($conv->receiver->user_id);
-            $order = Order::where('restaurant_id',$vendor->restaurants[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+            $order = Order::where('restaurant_id',$vendor?->restaurants[0]?->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
         }else if($conv->sender_type == 'delivery_man' && $conversation->sender){
             $user2 = DeliveryMan::find($conv->sender->deliveryman_id);
-            $order = Order::where('restaurant_id',$vendor->restaurants[0]->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+            $order = Order::where('restaurant_id',$vendor?->restaurants[0]?->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
         }else if($conv->receiver_type == 'delivery_man' && $conversation->receiver){
             $user2 = DeliveryMan::find($conv->receiver->deliveryman_id);
-            $order = Order::where('restaurant_id',$vendor->restaurants[0]->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+            $order = Order::where('restaurant_id',$vendor?->restaurants[0]?->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
         }
         else{
             $order=0;
@@ -200,11 +208,11 @@ class ConversationController extends Controller
         if(!$sender){
             $sender = new UserInfo();
             $sender->vendor_id = $vendor->id;
-            $sender->f_name = $vendor->restaurants[0]->name;
+            $sender->f_name = $vendor?->restaurants[0]?->name;
             $sender->l_name = '';
             $sender->phone = $vendor->phone;
             $sender->email = $vendor->email;
-            $sender->image = $vendor->restaurants[0]->logo;
+            $sender->image = $vendor?->restaurants[0]?->logo;
             $sender->save();
         }
 
@@ -243,11 +251,11 @@ class ConversationController extends Controller
         if(!$sender){
             $sender = new UserInfo();
             $sender->vendor_id = $vendor->id;
-            $sender->f_name = $vendor->restaurants[0]->name;
+            $sender->f_name = $vendor?->restaurants[0]?->name;
             $sender->l_name = '';
             $sender->phone = $vendor->phone;
             $sender->email = $vendor->email;
-            $sender->image = $vendor->restaurants[0]->logo;
+            $sender->image = $vendor?->restaurants[0]?->logo;
             $sender->save();
         }
 
@@ -286,11 +294,11 @@ class ConversationController extends Controller
         if(!$vendor){
             $vendor = new UserInfo();
             $vendor->user_id = $vnd->id;
-            $vendor->f_name = $vnd->restaurants[0]->name;
+            $vendor->f_name = $vnd?->restaurants[0]?->name;
             $vendor->l_name = '';
             $vendor->phone = $vnd->phone;
             $vendor->email = $vnd->email;
-            $vendor->image = $vnd->restaurants[0]->logo;
+            $vendor->image = $vnd?->restaurants[0]?->logo;
             $vendor->save();
         }
 
@@ -331,16 +339,16 @@ class ConversationController extends Controller
 
             if($conversation->sender_type == 'customer' && $conversation->sender){
                 $user = User::find($conversation->sender->user_id);
-                $order = Order::where('restaurant_id',$vnd->restaurants[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                $order = Order::where('restaurant_id',$vnd?->restaurants[0]?->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
             }else if($conversation->receiver_type == 'customer'  && $conversation->receiver){
                 $user = User::find($conversation->receiver->user_id);
-                $order = Order::where('restaurant_id',$vnd->restaurants[0]->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                $order = Order::where('restaurant_id',$vnd?->restaurants[0]?->id)->where('user_id', $user->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
             }else if($conversation->sender_type == 'delivery_man'&& $conversation->sender){
                 $user2 = DeliveryMan::find($conversation->sender->deliveryman_id);
-                $order = Order::where('restaurant_id',$vnd->restaurants[0]->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                $order = Order::where('restaurant_id',$vnd?->restaurants[0]?->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
             }else if($conversation->receiver_type == 'delivery_man' && $conversation->receiver){
                 $user2 = DeliveryMan::find($conversation->receiver->deliveryman_id);
-                $order = Order::where('restaurant_id',$vnd->restaurants[0]->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
+                $order = Order::where('restaurant_id',$vnd?->restaurants[0]?->id)->where('delivery_man_id', $user2->id)->whereIn('order_status', ['pending','accepted','confirmed','processing','handover','picked_up'])->count();
             }
             else{
                 $order=0;

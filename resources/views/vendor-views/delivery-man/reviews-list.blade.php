@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title">{{translate('messages.deliveryman')}} {{translate('messages.reviews')}}</h1>
+                    <h1 class="page-header-title">{{translate('messages.deliveryman_reviews')}}</h1>
                 </div>
             </div>
         </div>

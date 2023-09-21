@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Campaign view'))
+@section('title',translate('messages.Campaign_view'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -41,7 +41,7 @@
                     </div>
 
                     <div class="col-md">
-                        <h4>{{translate('messages.short')}} {{translate('messages.description')}} : </h4>
+                        <h4>{{translate('messages.short_description')}} : </h4>
                         <p>{{$banner->description}}</p>
                     </div>
 
@@ -79,18 +79,18 @@
                                         <!-- Search -->
                                         <div class="row">
                                             <div class="input-group-prepend col-md-7">
-                                            @php($allrestaurants=App\Models\Restaurant::all())
+                                            @php($allrestaurants=App\Models\Restaurant::get(['id','name']))
                                                 <select name="restaurant_id" id="restaurant_id" class="form-control">
                                                     @forelse($allrestaurants as $restaurant)
                                                     @if(!in_array($restaurant->id, $restaurant_ids))
                                                     <option value="{{$restaurant->id}}" >{{$restaurant->name}}</option>
                                                     @endif
                                                     @empty
-                                                    <option value="">No data found</option>
+                                                    <option value="">{{translate('messages.No_data_found')}}</option>
                                                     @endforelse
                                                 </select>
                                             </div>
-                                            <button type="submit" class="btn btn-primary col-md-5">{{translate('messages.add')}} {{translate('messages.restaurant')}}</button>
+                                            <button type="submit" class="btn btn-primary col-md-5">{{translate('messages.add_restaurant')}}</button>
 
                                         </div>
                                         <!-- End Search -->
@@ -151,7 +151,7 @@
                                     <td>
                                         <!-- Dropdown -->
                                         <div class="initial-4" onclick="location.href='{{route('admin.banner.campaign',[$banner->id, $dm['id']])}}'">
-                                                <span class="legend-indicator bg-danger"></span>{{translate('remove')}}
+                                                <span class="legend-indicator bg-danger"></span>{{translate('messages.remove')}}
                                             </div>
                                         <!-- End Dropdown -->
                                     </td>
@@ -233,7 +233,7 @@
                 }
             });
             $.post({
-                url: '{{route('admin.vendor.search')}}',
+                url: '{{route('admin.restaurant.search')}}',
                 data: formData,
                 cache: false,
                 contentType: false,

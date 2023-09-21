@@ -128,11 +128,11 @@
       </div>
 
       <span style="font-weight: bold;font-size: 16px;line-height: 135.5%;text-align: center;color: #182E4B; display:block; margin-bottom: 5px;">{{translate('messages.dear')}} {{$name}}</span>
-      <span style="font-weight: 400;font-size: 14px;line-height: 135.5%;color: #182E4B;display:block; margin-bottom:34px;">{{__($status=='approved'?'messages.Thank you for joinning with':'messages.Thank you for the joinning request on')}} <span style="color: #EF7822;">{{$company_name}}!</span></span>
-      <span style="font-weight: 400;font-size: 12px;line-height: 135.5%;color: #5D6774; display:block; margin-bottom:82px;">{{translate('messages.Your registration request is now status',['status'=>translate('messages.'.$status)])}} @if ($status=='pending')
-          {{translate('messages.Please wait untill admin aprroave your request')}}
+      <span style="font-weight: 400;font-size: 14px;line-height: 135.5%;color: #182E4B;display:block; margin-bottom:34px;">{{__($status=='approved'?'messages.Thank_you_for_joinning_with':'messages.Thank_you_for_the_joinning_request_on')}} <span style="color: #EF7822;">{{$company_name}}!</span></span>
+      <span style="font-weight: 400;font-size: 12px;line-height: 135.5%;color: #5D6774; display:block; margin-bottom:82px;">{{translate('messages.Your_registration_request_is_now_status',['status'=>translate('messages.'.$status)])}} @if ($status=='pending')
+          {{translate('messages.Please_wait_untill_admin_aprroave_your_request')}}
       @endif </span>
-      <span style="font-weight: 400;font-size: 12px;line-height: 135.5%;color: #5D6774;">{{translate('messages.If you require any assistance or have feedback or suggestions about our site, you can email us at')}}
+      <span style="font-weight: 400;font-size: 12px;line-height: 135.5%;color: #5D6774;">{{translate('messages.If_you_require_any_assistance_or_have_feedback_or_suggestions_about_our_site,_you_can_email_us_at')}}
           <a href="mailto:{{$company_email}}" class="email">{{$company_email}}</a>
       </span>
   </div>
@@ -158,13 +158,13 @@
               </tr>
               <tr>
                   <th >
-                      <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;"><span style="margin-right:5px;"> <a href="tel:{{$company_phone}}" style="text-decoration: none; color: inherit;">{{translate('messages.phone')}}: {{$company_phone}}</a></span> <span><a href="mailto:{{$company_email}}" style="text-decoration: none; color: inherit;">{{translate('messages.email')}}: {{$company_email}}</a></span></div>
+                      <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;"><span style="margin-inline-end:5px;"> <a href="tel:{{$company_phone}}" style="text-decoration: none; color: inherit;">{{translate('messages.phone')}}: {{$company_phone}}</a></span> <span><a href="mailto:{{$company_email}}" style="text-decoration: none; color: inherit;">{{translate('messages.email')}}: {{$company_email}}</a></span></div>
                       @if ($company_links['web_app_url_status'])
                       <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;">
                           <a href="{{$company_links['web_app_url']}}" style="text-decoration: none; color: inherit;">{{$company_links['web_app_url']}}</a></div>
                       @endif
                       <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;">{{$company_address}}</div>
-                      <span style="font-weight: 400;font-size: 10px;line-height: 22px;color: #242A30;">{{translate('messages.All copy right reserved',['year'=>date('Y'),'title'=>$company_name])}}</span>
+                      <span style="font-weight: 400;font-size: 10px;line-height: 22px;color: #242A30;">{{translate('messages.All_copy_right_reserved',['year'=>date('Y'),'title'=>$company_name])}}</span>
                   </th>
               </tr>
 

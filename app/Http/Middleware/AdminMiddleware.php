@@ -21,6 +21,6 @@ class AdminMiddleware
         if (Auth::guard('admin')->check()) {
             return $next($request);
         }
-        return redirect()->route('admin.auth.login');
+        return redirect()->route('home');
     }
 }

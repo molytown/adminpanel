@@ -65,7 +65,7 @@ class POSController extends Controller
 
                     $product->tax = $restaurant->tax;
                     $product = Helpers::product_data_formatting($product);
-                    $addon_data = Helpers::calculate_addon_price(\App\Models\AddOn::whereIn('id',$c['add_on_ids'])->get(), $c['add_on_qtys']);
+                    $addon_data = Helpers::calculate_addon_price(\App\Models\AddOn::withOutGlobalScope(App\Scopes\RestaurantScope::class)->whereIn('id',$c['add_on_ids'])->get(), $c['add_on_qtys']);
                     $or_d = [
                         'food_id' => $product->id,
                         'item_campaign_id' => null,
@@ -92,7 +92,7 @@ class POSController extends Controller
                         'errors' => [
                             ['code' => 'campaign', 'message' => 'not found!']
                         ]
-                    ], 401);
+                    ], 404);
                 }
             }
         }

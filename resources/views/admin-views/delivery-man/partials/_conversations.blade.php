@@ -32,7 +32,9 @@
                         </div>
                     </div>
                     <div class="pl-1">
-                        <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                        <small>
+                            {{  \App\CentralLogics\Helpers::time_date_format($con->created_at)  }}
+                        </small>
                     </div>
                 @else
                     <div class="pt-1 pb-1">
@@ -47,7 +49,9 @@
                         </div>
                     </div>
                     <div class="text-right pr-1">
-                        <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                        <small>
+                            {{  \App\CentralLogics\Helpers::time_date_format($con->created_at)  }}
+                        </small>
                     </div>
                 @endif
             @endforeach

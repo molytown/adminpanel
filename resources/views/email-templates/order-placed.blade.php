@@ -132,7 +132,7 @@
                     <h3 style="color:green;">{{translate('messages.Your_order_ID')}} : {{$id}}</h3>
                 </td>
                 <td>
-                    <div style="text-align: right; margin-right:15px;">
+                    <div style="text-align: end; margin-inline-end:15px;">
                         <img style="max-width:250px;border:0;" src="{{asset('/storage/app/public/business/'.$logo)}}" title=""
                             class="sitelogo" width="60%"  alt=""/>
                     </div>
@@ -146,8 +146,8 @@
             <tr style="width: 100%;">
                 <td style="width:50%;vertical-align: top; margin-top:5px;">
 
-                    <div style="text-align:left;margin-top:10px;">
-                      <span style="color: #130505 !important;text-transform: capitalize;font-weight: bold;">{{translate('messages.restaurant')}} {{translate('messages.info')}} </span><br>
+                    <div style="text-align: start;margin-top:10px;">
+                      <span style="color: #130505 !important;text-transform: capitalize;font-weight: bold;">{{translate('messages.restaurant_info')}} </span><br>
 
                       @if ($order->restaurant)
 
@@ -156,14 +156,14 @@
                             <img style="border:0;border-radius:50%;" src="{{asset('/storage/app/public/restaurant/'.$order->restaurant->logo)}}" title=""
                                     class="sitelogo" width="20%"  alt=""/>
 
-                            <span style="padding-left: 5px;">{{$order->restaurant->name}}</span>
+                            <span style="padding-inline-start: 5px;">{{$order->restaurant->name}}</span>
                         </div>
                     @endif
                   </div>
 
                 </td>
                 <td style="width:50%;vertical-align: top;">
-                    <div style="text-align:right;margin-top:10px;">
+                    <div style="text-align: end;margin-top:10px;">
                         <span style="color: #130505 !important;text-transform: capitalize;font-weight: bold;">{{translate('messages.payment_details')}}  </span><br>
                         <div style="margin-top: 10px;">
                           <span style="color: #414141 !important ; text-transform: capitalize;">{{ str_replace('_',' ',$order->payment_method) }}</span><br>
@@ -190,7 +190,6 @@
         $total_discount_on_product=0;
         $extra_discount=0;
         $total_addon_price = 0;
-        $zone_currency=$order->zone_currency ?? null;
     ?>
     <div style="background-color: rgb(248, 248, 248); width: 90%;margin:auto;margin-top:30px;">
         <div style="padding:20px;">
@@ -218,26 +217,44 @@
                                   </span>
 
                                 <br>
-                                @if(count(json_decode($details['variation'],true))>0)
+                                {{-- @if(count(json_decode($details['variation'],true))>0)
                                   <span style="font-size: 12px;">
-                                    {{translate('messages.variation')}} : {{json_decode($details['variation'], true)[0]['type']}}
+                                    {{translate('messages.variation')}} :
+                                    {{json_decode($details['variation'], true)[0]['name']}}
                                   </span>
-                                @endif
+                                @endif --}}
+                                @foreach(json_decode($details['variation'],true) as $variation)
+                                @if (isset($variation['values']))
+                                <div style="font-size: 12px;">
+                                            <span class="text-capitalize">  <strong>
+                                            {{  $variation['name']}} -
+                                                </strong> </span>
+                                            @foreach ($variation['values'] as $value)
+                                                <span >
+                                                    &nbsp; {{ $value['label']}} :
+                                                    {{\App\CentralLogics\Helpers::format_currency( $value['optionPrice'])}}
+                                                </span>
+                                            @endforeach
+                                        </div>
+                                        @endif
+                                @endforeach
+
+
                                 @foreach(json_decode($details['add_ons'],true) as $key2 =>$addon)
                                     @if($key2==0)<br><span style="font-size: 12px;"><u>{{translate('messages.addons')}}  </u></span>@endif
                                     <div style="font-size: 12px;">
                                         <span>{{Str::limit($addon['name'],20, '...')}} :  </span>
                                         <span class="font-weight-bold">
-                                            {{$addon['quantity']}} x {{\App\CentralLogics\Helpers::format_currency($addon['price'],$zone_currency)}}
+                                            {{$addon['quantity']}} x {{\App\CentralLogics\Helpers::format_currency($addon['price'])}}
                                         </span>
                                     </div>
                                     @php($total_addon_price+=$addon['price']*$addon['quantity'])
                                 @endforeach
 
                                 </td>
-                                <td style="padding:5px;">{{\App\CentralLogics\Helpers::format_currency($details['price'],$zone_currency)}}</td>
+                                <td style="padding:5px;">{{\App\CentralLogics\Helpers::format_currency($details['price'])}}</td>
                                 <td style="padding:5px;">{{$details->quantity}}</td>
-                                <td style="padding:5px;">{{\App\CentralLogics\Helpers::format_currency($subtotal,$zone_currency)}}</td>
+                                <td style="padding:5px;">{{\App\CentralLogics\Helpers::format_currency($subtotal)}}</td>
                             </tr>
                             <?php
                                 $sub_total+=$details['price']*$details['quantity'];
@@ -254,59 +271,59 @@
 
         <table style="background-color: rgb(255, 255, 255);width: 90%;margin:auto;margin-top:30px;">
             <tr>
-                <th style="text-align: left; vertical-align: auto;">
+                <th style="text-align: start; vertical-align: auto;">
 
                 </th>
 
-                <td style="text-align: right">
-                    <table style="width: 46%;margin-left:41%; display: inline;text-transform: capitalize; ">
+                <td style="text-align: end">
+                    <table style="width: 46%;margin-inline-start:41%; display: inline;text-transform: capitalize; ">
                         <tbody>
 
                         <tr>
-                            <th  ><b>{{translate('messages.item')}} {{translate('messages.price')}} : </b></th>
-                            <td>{{\App\CentralLogics\Helpers::format_currency($sub_total,$zone_currency)}}</td>
+                            <th  ><b>{{translate('messages.item_price')}} : </b></th>
+                            <td>{{\App\CentralLogics\Helpers::format_currency($sub_total)}}</td>
                         </tr>
                         <tr>
-                            <th  ><b>{{translate('messages.addon')}} {{translate('messages.cost')}} : </b></th>
-                            <td>{{\App\CentralLogics\Helpers::format_currency($total_addon_price,$zone_currency)}}</td>
+                            <th  ><b>{{translate('messages.addon_cost')}} : </b></th>
+                            <td>{{\App\CentralLogics\Helpers::format_currency($total_addon_price)}}</td>
 
                         </tr>
                         <tr>
                             <th  ><b>{{translate('messages.subtotal')}} : </b></th>
-                            <td>{{\App\CentralLogics\Helpers::format_currency($sub_total + $total_addon_price,$zone_currency)}}</td>
+                            <td>{{\App\CentralLogics\Helpers::format_currency($sub_total + $total_addon_price)}}</td>
 
                         </tr>
                         <tr>
                             <td>{{translate('messages.tax')}}  : </td>
-                            <td>{{\App\CentralLogics\Helpers::format_currency($order->total_tax_amount,$zone_currency)}}</td>
+                            <td>{{\App\CentralLogics\Helpers::format_currency($order->total_tax_amount)}}</td>
                         </tr>
 
                         <tr>
                             <td  >{{translate('messages.delivery_charge')}} : </td>
-                            <td>{{\App\CentralLogics\Helpers::format_currency($order->delivery_charge,$zone_currency)}}</td>
+                            <td>{{\App\CentralLogics\Helpers::format_currency($order->delivery_charge)}}</td>
                         </tr>
 
                         <tr>
                             <td  >{{translate('messages.DM Tips')}} : </td>
-                            <td>{{\App\CentralLogics\Helpers::format_currency($order->dm_tips,$zone_currency)}}</td>
+                            <td>{{\App\CentralLogics\Helpers::format_currency($order->dm_tips)}}</td>
                         </tr>
 
                         <tr class="border-bottom">
                         <td  >{{translate('messages.discount')}} : </td>
                             <td>
-                                - {{\App\CentralLogics\Helpers::format_currency($order->restaurant_discount_amount,$zone_currency)}}</td>
+                                - {{\App\CentralLogics\Helpers::format_currency($order->restaurant_discount_amount)}}</td>
                         </tr>
 
                         <tr>
                             <td  >{{translate('messages.coupon_discount')}} : </td>
                             <td>
-                                - {{\App\CentralLogics\Helpers::format_currency($order->coupon_discount_amount,$zone_currency)}}</td>
+                                - {{\App\CentralLogics\Helpers::format_currency($order->coupon_discount_amount)}}</td>
                         </tr>
 
                         <tr class="bg-primary">
                             <th class="text-left"><b class="text-white">{{translate('messages.total')}} : </b></th>
                             <td class="text-white">
-                                {{\App\CentralLogics\Helpers::format_currency($order->order_amount,$zone_currency)}}
+                                {{\App\CentralLogics\Helpers::format_currency($order->order_amount)}}
                             </td>
                         </tr>
                         </tbody>
@@ -337,13 +354,13 @@
             </tr>
             <tr>
                 <th >
-                    <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;"><span style="margin-right:5px;"> <a href="tel:{{$company_phone}}" style="text-decoration: none; color: inherit;">{{translate('messages.phone')}}: {{$company_phone}}</a></span> <span><a href="mailto:{{$company_email}}" style="text-decoration: none; color: inherit;">{{translate('messages.email')}}: {{$company_email}}</a></span></div>
+                    <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;"><span style="margin-inline-end:5px;"> <a href="tel:{{$company_phone}}" style="text-decoration: none; color: inherit;">{{translate('messages.phone')}}: {{$company_phone}}</a></span> <span><a href="mailto:{{$company_email}}" style="text-decoration: none; color: inherit;">{{translate('messages.email')}}: {{$company_email}}</a></span></div>
                     @if ($company_links['web_app_url_status'])
                     <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;">
                         <a href="{{$company_links['web_app_url']}}" style="text-decoration: none; color: inherit;">{{$company_links['web_app_url']}}</a></div>
                     @endif
                     <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;">{{$company_address}}</div>
-                    <span style="font-weight: 400;font-size: 10px;line-height: 22px;color: #242A30;">{{translate('messages.All copy right reserved',['year'=>date('Y'),'title'=>$company_name])}}</span>
+                    <span style="font-weight: 400;font-size: 10px;line-height: 22px;color: #242A30;">{{translate('messages.All_copy_right_reserved',['year'=>date('Y'),'title'=>$company_name])}}</span>
                 </th>
             </tr>
 

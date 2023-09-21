@@ -18,7 +18,7 @@
             <!-- Header -->
             <div class="card-header py-2">
                 <div class="search--button-wrapper">
-                    <h5 class="card-title">{{translate('messages.deliveryman')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$delivery_men->total()}}</span></h5>
+                    <h5 class="card-title">{{translate('messages.deliveryman_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$delivery_men->total()}}</span></h5>
                     <form action="javascript:" id="search-form" >
                                     <!-- Search -->
                         @csrf
@@ -48,7 +48,7 @@
                     <tr>
                         <th class="text-capitalize">{{ translate('messages.sl') }}</th>
                         <th class="text-capitalize">{{translate('messages.name')}}</th>
-                        <th class="text-capitalize">{{translate('messages.availability')}} {{translate('messages.status')}}</th>
+                        <th class="text-capitalize">{{translate('messages.availability_status')}}</th>
                         <th class="text-capitalize">{{translate('messages.phone')}}</th>
                         <th class="text-capitalize">{{ translate('Active Orders') }}</th>
                         <th class="text-capitalize text-center">{{translate('messages.action')}}</th>
@@ -74,26 +74,27 @@
                             <td>
                                 <div>
                                     <!-- Status -->
-                                    Currenty Assigned Orders : {{$dm->current_orders}}
+                                    {{translate('messages.Currenty_Assigned_Orders')}}
+                                     : {{$dm->current_orders}}
                                     <!-- Status -->
                                 </div>
                                 @if($dm->application_status == 'approved')
                                     @if($dm->active)
                                     <div>
-                                        Active Status : <strong class="text-primary text-capitalize">{{translate('messages.online')}}</strong>
+                                        {{translate('messages.Active_Status')}}   : <strong class="text-primary text-capitalize">{{translate('messages.online')}}</strong>
                                     </div>
                                     @else
                                     <div>
-                                        Active Status : <strong class="text-secondary text-capitalize">{{translate('messages.offline')}}</strong>
+                                        {{translate('messages.Active_Status')}} : <strong class="text-secondary text-capitalize">{{translate('messages.offline')}}</strong>
                                     </div>
                                     @endif
                                 @elseif ($dm->application_status == 'denied')
                                     <div>
-                                        Active Status : <strong class="text-danger text-capitalize">{{translate('messages.denied')}}</strong>
+                                        {{translate('messages.Active_Status')}} : <strong class="text-danger text-capitalize">{{translate('messages.denied')}}</strong>
                                     </div>
                                 @else
                                     <div>
-                                        Active Status : <strong class="text-info text-capitalize">{{translate('messages.pending')}}</strong>
+                                        {{translate('messages.Active_Status')}} : <strong class="text-info text-capitalize">{{translate('messages.not_approved')}}</strong>
                                     </div>
                                 @endif
                             </td>

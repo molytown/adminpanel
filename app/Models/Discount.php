@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 class Discount extends Model
 {
     use HasFactory;
-    
+
     protected $fillable = [
         'start_date','end_date','start_time','end_time','min_purchase','max_discount','discount','discount_type','restaurant_id',
     ];
@@ -16,9 +16,10 @@ class Discount extends Model
         'min_purchase' => 'float',
         'max_discount' => 'float',
         'discount' => 'float',
-        'restaurant_id'=>'integer'
+        'restaurant_id'=>'integer',
+        'created_at'=>'datetime',
+        'updated_at'=>'datetime',
     ];
-    protected $dates = ['created_at', 'updated_at'];
 
     public function restaurant()
     {

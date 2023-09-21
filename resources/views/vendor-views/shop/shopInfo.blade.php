@@ -11,7 +11,7 @@
                         <img src="{{asset('/public/assets/admin/img/resturant-panel/page-title/resturant.png')}}" alt="public">
                     </div>
                     <span>
-                        {{translate('messages.my_shop')}} {{translate('messages.info')}}
+                        {{translate('messages.my_shop_info')}}
                     </span>
                 </div>
             </h2>

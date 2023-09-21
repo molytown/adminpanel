@@ -16,7 +16,7 @@
                             <img src="{{asset('/public/assets/admin/img/resturant-panel/page-title/category.png')}}" alt="public">
                         </div>
                         <span>
-                            {{translate('messages.sub_category')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$categories->total()}}</span>
+                            {{translate('messages.sub_category_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$categories->total()}}</span>
                         </span>
                     </h2>
                     <form action="javascript:"  id="search-form" class="search-form ml-auto">
@@ -114,7 +114,7 @@
                 language: {
                     zeroRecords: '<div class="text-center p-4">' +
                     '<img class="mb-3 w-7rem" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="Image Description">' +
-                    '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                    '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                     '</div>'
                 }
             });

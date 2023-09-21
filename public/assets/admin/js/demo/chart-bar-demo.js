@@ -45,8 +45,8 @@ var myBarChart = new Chart(ctx, {
     maintainAspectRatio: false,
     layout: {
       padding: {
-        left: 10,
-        right: 25,
+        insetInlineStart: 10,
+        insetInlineEnd: 25,
         top: 25,
         bottom: 0
       }

@@ -6,11 +6,12 @@ use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use App\Scopes\ZoneScope;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use App\Traits\ReportFilter;
 
 class Order extends Model
 {
-    use HasFactory;
-
+    use ReportFilter,HasFactory;
+    protected $guarded = ['id'];
     protected $casts = [
         'order_amount' => 'float',
         'coupon_discount_amount' => 'float',
@@ -27,8 +28,45 @@ class Order extends Model
         'processing_time' => 'integer',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
-        'dm_tips'=>'float'
+        'dm_tips'=>'float',
+        'vehicle_id' => 'integer',
+        'distance'=>'float',
+        'subscription_id'=>'integer',
+        'cutlery'=>'boolean',
+        'additional_charge' => 'float',
     ];
+    
+    public function payments()
+    {
+        return $this->hasMany(OrderPayment::class);
+    }
+
+    public function logs()
+    {
+        return $this->hasMany(Log::class,'model_id')->where('model','Order');
+    }
+    public function zone()
+    {
+        return $this->belongsTo(Zone::class, 'zone_id');
+    }
+
+    public function subscription_logs()
+    {
+        return $this->hasMany(SubscriptionLog::class);
+    }
+
+    public function subscription_log()
+    {
+        return $this->hasOne(SubscriptionLog::class)->where(function($q){
+            $q->whereDate('schedule_at', now()->format('Y-m-d'))->orWhereNotIn('order_status',['delivered','failed','canceled', 'refund_requested','refund_request_canceled', 'refunded']);
+        });
+        // ->whereIn('order_status', ['pending', 'accepted','confirmed','processing','handover','picked_up']);
+    }
+
+    public function subscription()
+    {
+        return $this->belongsTo(Subscription::class,'subscription_id');
+    }
 
     public function setDeliveryChargeAttribute($value)
     {
@@ -40,6 +78,11 @@ class Order extends Model
         return $this->hasMany(OrderDetail::class);
     }
 
+    public function refund()
+    {
+        return $this->hasOne(Refund::class, 'order_id');
+    }
+
     public function delivery_man()
     {
         return $this->belongsTo(DeliveryMan::class, 'delivery_man_id');
@@ -49,6 +92,7 @@ class Order extends Model
     {
         return $this->belongsTo(User::class, 'user_id');
     }
+
 
     public function coupon()
     {
@@ -123,9 +167,20 @@ class Order extends Model
         return $query->where('order_status','refunded');
     }
 
+    public function scopeRefund_requested($query)
+    {
+        return $query->where('order_status','refund_requested');
+    }
+
+    public function scopeRefund_request_canceled($query)
+    {
+        return $query->where('order_status','refund_request_canceled');
+    }
+
+
     public function scopeSearchingForDeliveryman($query)
     {
-        return $query->whereNull('delivery_man_id')->where('order_type', '=' , 'delivery')->whereNotIn('order_status',['delivered','failed','canceled', 'refund_requested', 'refunded']);
+        return $query->whereNull('delivery_man_id')->where('order_type', '=' , 'delivery')->whereNotIn('order_status',['delivered','failed','canceled', 'refund_requested','refund_request_canceled', 'refunded']);
     }
 
     public function scopeDelivery($query)
@@ -166,5 +221,106 @@ class Order extends Model
     protected static function booted()
     {
         static::addGlobalScope(new ZoneScope);
+    }
+
+    public function scopeNotDigitalOrder($query)
+    {
+        return $query->where('payment_method', '!=', 'digital_payment');
+    }
+
+    // protected static function boot(){
+    //     parent::boot();
+    //     static::addGlobalScope('order', function (Builder $builder) {
+    //         $builder->where('payment_method' ,'!=', 'digital_payment');
+    //             });
+    // }
+
+
+
+    public function scopeNotRefunded($query)
+    {
+        return $query->where(function($query){
+            $query->whereNotIn('order_status', ['refunded']);
+        });
+    }
+
+    public function scopeRestaurantOrder($query)
+    {
+        return $query->where(function($q){
+            $q->where('order_type', 'take_away')->orWhere('order_type', 'delivery');
+        });
+    }
+
+    public function scopeHasSubscriptionToday($query)
+    {
+        return $query->where(function($query){
+            $query->where(function($query){
+                $query->whereHas('subscription', function($query){
+                    $query->where('status','active')->whereDate('start_at', '<=', now()->format('Y-m-d'))->whereDate('end_at','>=', now()->format('Y-m-d'))
+
+                    ->whereHas('schedules', function($query){
+                        $query->where(function($query){
+                            $query->where('type', 'weekly')->where('day', (int)now()->format('w'));
+                        })->orWhere(function($query){
+                            $query->where('type', 'monthly')->where('day', (int)now()->format('d'));
+                        })->orWhere('type', 'daily');
+                    })->whereDoesntHave('pause', function($query){
+                        $query->whereDate('from', '<=', now()->format('Y-m-d'))->whereDate('to','>=', now()->format('Y-m-d'));
+                    });
+                })
+                ->whereDoesntHave('subscription_logs', function($query){
+                    $query->whereDate('schedule_at', now()->format('Y-m-d'))->orWhereIn('order_status',['delivered','failed','canceled', 'refund_requested','refund_request_canceled', 'refunded']);
+                });
+            })->orWhereNull('subscription_id');
+        });
+    }
+
+    public function scopeHasSubscriptionInStatus($query, array $status_list)
+    {
+        return $query->orWhereHas('subscription_logs', function($query)use($status_list){
+            $query->whereIn('order_status',$status_list);
+        });
+    }
+
+    public function scopeHasSubscriptionTodayGet($query)
+    {
+        return $query->where(function($query){
+            $query->where(function($query){
+                $query->whereHas('subscription', function($query){
+                    $query->where('status','active')->whereDate('start_at', '<=', now()->format('Y-m-d'))->whereDate('end_at','>=', now()->format('Y-m-d'))
+                    ->whereHas('schedules', function($query){
+                        $query->where(function($query){
+                            $query->where('type', 'weekly')->where('day', (int)now()->format('w'));
+                        })->orWhere(function($query){
+                            $query->where('type', 'monthly')->where('day', (int)now()->format('d'));
+                        })->orWhere('type', 'daily');
+                    })->whereDoesntHave('pause', function($query){
+                        $query->whereDate('from', '<=', now()->format('Y-m-d'))->whereDate('to','>=', now()->format('Y-m-d'));
+                    });
+                });
+            });
+        });
+    }
+
+
+
+    public static function scopeApplyDateFilterSchedule($query, $filter, $from = null, $to = null)
+    {
+        return $query->when(isset($from) && isset($to)  && $filter == 'custom', function ($query) use ($from, $to) {
+            return $query->whereBetween('schedule_at', [$from . " 00:00:00", $to . " 23:59:59"]);
+        })
+        ->when($filter == 'this_year', function ($query) {
+            return $query->whereYear('schedule_at', now()->format('Y'));
+        })
+        ->when($filter == 'this_month', function ($query) {
+            return $query->whereMonth('schedule_at', now()->format('m'))->whereYear('schedule_at', now()->format('Y'));
+        })
+        ->when($filter == 'previous_year', function ($query) {
+            return $query->whereYear('schedule_at', date('Y') - 1);
+        })
+        ->when($filter == 'this_week', function ($query) {
+            return $query->whereBetween('schedule_at', [now()->startOfWeek()->format('Y-m-d H:i:s'), now()->endOfWeek()->format('Y-m-d H:i:s')]);
+        });
+        return $query;
     }
 }

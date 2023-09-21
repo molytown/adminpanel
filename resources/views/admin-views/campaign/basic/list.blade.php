@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.Campaign List'))
+@section('title',translate('messages.Campaign_List'))
 
 @push('css_or_js')
 
@@ -12,12 +12,12 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title"><i class="tio-notice"></i> {{translate('messages.basic')}} {{translate('messages.campaign')}} <span class="badge badge-soft-dark ml-2" id="itemCount">{{$campaigns->total()}}</span></h1>
+                    <h1 class="page-header-title"><i class="tio-notice"></i> {{translate('messages.basic_campaign')}} <span class="badge badge-soft-dark ml-2" id="itemCount">{{$campaigns->total()}}</span></h1>
                 </div>
 
                 <div class="col-sm-auto">
                     <a class="btn btn--primary" href="{{route('admin.campaign.add-new', 'basic')}}">
-                        <i class="tio-add"></i> {{translate('messages.add')}} {{translate('messages.new')}} {{translate('messages.campaign')}}
+                        <i class="tio-add"></i> {{translate('messages.add_new_campaign')}}
                     </a>
                 </div>
             </div>
@@ -30,18 +30,50 @@
                     <div class="card-header py-2 border-0">
                         <div class="search--button-wrapper">
                             <h5 class="card-title"></h5>
-                            <form id="search-form">
-                                @csrf
+                            <form>
                                 <!-- Search -->
                                 <div class="input--group input-group input-group-merge input-group-flush">
-                                    <input id="datatableSearch" type="search" name="search" class="form-control" placeholder="{{ translate('Ex: Search by name...') }}" aria-label="Search here">
+                                    <input id="datatableSearch" type="search" name="search"  value="{{ request()?->search ?? null }}" class="form-control" placeholder="{{ translate('Ex_:_Search_by_name...') }}" aria-label="Search here">
                                     <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                                 </div>
                                 <!-- End Search -->
                             </form>
+                            <div class="hs-unfold mr-2">
+                                <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                    data-hs-unfold-options='{
+                                            "target": "#usersExportDropdown",
+                                            "type": "css-animation"
+                                        }'>
+                                    <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                                </a>
+
+                                <div id="usersExportDropdown"
+                                    class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+
+                                    <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                    <a id="export-excel" class="dropdown-item" href="
+                                        {{ route('admin.campaign.basic_campaign_export', ['type' => 'excel', request()->getQueryString()]) }}
+                                        ">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                            alt="Image Description">
+                                        {{ translate('messages.excel') }}
+                                    </a>
+                                    <a id="export-csv" class="dropdown-item" href="
+                                    {{ route('admin.campaign.basic_campaign_export', ['type' => 'csv', request()->getQueryString()]) }}">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                            alt="Image Description">
+                                        {{ translate('messages.csv') }}
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
+
                     <!-- Table -->
+                    {{-- {{ dd(app()->getLocale()) }} --}}
                     <div class="table-responsive datatable-custom">
                         <table id="columnSearchDatatable"
                                class="font-size-sm table table-borderless table-thead-bordered table-nowrap table-align-middle card-table"
@@ -54,8 +86,8 @@
                             <tr>
                                 <th>{{ translate('messages.sl') }}</th>
                                 <th >{{translate('messages.title')}}</th>
-                                <th >{{translate('messages.date')}} {{translate('messages.duration')}}</th>
-                                <th >{{translate('messages.time')}} {{translate('messages.duration')}}</th>
+                                <th >{{translate('messages.date_duration')}}</th>
+                                <th >{{translate('messages.time_duration')}}</th>
                                 <th>{{translate('messages.status')}}</th>
                                 <th class="text-center">{{translate('messages.action')}}</th>
                             </tr>
@@ -70,10 +102,12 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <span class="bg-gradient-light text-dark">{{$campaign->start_date?$campaign->start_date->format('d M, Y'). ' - ' .$campaign->end_date->format('d M, Y'): 'N/A'}}</span>
+                                        <span class="bg-gradient-light text-dark">{{$campaign->start_date?  \App\CentralLogics\Helpers::date_format($campaign->start_date)  : 'N/A'}}</span>
+                                        <span class="bg-gradient-light text-dark">-</span>
+                                        <span class="bg-gradient-light text-dark">{{$campaign->start_time?  \App\CentralLogics\Helpers::date_format($campaign->end_date) : 'N/A' }}</span>
                                     </td>
                                     <td>
-                                        <span class="bg-gradient-light text-dark">{{$campaign->start_time?date(config('timeformat'),strtotime($campaign->start_time)). ' - ' .date(config('timeformat'),strtotime($campaign->end_time)): 'N/A'}}</span>
+                                        <span class="bg-gradient-light text-dark">{{$campaign->start_time?  \App\CentralLogics\Helpers::time_format($campaign->start_time). ' - ' .\App\CentralLogics\Helpers::time_format($campaign->end_time): 'N/A'}}</span>
                                     </td>
                                     <td>
                                         <label class="toggle-switch toggle-switch-sm" for="stocksCheckbox{{$campaign->id}}">
@@ -86,10 +120,10 @@
                                     <td>
                                         <div class="btn--container justify-content-center">
                                             <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                                href="{{route('admin.campaign.edit',['basic',$campaign['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.campaign')}}"><i class="tio-edit"></i>
+                                                href="{{route('admin.campaign.edit',['basic',$campaign['id']])}}" title="{{translate('messages.edit_campaign')}}"><i class="tio-edit"></i>
                                             </a>
                                             <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:"
-                                                onclick="form_alert('campaign-{{$campaign['id']}}','{{translate('messages.Want_to_delete_this_item')}}')" title="{{translate('messages.delete')}} {{translate('messages.campaign')}}"><i class="tio-delete-outlined"></i>
+                                                onclick="form_alert('campaign-{{$campaign['id']}}','{{translate('messages.Want_to_delete_this_campaign')}}')" title="{{translate('messages.delete_campaign')}}"><i class="tio-delete-outlined"></i>
                                             </a>
                                             <form action="{{route('admin.campaign.delete',[$campaign['id']])}}"
                                                         method="post" id="campaign-{{$campaign['id']}}">
@@ -168,7 +202,7 @@
             });
         });
     </script>
-    <script>
+    {{-- <script>
         $('#search-form').on('submit', function (e) {
             e.preventDefault();
             var formData = new FormData(this);
@@ -196,5 +230,5 @@
                 },
             });
         });
-    </script>
+    </script> --}}
 @endpush

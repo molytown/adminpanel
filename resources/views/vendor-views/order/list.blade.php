@@ -52,12 +52,11 @@
             <!-- Header -->
             <div class="card-header py-2">
                 <div class="search--button-wrapper justify-content-end max-sm-flex-100">
-                    <form action="javascript:" id="search-form">
-                        @csrf
+                    <form >
                         <!-- Search -->
                         <div class="input-group input--group">
-                            <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                    placeholder="{{ translate('Ex : Search by Order Id') }}" aria-label="{{translate('messages.search')}}" required>
+                            <input id="datatableSearch_" type="search" name="search" class="form-control" value="{{ request()?->search ?? null}}"
+                                    placeholder="{{ translate('Ex : Search by Order Id') }}" aria-label="{{translate('messages.search')}}">
                             <button type="submit" class="btn btn--secondary">
                                 <i class="tio-search"></i>
                             </button>
@@ -94,18 +93,18 @@
                                 </a>
                                 <div class="dropdown-divider"></div>
                                 <span
-                                    class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                                <a id="export-excel" class="dropdown-item" href="javascript:;">
+                                    class="dropdown-header">{{translate('messages.download_options')}}</span>
+                                <a id="export-excel" class="dropdown-item" href="{{route("vendor.order.export",['status'=>$st,'type'=>'excel',request()->getQueryString() ])}}">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                             alt="Image Description">
                                     {{translate('messages.excel')}}
                                 </a>
-                                <a id="export-csv" class="dropdown-item" href="javascript:;">
+                                <a id="export-csv" class="dropdown-item" href="{{route("vendor.order.export",['status'=>$st,'type'=>'csv',request()->getQueryString() ])}}">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                             alt="Image Description">
-                                    .{{translate('messages.csv')}}
+                                    {{translate('messages.csv')}}
                                 </a>
                                 <a id="export-pdf" class="dropdown-item" href="javascript:;">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
@@ -134,7 +133,7 @@
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-center mb-3">
                                             <span class="mr-2">
-                                                {{translate('messages.Order ID')}}
+                                                {{translate('messages.Order_ID')}}
 
                                             </span>
 
@@ -193,7 +192,7 @@
                                             <!-- End Checkbox Switch -->
                                         </div>
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="mr-2">{{translate('messages.order')}} {{translate('messages.status')}}</span>
+                                            <span class="mr-2">{{translate('messages.order_status')}}</span>
 
                                             <!-- Checkbox Switch -->
                                             <label class="toggle-switch toggle-switch-sm" for="toggleColumn_order_status">
@@ -243,11 +242,11 @@
                         <th class="w-60px">
                             {{ translate('messages.sl') }}
                         </th>
-                        <th class="w-90px table-column-pl-0">{{translate('messages.Order ID')}}</th>
-                        <th class="w-140px">{{translate('messages.order')}} {{translate('messages.date')}}</th>
+                        <th class="w-90px table-column-pl-0">{{translate('messages.Order_ID')}}</th>
+                        <th class="w-140px">{{translate('messages.order_date')}}</th>
                         <th class="w-140px">{{translate('messages.customer_information')}}</th>
-                        <th class="w-100px">{{translate('messages.total')}} {{translate('messages.amount')}}</th>
-                        <th class="w-100px text-center">{{translate('messages.order')}} {{translate('messages.status')}}</th>
+                        <th class="w-100px">{{translate('messages.total_amount')}}</th>
+                        <th class="w-100px text-center">{{translate('messages.order_status')}}</th>
                         <th class="w-100px text-center">{{translate('messages.actions')}}</th>
                     </tr>
                     </thead>
@@ -263,26 +262,26 @@
                             </td>
                             <td>
                                 <span class="d-block">
-                                    {{date('d M Y',strtotime($order['created_at']))}}
+                                    {{ Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat('d M Y') }}
                                 </span>
                                 <span class="d-block text-uppercase">
-                                    {{date(config('timeformat'),strtotime($order['created_at']))}}
+                                    {{ Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat(config('timeformat')) }}
                                 </span>
                             </td>
                             <td>
                                 @if($order->customer)
                                     <a class="text-body text-capitalize"
-                                       href="{{route('vendor.order.details',['id'=>$order['id']])}}">
-                                       <span class="d-block font-semibold">
-                                            {{$order->customer['f_name'].' '.$order->customer['l_name']}}
-                                       </span>
-                                       <span class="d-block">
-                                            {{$order->customer['phone']}}
-                                       </span>
+                                        href="{{route('vendor.order.details',['id'=>$order['id']])}}">
+                                        <span class="d-block font-semibold">
+                                                {{$order->customer['f_name'].' '.$order->customer['l_name']}}
+                                        </span>
+                                        <span class="d-block">
+                                                {{$order->customer['phone']}}
+                                        </span>
                                     </a>
                                 @else
                                     <label
-                                        class="badge badge-danger">{{translate('messages.invalid')}} {{translate('messages.customer')}} {{translate('messages.data')}}</label>
+                                        class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
                                 @endif
                             </td>
                             <td>
@@ -296,6 +295,10 @@
                                     <strong class="text-success">
                                         {{translate('messages.paid')}}
                                     </strong>
+                                    @elseif($order->payment_status=='partially_paid')
+                                        <strong class="text-success">
+                                            {{translate('messages.partially_paid')}}
+                                        </strong>
                                     @else
                                         <strong class="text-danger">
                                             {{translate('messages.unpaid')}}
@@ -305,31 +308,37 @@
 
                             </td>
                             <td class="text-capitalize text-center">
-                                @if($order['order_status']=='pending')
-                                    <span class="badge badge-soft-info mb-1">
-                                        {{translate('messages.pending')}}
-                                    </span>
-                                @elseif($order['order_status']=='confirmed')
-                                    <span class="badge badge-soft-info mb-1">
-                                      {{translate('messages.confirmed')}}
-                                    </span>
-                                @elseif($order['order_status']=='processing')
-                                    <span class="badge badge-soft-warning mb-1">
-                                      {{translate('messages.processing')}}
-                                    </span>
-                                @elseif($order['order_status']=='picked_up')
-                                    <span class="badge badge-soft-warning mb-1">
-                                      {{translate('messages.out_for_delivery')}}
-                                    </span>
-                                @elseif($order['order_status']=='delivered')
-                                    <span class="badge badge-soft-success mb-1">
-                                      {{translate('messages.delivered')}}
-                                    </span>
-                                @else
-                                    <span class="badge badge-soft-danger mb-1">
-                                        {{translate(str_replace('_',' ',$order['order_status']))}}
-                                    </span>
+                                @if (isset($order->subscription)  && $order->subscription->status != 'canceled' )
+                                    @php
+                                        $order->order_status = $order->subscription_log ? $order->subscription_log->order_status : $order->order_status;
+                                    @endphp
                                 @endif
+                                    @if($order['order_status']=='pending')
+                                        <span class="badge badge-soft-info mb-1">
+                                            {{translate('messages.pending')}}
+                                        </span>
+                                    @elseif($order['order_status']=='confirmed')
+                                        <span class="badge badge-soft-info mb-1">
+                                        {{translate('messages.confirmed')}}
+                                        </span>
+                                    @elseif($order['order_status']=='processing')
+                                        <span class="badge badge-soft-warning mb-1">
+                                        {{translate('messages.processing')}}
+                                        </span>
+                                    @elseif($order['order_status']=='picked_up')
+                                        <span class="badge badge-soft-warning mb-1">
+                                        {{translate('messages.out_for_delivery')}}
+                                        </span>
+                                    @elseif($order['order_status']=='delivered')
+                                        <span class="badge badge-soft-success mb-1">
+                                        {{translate('messages.delivered')}}
+                                        </span>
+                                    @else
+                                        <span class="badge badge-soft-danger mb-1">
+                                            {{translate(str_replace('_',' ',$order['order_status']))}}
+                                        </span>
+                                    @endif
+
 
                                 <div class="text-capitalze opacity-7">
                                     @if($order['order_type']=='take_away')
@@ -436,14 +445,6 @@
                         className: 'd-none'
                     },
                     {
-                        extend: 'excel',
-                        className: 'd-none'
-                    },
-                    {
-                        extend: 'csv',
-                        className: 'd-none'
-                    },
-                    {
                         extend: 'pdf',
                         className: 'd-none'
                     },
@@ -464,7 +465,7 @@
                 language: {
                     zeroRecords: '<div class="text-center p-4">' +
                         '<img class="mb-3 w-7rem" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description">' +
-                        '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                        '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                         '</div>'
                 }
             });
@@ -523,31 +524,4 @@
         });
     </script>
 
-    <script>
-        $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('vendor.order.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.card-footer').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
-    </script>
 @endpush

@@ -12,14 +12,14 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{route('admin.dashboard')}}">{{translate('messages.Dashboard')}}</a></li>
-            <li class="breadcrumb-item" aria-current="page">{{translate('messages.seller')}} {{translate('messages.Withdraw')}}</li>
+            <li class="breadcrumb-item" aria-current="page">{{translate('messages.seller_Withdraw')}}</li>
         </ol>
     </nav>
 
     <!-- Page Heading -->
     <div class="d-sm-flex row align-items-center justify-content-between mb-2">
         <div class="col-md-6">
-             <h4 class=" mb-0 text-black-50">{{translate('messages.seller')}} {{translate('messages.Withdraw')}} {{translate('messages.information')}}</h4>
+             <h4 class=" mb-0 text-black-50">{{translate('messages.seller_Withdraw_information')}}</h4>
             </div>
 
     </div>
@@ -33,10 +33,10 @@
                 <div class="card-body">
                     <div class="col-md-8 mt-2">
 
-                        <h4>{{translate('messages.bank_name')}}: {{$seller->seller->bank_name ? $seller->seller->bank_name : 'No Data found'}}</h4>
-                        <h6>{{translate('messages.Branch')}}  : {{$seller->seller->branch ? $seller->seller->branch : 'No Data found'}}</h6>
-                        <h6>{{translate('messages.holder_name')}} : {{$seller->seller->holder_name ? $seller->seller->holder_name : 'No Data found'}}</h6>
-                        <h6>{{translate('messages.account_no')}}  : {{$seller->seller->account_no ? $seller->seller->account_no : 'No Data found'}}</h6>
+                        <h4>{{translate('messages.bank_name')}}: {{$seller->seller->bank_name ? $seller->seller->bank_name : translate('messages.No_Data_found')}}</h4>
+                        <h6>{{translate('messages.Branch')}}  : {{$seller->seller->branch ? $seller->seller->branch : translate('messages.No_Data_found')}}</h6>
+                        <h6>{{translate('messages.holder_name')}} : {{$seller->seller->holder_name ? $seller->seller->holder_name : translate('messages.No_Data_found')}}</h6>
+                        <h6>{{translate('messages.account_no')}}  : {{$seller->seller->account_no ? $seller->seller->account_no : translate('messages.No_Data_found')}}</h6>
 
 
 
@@ -48,7 +48,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    {{translate('messages.Shop')}} {{translate('messages.info')}}
+                    {{translate('messages.Shop_info')}}
                 </div>
                 <div class="card-body">
                     <h5>{{translate('messages.seller_b')}} : {{$seller->seller->shop->name}}</h5>
@@ -64,7 +64,7 @@
         <div class="col-md-6">
             <div class="card">
                 <div class="card-header">
-                    {{translate('messages.Seller')}} {{translate('messages.info')}}
+                    {{translate('messages.Seller_info')}}
                 </div>
                 <div class="card-body">
                     <h5>{{translate('messages.name')}} : {{$seller->seller->f_name}} {{$seller->seller->l_name}}</h5>
@@ -79,11 +79,15 @@
 
             <div class="card">
                 <div class="card-header">
-                    <h3 class="h3 mb-0  ">{{translate('messages.Withdraw')}} {{translate('messages.information')}} </h3>
+                    <h3 class="h3 mb-0  ">{{translate('messages.Withdraw_information')}} </h3>
                 </div>
                 <div class="card-body">
                     <h5>{{translate('messages.amount')}} : {{$seller->amount}}</h5>
-                    <h5>{{translate('messages.request_time')}} : {{$seller->created_at}}</h5>
+                    <h5>{{translate('messages.request_time')}} :
+
+                    {{  Carbon\Carbon::parse($seller->created_at)->locale(app()->getLocale())->translatedFormat('d M Y '.config('timeformat')) }}
+
+                   </h5>
                     {{-- {{ $seller->id }} --}}
                     @if ($seller->approved== 0)
 

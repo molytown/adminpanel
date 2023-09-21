@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.Delivery Man Preview'))
+@section('title',translate('messages.Delivery_Man_Timelog'))
 
 @push('css_or_js')
 
@@ -41,8 +41,8 @@
         <!-- Card -->
         <div class="card mb-3 mb-lg-5 mt-2">
             <div class="card-header py-2">
-`               <form class="search--button-wrapper" action="{{url()->current()}}">
-                    <h5 class="card-title">{{ translate('messages.order')}} {{ translate('messages.transactions')}}</h5>
+                <form class="search--button-wrapper" action="{{url()->current()}}">
+                    <h5 class="card-title">{{ translate('messages.order_transactions')}}</h5>
                     <div>
                         <input type="date" name="from" id="from" {{request('from')?'value='.request('from'):''}}
                                 class="form-control" required>
@@ -64,6 +64,7 @@
                         <thead class="thead-light">
                             <tr>
                                 <th>{{translate('sl')}}</th>
+                                <th>{{translate('messages.Shift')}}</th>
                                 <th>{{translate('messages.date')}}</th>
                                 <th>{{translate('messages.active_time')}} ({{translate('H:M')}})</th>
                             </tr>
@@ -72,6 +73,7 @@
                         @foreach($timelogs as $key=>$timelog)
                             <tr>
                                 <td scope="row">{{$key+$timelogs->firstItem()}}</td>
+                                <td>{{ isset($timelog->shift) ? $timelog->shift->name : translate('no_shift_found')}}</td>
                                 <td>{{$timelog->date}}</td>
                                 <td>{{str_pad((int)($timelog->working_hour/60), 2, '0', STR_PAD_LEFT)}}:{{str_pad((int)($timelog->working_hour % 60), 2, '0', STR_PAD_LEFT)}}</td>
                             </tr>
@@ -101,14 +103,14 @@
 <script>
     function request_alert(url, message) {
         Swal.fire({
-            title: 'Are you sure?',
+            title: '{{ translate('Are_you_sure?') }}',
             text: message,
             type: 'warning',
             showCancelButton: true,
             cancelButtonColor: 'default',
             confirmButtonColor: '#FC6A57',
-            cancelButtonText: 'No',
-            confirmButtonText: 'Yes',
+            cancelButtonText: '{{ translate('no') }}',
+            confirmButtonText: '{{ translate('yes') }}',
             reverseButtons: true
         }).then((result) => {
             if (result.value) {

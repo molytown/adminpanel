@@ -33,32 +33,8 @@
             </span>
 
             <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', $restaurant->id)}}">{{translate('messages.overview')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'order'])}}"  aria-disabled="true">{{translate('messages.orders')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'product'])}}"  aria-disabled="true">{{translate('messages.foods')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'reviews'])}}"  aria-disabled="true">{{translate('messages.reviews')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'discount'])}}"  aria-disabled="true">{{translate('discounts')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction'])}}"  aria-disabled="true">{{translate('messages.transactions')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'settings'])}}"  aria-disabled="true">{{translate('messages.settings')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'conversations'])}}"  aria-disabled="true">{{translate('messages.conversations')}}</a>
-                </li>
-            </ul>
+            @include('admin-views.vendor.view.partials._header',['restaurant'=>$restaurant])
+
             <!-- End Nav -->
         </div>
         <!-- End Nav Scroller -->
@@ -70,39 +46,39 @@
                 <div class="order-info-icon">
                     <img src="{{asset('/public/assets/admin/img/resturant/navbar/all.png')}}" alt="public">
                 </div>
-                    <h6 class="card-subtitle">{{translate('messages.all')}} {{translate('messages.orders')}} <span class="amount text--primary">{{\App\Models\Order::where('restaurant_id', $restaurant->id)->count()}}</span></h6>
+                    <h6 class="card-subtitle">{{translate('messages.all_orders')}} <span class="amount text--primary">{{\App\Models\Order::where('restaurant_id', $restaurant->id)->Notpos()->count()}}</span></h6>
             </div>
             <span class="order-info-seperator"></span>
             <div class="order-info-item" onclick="location.href='{{route('admin.order.list',['scheduled'])}}?vendor[]={{$restaurant->id}}'">
                 <div class="order-info-icon">
                     <img src="{{asset('/public/assets/admin/img/resturant/navbar/schedule.png')}}" alt="public">
                 </div>
-                <h6 class="card-subtitle">{{translate('messages.scheduled')}} {{translate('messages.orders')}}
-                <span class="amount text--warning">{{\App\Models\Order::Scheduled()->where('restaurant_id', $restaurant->id)->count()}}</span></h6>
+                <h6 class="card-subtitle">{{translate('messages.scheduled_orders')}}
+                <span class="amount text--warning">{{\App\Models\Order::Scheduled()->Notpos()->where('restaurant_id', $restaurant->id)->count()}}</span></h6>
             </div>
             <span class="order-info-seperator"></span>
             <div class="order-info-item" onclick="location.href='{{route('admin.order.list',['pending'])}}?vendor[]={{$restaurant->id}}'">
                 <div class="order-info-icon">
                     <img src="{{asset('/public/assets/admin/img/resturant/navbar/pending.png')}}" alt="public">
                 </div>
-                <h6 class="card-subtitle">{{translate('messages.pending')}} {{translate('messages.orders')}}
+                <h6 class="card-subtitle">{{translate('messages.pending_orders')}}
                 <span class="amount text--info">
-                {{\App\Models\Order::where(['order_status'=>'pending','restaurant_id'=>$restaurant->id])->count()}}</span></h6>
+                {{\App\Models\Order::where(['order_status'=>'pending','restaurant_id'=>$restaurant->id])->Notpos()->count()}}</span></h6>
             </div>
             <span class="order-info-seperator"></span>
             <div class="order-info-item" onclick="location.href='{{route('admin.order.list',['delivered'])}}?vendor[]={{$restaurant->id}}'">
                 <div class="order-info-icon">
                     <img src="{{asset('/public/assets/admin/img/resturant/navbar/delivered.png')}}" alt="public">
                 </div>
-                <h6 class="card-subtitle">{{translate('messages.delivered')}} {{translate('messages.orders')}}
-                <span class="amount text--success">{{\App\Models\Order::where(['order_status'=>'delivered', 'restaurant_id'=>$restaurant->id])->count()}}</span></h6>
+                <h6 class="card-subtitle">{{translate('messages.delivered_orders')}}
+                <span class="amount text--success">{{\App\Models\Order::where(['order_status'=>'delivered', 'restaurant_id'=>$restaurant->id])->Notpos()->count()}}</span></h6>
             </div>
             <span class="order-info-seperator"></span>
             <div class="order-info-item" onclick="location.href='{{route('admin.order.list',['canceled'])}}?vendor[]={{$restaurant->id}}'">
                 <div class="order-info-icon">
                     <img src="{{asset('/public/assets/admin/img/resturant/navbar/cancel.png')}}" alt="public">
                 </div>
-                <h6 class="card-subtitle">{{translate('messages.canceled')}} {{translate('messages.orders')}}
+                <h6 class="card-subtitle">{{translate('messages.canceled_orders')}}
                 <span class="amount text--danger">{{\App\Models\Order::where(['order_status'=>'canceled', 'restaurant_id'=>$restaurant->id])->count()}}</span></h6>
             </div>
 
@@ -114,13 +90,13 @@
         <div class="card-header py-2 border-0">
             <div class="search--button-wrapper">
                 <span class="mr-auto">&nbsp;</span>
-                <form action="javascript:" id="search-form" class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
+                <form  class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
                     <!-- Search -->
-                    @csrf
+
                     <input type="hidden" name="restaurant_id" value="{{$restaurant->id}}">
                     <div class="input--group input-group input-group-merge input-group-flush">
-                        <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                placeholder="Search by ID ... " aria-label="{{translate('messages.search')}}" required>
+                        <input id="datatableSearch_" type="search" name="search" class="form-control" value="{{ request()?->search ?? null }}"
+                                placeholder="{{translate('messages.Search_by_ID')}}" aria-label="{{translate('messages.search')}}" required>
                         <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
 
                     </div>
@@ -138,67 +114,23 @@
 
                     <div id="usersExportDropdown"
                             class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                        <a id="export-copy" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                    alt="Image Description">
-                            {{translate('messages.copy')}}
-                        </a>
-                        <a id="export-print" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                    alt="Image Description">
-                            {{translate('messages.print')}}
-                        </a>
-                        <div class="dropdown-divider"></div>--}}
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-{{--                         <form action="{{route('admin.order.export-orders')}}" method="post">
-                            @csrf
-                            <input type="hidden" name="restaurant_id" value="{{$restaurant->id}}">
-                            <input type="hidden" name="type" value="excel">
-                            <button type="submit">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
-                                alt="Image Description">
-                                {{translate('messages.excel')}}
-                            </button>
-                        </form> --}}
-                        <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.order.export-orders', ['type'=>'excel', 'restaurant_id'=>$restaurant->id])}}">
+
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+
+                        <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.order.export-orders', ['type'=>'excel', 'restaurant_id'=>$restaurant->id , request()->getQueryString()]) }}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                             src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                             alt="Image Description">
                             {{translate('messages.excel')}}
                         </a>
-                        <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.order.export-orders', ['type'=>'csv', 'restaurant_id'=>$restaurant->id])}}">
+                        <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.order.export-orders', ['type'=>'csv', 'restaurant_id'=>$restaurant->id , request()->getQueryString()]) }}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                             src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                             alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
-{{--                         <form action="{{route('admin.order.export-orders')}}" method="post">
-                            @csrf
-                            <input type="hidden" name="restaurant_id" value="{{$restaurant->id}}">
-                            <input type="hidden" name="type" value="csv">
-                            <button type="submit">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
-                                alt="Image Description">
-                                .{{translate('messages.csv')}}
-                            </button>
-                        </form> --}}
-{{--                         <a id="export-csv" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
-                                    alt="Image Description">
-                            .{{translate('messages.csv')}}
-                        </a> --}}
-                        {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                    alt="Image Description">
-                            {{translate('messages.pdf')}}
-                        </a>--}}
+
+
                     </div>
                 </div>
                 <!-- Static Export Button -->
@@ -229,23 +161,22 @@
                     <thead class="thead-light">
                     <tr>
                         <th class="text-center pl-4 w-100px">
-                            SL
+                            {{translate('sl')}}
                         </th>
-                        <th class="table-column-pl-0">{{translate('messages.order')}} {{translate('messages.id')}}</th>
+                        <th class="table-column-pl-0">{{translate('messages.order_id')}}</th>
                         <th>
                             <div class="pl-2">
-                                {{translate('messages.order')}} {{translate('messages.date')}}
+                                {{translate('messages.order_date')}}
                             </div>
                         </th>
-                        <th>{{translate('messages.customer')}} {{translate('messages.info')}}</th>
-                        <th>{{translate('messages.total')}} {{translate('messages.amount')}}</th>
-                        <th>{{translate('messages.order')}} {{translate('messages.status')}}</th>
+                        <th>{{translate('messages.customer_info')}}</th>
+                        <th>{{translate('messages.total_amount')}}</th>
+                        <th>{{translate('messages.order_status')}}</th>
                         <th class="w-100px">{{translate('messages.action')}}</th>
                     </tr>
                     </thead>
 
                     <tbody id="set-rows">
-                    @php($orders=\App\Models\Order::where('restaurant_id', $restaurant->id)->latest()->Notpos()->paginate(10))
                     @foreach($orders as $key=>$order)
 
                         <tr class="status-{{$order['order_status']}} class-all">
@@ -269,15 +200,14 @@
                                             <small class="d-block">{{$order->customer['phone']}}</small>
                                         </a>
                                     @else
-                                        <label class="badge badge-danger">{{translate('messages.invalid')}} {{translate('messages.customer')}} {{translate('messages.data')}}</label>
+                                        <label class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
                                     @endif
                                 </div>
                             </td>
                             <td>
-                                @php($zone_currency= $restaurant->zone->zone_currency ?? null)
                                 <div class="d-inline-block text-right total-amount-table-data">
                                     <div class="paid--amount-status">
-                                        {{\App\CentralLogics\Helpers::format_currency($order['order_amount'],$zone_currency )}}
+                                        {{\App\CentralLogics\Helpers::format_currency($order['order_amount'])}}
                                     </div>
                                     @if($order->payment_status=='paid')
                                         <strong class="text--success order--status">
@@ -317,7 +247,7 @@
                                     </span>
                                 @else
                                     <span class="badge badge-soft-danger badge--cancel">
-                                        {{str_replace('_',' ',$order['order_status'])}}
+                                        {{translate(str_replace('_',' ',$order['order_status']))}}
                                     </span>
                                 @endif
                             </td>
@@ -399,35 +329,5 @@
             });
         });
     </script>
-    <script>
-            $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.order.restaurant-order-search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('#itemCount').html(data.total);
-                    $('.page-area').hide();
-                },
-                error: function (data){
-                    console.log(data);
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
-    </script>
+
 @endpush

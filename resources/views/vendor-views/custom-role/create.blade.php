@@ -42,11 +42,48 @@
                     <div class="px-xl-2">
                         <form action="{{route('vendor.custom-role.create')}}" method="post">
                             @csrf
-                            <div class="form-group">
-                                <label class="form-label" for="name">{{translate('messages.role_name')}}</label>
-                                <input type="text" name="name" class="form-control" id="name" aria-describedby="emailHelp"
-                                    placeholder="{{ translate('messages.Ex :') }} {{ translate('Store') }}" required>
+
+
+                            @php($language=\App\Models\BusinessSetting::where('key','language')->first())
+                            @php($language = $language->value ?? null)
+                            @php($default_lang = str_replace('_', '-', app()->getLocale()))
+                            @if ($language)
+                            <ul class="nav nav-tabs mb-4">
+                                <li class="nav-item">
+                                    <a class="nav-link lang_link active"
+                                    href="#"
+                                    id="default-link">{{translate('messages.default')}}</a>
+                                </li>
+                                @foreach (json_decode($language) as $lang)
+                                    <li class="nav-item">
+                                        <a class="nav-link lang_link"
+                                            href="#"
+                                            id="{{ $lang }}-link">{{ \App\CentralLogics\Helpers::get_language_name($lang) . '(' . strtoupper($lang) . ')' }}</a>
+                                    </li>
+                                @endforeach
+                            </ul>
+                            @endif
+
+
+                            <input type="hidden" name="lang[]" value="default">
+
+                            <div class="form-group lang_form" id="default-form">
+                                <label class="form-label input-label qcont" for="name">{{ translate('messages.role_name') }} ({{ translate('messages.default') }})</label>
+                                <input type="text" name="name[]" class="form-control" placeholder="{{translate('role_name_example')}}" maxlength="191"  oninvalid="document.getElementById('en-link').click()">
                             </div>
+
+
+
+                            @if ($language)
+                            @foreach(json_decode($language) as $lang)
+                                <div class="form-group d-none lang_form" id="{{$lang}}-form">
+                                    <label class="input-label" for="exampleFormControlInput1">{{translate('messages.role_name')}} ({{strtoupper($lang)}})</label>
+                                    <input type="text" name="name[]" class="form-control" placeholder="{{translate('role_name_example')}}" maxlength="191" oninvalid="document.getElementById('en-link').click()">
+                                </div>
+                                <input type="hidden" name="lang[]" value="{{$lang}}">
+                            @endforeach
+                            @endif
+
 
                             <h5 class="form-label">{{translate('messages.module_permission')}} : </h5>
                             <div class="check--item-wrapper mx-0">
@@ -68,7 +105,7 @@
                                     <div class="form-group form-check form--check">
                                         <input type="checkbox" name="modules[]" value="restaurant_setup" class="form-check-input"
                                             id="restaurant_setup">
-                                        <label class="form-check-label input-label qcont" for="restaurant_setup">{{translate('messages.restaurant')}} {{translate('messages.setup')}}</label>
+                                        <label class="form-check-label input-label qcont" for="restaurant_setup">{{translate('messages.restaurant_setup')}}</label>
                                     </div>
                                 </div>
                                 <div class="check-item">
@@ -113,13 +150,13 @@
                                         <label class="form-check-label input-label qcont" for="chat">{{ translate('messages.chat')}}</label>
                                     </div>
                                 </div>
-                                <div class="check-item">
+                                {{-- <div class="check-item">
                                     <div class="form-group form-check form--check">
                                         <input type="checkbox" name="modules[]" value="custom_role" class="form-check-input"
                                             id="custom_role">
                                         <label class="form-check-label input-label qcont" for="custom_role">{{translate('messages.custom_role')}}</label>
                                     </div>
-                                </div>
+                                </div> --}}
                                 <div class="check-item">
                                     <div class="form-group form-check form--check">
                                         <input type="checkbox" name="modules[]" value="campaign" class="form-check-input"
@@ -139,6 +176,31 @@
                                         <input type="checkbox" name="modules[]" value="pos" class="form-check-input"
                                             id="pos">
                                         <label class="form-check-label input-label qcont" for="pos">{{translate('messages.pos')}}</label>
+                                    </div>
+                                </div>
+                                @php($restaurant_data = \App\CentralLogics\Helpers::get_restaurant_data())
+                                @if ($restaurant_data->restaurant_model != 'commission')
+                                <div class="check-item">
+                                    <div class="form-group form-check form--check">
+                                        <input type="checkbox" name="modules[]" value="subscription" class="form-check-input"
+                                        id="subscription">
+                                        <label class="form-check-label input-label qcont" for="subscription">{{translate('messages.subscription')}}</label>
+                                    </div>
+                                </div>
+                                @endif
+
+                                <div class="check-item">
+                                    <div class="form-group form-check form--check">
+                                        <input type="checkbox" name="modules[]" value="coupon" class="form-check-input"
+                                            id="coupon">
+                                        <label class="form-check-label input-label qcont" for="coupon">{{translate('messages.coupon')}}</label>
+                                    </div>
+                                </div>
+                                <div class="check-item">
+                                    <div class="form-group form-check form--check">
+                                        <input type="checkbox" name="modules[]" value="report" class="form-check-input"
+                                            id="report">
+                                        <label class="form-check-label input-label qcont" for="report">{{translate('messages.report')}}</label>
                                     </div>
                                 </div>
                             </div>
@@ -199,21 +261,24 @@
                                     <td class="text-capitalize">
                                         @if($r['modules']!=null)
                                             @foreach((array)json_decode($r['modules']) as $key=>$m)
-                                               {{str_replace('_',' ',$m)}},
+                                               {{translate(str_replace('_',' ',$m))}},
                                             @endforeach
                                         @endif
                                     </td>
-                                    <td>{{date('d-M-y',strtotime($r['created_at']))}}</td>
+                                    <td>
+                                    {{  Carbon\Carbon::parse($r['created_at'])->locale(app()->getLocale())->translatedFormat('d M Y') }}
+                                        {{-- {{date('d-M-y',strtotime($r['created_at']))}} --}}
+                                    </td>
                                     {{--<td>
                                         {{$r->status?'Active':'Inactive'}}
                                     </td>--}}
                                     <td>
                                         <div class="btn--container justify-content-center">
                                             <a class="btn action-btn btn--primary btn-outline-primary"
-                                                href="{{route('vendor.custom-role.edit',[$r['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.role')}}"><i class="tio-edit"></i>
+                                                href="{{route('vendor.custom-role.edit',[$r['id']])}}" title="{{translate('messages.edit_role')}}"><i class="tio-edit"></i>
                                             </a>
                                             <a class="btn action-btn btn--danger btn-outline-danger" href="javascript:"
-                                                onclick="form_alert('role-{{$r['id']}}','{{translate('messages.Want_to_delete_this_role')}}')" title="{{translate('messages.delete')}} {{translate('messages.role')}}"><i class="tio-delete-outlined"></i>
+                                                onclick="form_alert('role-{{$r['id']}}','{{translate('messages.Want_to_delete_this_role')}}')" title="{{translate('messages.delete_role')}}"><i class="tio-delete-outlined"></i>
                                             </a>
                                             <form action="{{route('vendor.custom-role.delete',[$r['id']])}}"
                                                     method="post" id="role-{{$r['id']}}">
@@ -278,6 +343,27 @@
         });
         $(document).ready(function() {
             var datatable = $.HSCore.components.HSDatatables.init($('#columnSearchDatatable'));
+        });
+    </script>
+    <script>
+        $(".lang_link").click(function(e){
+            e.preventDefault();
+            $(".lang_link").removeClass('active');
+            $(".lang_form").addClass('d-none');
+            $(this).addClass('active');
+
+            let form_id = this.id;
+            let lang = form_id.substring(0, form_id.length - 5);
+            console.log(lang);
+            $("#"+lang+"-form").removeClass('d-none');
+            if(lang == '{{$default_lang}}')
+            {
+                $(".from_part_2").removeClass('d-none');
+            }
+            else
+            {
+                $(".from_part_2").addClass('d-none');
+            }
         });
     </script>
 @endpush

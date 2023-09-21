@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center mb-3">
                 <div class="col-sm">
-                <h1 class="page-header-title text-capitalize">{{translate('messages.pos')}} {{translate('messages.orders')}} <span
+                <h1 class="page-header-title text-capitalize">{{translate('messages.pos_orders')}} <span
                             class="badge badge-soft-dark ml-2">{{$orders->total()}}</span></h1>
                 </div>
             </div>
@@ -72,7 +72,7 @@
                                     </a>
                                     <div class="dropdown-divider"></div>
                                     <span
-                                        class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
+                                        class="dropdown-header">{{translate('messages.download_options')}}</span>
                                     <a id="export-excel" class="dropdown-item" href="javascript:;">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                              src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
@@ -83,7 +83,7 @@
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                              src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                              alt="Image Description">
-                                        .{{translate('messages.csv')}}
+                                        {{translate('messages.csv')}}
                                     </a>
                                     <a id="export-pdf" class="dropdown-item" href="javascript:;">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
@@ -155,7 +155,7 @@
 
                                             <div class="d-flex justify-content-between align-items-center mb-3">
                                                 <span
-                                                    class="mr-2 text-capitalize">{{translate('messages.payment')}} {{translate('messages.status')}}</span>
+                                                    class="mr-2 text-capitalize">{{translate('messages.payment_status')}}</span>
 
                                                 <!-- Checkbox Switch -->
                                                 <label class="toggle-switch toggle-switch-sm"
@@ -183,7 +183,7 @@
                                                 <!-- End Checkbox Switch -->
                                             </div>
                                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <span class="mr-2">{{translate('messages.order')}} {{translate('messages.status')}}</span>
+                                                <span class="mr-2">{{translate('messages.order_status')}}</span>
 
                                                 <!-- Checkbox Switch -->
                                                 <label class="toggle-switch toggle-switch-sm" for="toggleColumn_order_status">
@@ -197,7 +197,7 @@
                                             </div>
 
                                             <div class="d-flex justify-content-between align-items-center mb-3">
-                                                <span class="mr-2">{{translate('messages.order')}} {{translate('messages.type')}}</span>
+                                                <span class="mr-2">{{translate('messages.order_type')}}</span>
 
                                                 <!-- Checkbox Switch -->
                                                 <label class="toggle-switch toggle-switch-sm"
@@ -254,10 +254,10 @@
                         <th class="table-column-pl-0">{{translate('messages.order')}}</th>
                         <th>{{translate('messages.date')}}</th>
                         <th>{{translate('messages.customer')}}</th>
-                        <th>{{translate('messages.payment')}} {{translate('messages.status')}}</th>
+                        <th>{{translate('messages.payment_status')}}</th>
                         <th>{{translate('messages.total')}}</th>
-                        <th>{{translate('messages.order')}} {{translate('messages.status')}}</th>
-                        <th>{{translate('messages.order')}} {{translate('messages.type')}}</th>
+                        <th>{{translate('messages.order_status')}}</th>
+                        <th>{{translate('messages.order_type')}}</th>
                         <th>{{translate('messages.actions')}}</th>
                     </tr>
                     </thead>
@@ -316,7 +316,7 @@
                                     </span>
                                 @else
                                     <span class="badge badge-soft-danger ml-2 ml-sm-3">
-                                      <span class="legend-indicator bg-danger"></span>{{str_replace('_',' ',$order['order_status'])}}
+                                      <span class="legend-indicator bg-danger"></span>{{translate(str_replace('_',' ',$order['order_status']))}}
                                     </span>
                                 @endif
                             </td>
@@ -335,7 +335,7 @@
                                 <a class="btn btn-sm btn-white"
                                            href="{{route('vendor.pos.order-details',['id'=>$order['id']])}}"><i
                                                 class="tio-visible"></i> {{translate('messages.view')}}</a>
-                                <btton class="btn btn-sm btn-white" target="_blank"
+                                <button class="btn btn-sm btn-white" target="_blank"
                                            type="button" onclick="print_invoice('{{$order->id}}')"><i
                                                 class="tio-download"></i> {{translate('messages.invoice')}}</button>
                             </td>
@@ -369,7 +369,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">{{translate('messages.print')}} {{translate('messages.invoice')}}</h5>
+                    <h5 class="modal-title">{{translate('messages.print_invoice')}}</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                     </button>
@@ -447,7 +447,7 @@
                 language: {
                     zeroRecords: '<div class="text-center p-4">' +
                         '<img class="mb-3 w-7rem" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description">' +
-                        '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                        '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                         '</div>'
                 }
             });
@@ -544,7 +544,7 @@
 
         function print_invoice(order_id) {
             $.get({
-                url: '{{url('/')}}/vendor-panel/pos/invoice/'+order_id,
+                url: '{{url('/')}}/restaurant-panel/pos/invoice/'+order_id,
                 dataType: 'json',
                 beforeSend: function () {
                     $('#loading').show();
@@ -561,10 +561,20 @@
         }
 
         function printDiv(divName) {
-            var printContents = document.getElementById(divName).innerHTML;
-            document.body.innerHTML = printContents;
-            window.print();
-            location.reload();
+            if($('html').attr('dir') === 'rtl') {
+                $('html').attr('dir', 'ltr')
+                var printContents = document.getElementById(divName).innerHTML;
+                document.body.innerHTML = printContents;
+                $('.initial-38-1').attr('dir', 'rtl')
+                window.print();
+                $('html').attr('dir', 'rtl')
+                location.reload();
+            }else{
+                var printContents = document.getElementById(divName).innerHTML;
+                document.body.innerHTML = printContents;
+                window.print();
+                location.reload();
+            }
         }
     </script>
 @endpush

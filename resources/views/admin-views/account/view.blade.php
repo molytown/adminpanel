@@ -1,5 +1,5 @@
 @extends('layouts.admin.app')
-@section('title',translate('Accoutn transaction information'))
+@section('title',translate('account_transaction_information'))
 @push('css_or_js')
 
 @endpush
@@ -9,7 +9,7 @@
     <!-- Page Heading -->
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
         <h2 class="page-header-title text-capitalize m-0">
-            {{translate('messages.account_transaction')}} {{translate('messages.information')}}
+            {{translate('messages.account_transaction_information')}}
         </h2>
     </div>
     <div class="row g-2">
@@ -21,7 +21,7 @@
                         <span class="card-header-icon">
                             <i class="tio-user"></i>
                         </span>
-                        <span>{{$account_transaction->restaurant?translate('messages.restaurant'):translate('messages.deliveryman')}} {{translate('messages.info')}}</span>
+                        <span>{{$account_transaction->restaurant?translate('messages.restaurant'):translate('messages.deliveryman_info')}}</span>
                     </h5>
                 </div>
                 <div class="card-body">
@@ -31,7 +31,7 @@
                             <h6>{{translate('messages.phone')}}  : {{$account_transaction->restaurant ? $account_transaction->restaurant->phone : $account_transaction->deliveryman->phone}}</h6>
                             <h6>{{translate('messages.collected_cash')}} : {{\App\CentralLogics\Helpers::format_currency($account_transaction->restaurant ? $account_transaction->restaurant->vendor->wallet->collected_cash : $account_transaction->deliveryman->wallet->collected_cash)}}</h6>
                         @else
-                            <h4 class="text-center">{{$account_transaction->from_type == 'restaurant' ? translate('messages.Restaurant deleted!') : translate('messages.deliveryman_deleted!')}}</h4>
+                            <h4 class="text-center">{{$account_transaction->from_type == 'restaurant' ? translate('messages.restaurant_deleted!') : translate('messages.deliveryman_deleted!')}}</h4>
                         @endif
 
                     </div>
@@ -40,20 +40,18 @@
         </div>
 
         <div class="col-md-6">
-            {{-- {{ $wr }} --}}
-
             <div class="card h-100">
                 <div class="card-header">
                     <h5 class="card-title">
                         <span class="card-header-icon">
                             <i class="tio-user"></i>
                         </span>
-                        <span>{{translate('messages.transaction')}} {{translate('messages.information')}}</span>
+                        <span>{{translate('messages.transaction_information')}}</span>
                     </h5>
                 </div>
                 <div class="card-body">
                     <h6>{{translate('messages.amount')}} : {{\App\CentralLogics\Helpers::format_currency($account_transaction->amount)}}</h6>
-                    <h6 class="text-capitalize">{{translate('messages.time')}} : {{$account_transaction->created_at->format('Y-m-d '.config('timeformat'))}}</h6>
+                    <h6 class="text-capitalize">{{translate('messages.time')}} :{{ \App\CentralLogics\Helpers::time_date_format($account_transaction->created_at) }}</h6>
                     <h6>{{translate('messages.method')}} : {{$account_transaction->method}}</h6>
                     <h6>{{translate('messages.reference')}} : {{$account_transaction->ref}}</h6>
                 </div>

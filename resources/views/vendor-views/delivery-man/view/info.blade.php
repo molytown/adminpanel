@@ -37,7 +37,7 @@
                         <div class="resturant-card dashboard--card bg--2">
                             <h4 class="title">{{$dm->orders->count()}}</h4>
                             <span class="subtitle">
-                                {{translate('messages.total')}} {{translate('messages.delivered')}} {{translate('messages.orders')}}
+                                {{translate('messages.total_delivered_orders')}}
                             </span>
                             <img class="resturant-icon" src="{{asset('public/assets/admin/img/resturant-panel/deliveryman/delivered.png')}}" alt="dashboard">
                         </div>
@@ -211,7 +211,7 @@
                             <li class="d-flex align-items-center font-size-sm">
                                 @php($five=\App\CentralLogics\Helpers::dm_rating_count($dm['id'],5))
                                 <span
-                                    class="progress-name mr-3">Excellent</span>
+                                    class="progress-name mr-3">{{translate('messages.Excellent')}}</span>
                                 <div class="progress flex-grow-1">
                                     <div class="progress-bar" role="progressbar"
                                          style="width: {{$total==0?0:($five/$total)*100}}%;"
@@ -225,7 +225,7 @@
                             <!-- Review Ratings -->
                             <li class="d-flex align-items-center font-size-sm">
                                 @php($four=\App\CentralLogics\Helpers::dm_rating_count($dm['id'],4))
-                                <span class="progress-name mr-3">Good</span>
+                                <span class="progress-name mr-3">{{translate('messages.Good')}}</span>
                                 <div class="progress flex-grow-1">
                                     <div class="progress-bar" role="progressbar"
                                          style="width: {{$total==0?0:($four/$total)*100}}%;"
@@ -239,7 +239,7 @@
                             <!-- Review Ratings -->
                             <li class="d-flex align-items-center font-size-sm">
                                 @php($three=\App\CentralLogics\Helpers::dm_rating_count($dm['id'],3))
-                                <span class="progress-name mr-3">Average</span>
+                                <span class="progress-name mr-3">{{translate('messages.Average')}}</span>
                                 <div class="progress flex-grow-1">
                                     <div class="progress-bar" role="progressbar"
                                          style="width: {{$total==0?0:($three/$total)*100}}%;"
@@ -253,7 +253,7 @@
                             <!-- Review Ratings -->
                             <li class="d-flex align-items-center font-size-sm">
                                 @php($two=\App\CentralLogics\Helpers::dm_rating_count($dm['id'],2))
-                                <span class="progress-name mr-3">Below Average</span>
+                                <span class="progress-name mr-3">{{translate('messages.Below_Average')}}</span>
                                 <div class="progress flex-grow-1">
                                     <div class="progress-bar" role="progressbar"
                                          style="width: {{$total==0?0:($two/$total)*100}}%;"
@@ -267,7 +267,7 @@
                             <!-- Review Ratings -->
                             <li class="d-flex align-items-center font-size-sm">
                                 @php($one=\App\CentralLogics\Helpers::dm_rating_count($dm['id'],1))
-                                <span class="progress-name mr-3">Poor</span>
+                                <span class="progress-name mr-3">{{translate('messages.poor')}}</span>
                                 <div class="progress flex-grow-1">
                                     <div class="progress-bar" role="progressbar"
                                          style="width: {{$total==0?0:($one/$total)*100}}%;"
@@ -285,6 +285,8 @@
         </div>
         <!-- End Card -->
 
+        @php($restaurant=\App\CentralLogics\Helpers::get_restaurant_data())
+        @if ($restaurant->restaurant_model == 'commission' && $restaurant->reviews_section || ($restaurant->restaurant_model == 'subscription' && isset($restaurant->restaurant_sub) && $restaurant->restaurant_sub->review))
         <!-- Card -->
         <div class="card">
             <!-- Table -->
@@ -338,7 +340,8 @@
                                 @endif
                             </td>
                             <td>
-                                #10000000
+                                <a href="{{route('vendor.order.details',['id'=>$review->order_id])}}">{{$review->order_id}}</a>
+
                             </td>
                             <td>
                                 <div class="text-wrap w-18rem">
@@ -359,6 +362,8 @@
                                 @endforeach
                             </td>--}}
                             <td>
+                                {{-- {{  Carbon\Carbon::parse($review->created_at)->locale(app()->getLocale())->translatedFormat('d M Y'.config('timeformat')) }} --}}
+
                                 {{date('d M Y '. config('timeformat'),strtotime($review['created_at']))}}
                             </td>
                         </tr>
@@ -389,6 +394,9 @@
             <!-- End Footer -->
         </div>
         <!-- End Card -->
+        @endif
+
+
     </div>
 @endsection
 
@@ -396,14 +404,14 @@
 <script>
     function request_alert(url, message) {
         Swal.fire({
-            title: 'Are you sure?',
+            title: '{{ translate('Are_you_sure?') }}',
             text: message,
             type: 'warning',
             showCancelButton: true,
             cancelButtonColor: 'default',
             confirmButtonColor: '#FC6A57',
-            cancelButtonText: 'No',
-            confirmButtonText: 'Yes',
+            cancelButtonText: '{{ translate('no') }}',
+            confirmButtonText: '{{ translate('yes') }}',
             reverseButtons: true
         }).then((result) => {
             if (result.value) {

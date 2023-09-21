@@ -525,7 +525,7 @@
                     // calculate placement
                     this.dropdown.css({
                         top: inputTop + extraTop,
-                        left: pos.left
+                        insetInlineStart: pos.left
                     });
                     // close menu on window scroll
                     $(window).on("scroll" + this.ns, function() {

@@ -1,4 +1,4 @@
-@if(count($combinations[0]) > 0)
+{{-- @if(count($combinations[0]) > 0)
     <table class="table table-bordered">
         <thead>
         <tr>
@@ -38,4 +38,4 @@
         @endforeach
         </tbody>
     </table>
-@endif
+@endif --}}

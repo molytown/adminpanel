@@ -16,7 +16,7 @@
                             <img src="{{asset('/public/assets/admin/img/resturant-panel/page-title/category.png')}}" alt="public">
                         </div>
                         <span>
-                            {{translate('messages.category')}} {{translate('messages.list')}}
+                            {{translate('messages.category_list')}}
                             <span class="badge badge-soft-dark ml-2" id="itemCount">{{$categories->total()}}</span>
                         </span>
                     </h2>
@@ -47,8 +47,8 @@
                         <thead class="thead-light">
                             <tr>
                                 <th class="text-center w-33p">{{ translate('messages.sl') }}</th>
-                                <th class="text-center w-33p">{{ translate('messages.Category') }} {{translate('messages.id')}}</th>
-                                <th class="text-center w-33p">{{ translate('messages.Category') }} {{translate('messages.name')}}</th>
+                                <th class="text-center w-33p">{{ translate('messages.Category_id')}}</th>
+                                <th class="text-center w-33p">{{ translate('messages.Category_name')}}</th>
                             </tr>
                         </thead>
 

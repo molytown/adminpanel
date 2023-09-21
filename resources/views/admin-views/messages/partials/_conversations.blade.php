@@ -11,8 +11,25 @@
             <div class="chat-user-info-content">
                 <h5 class="mb-0 text-capitalize">
                     {{$user['f_name'].' '.$user['l_name']}}</h5>
-                <span>{{ $user['phone'] }}</span>
+                <span dir="ltr">{{ $user['phone'] }}</span>
             </div>
+        </div>
+        <div class="dropdown">
+            <button class="btn shadow-none" data-toggle="dropdown">
+                <img src="{{asset('/public/assets/admin/img/ellipsis.png')}}" alt="">
+            </button>
+            @if ($user?->user)
+
+            <ul class="dropdown-menu conv-dropdown-menu">
+                {{-- <li>
+                    <a href="#">View Details</a>
+                </li> --}}
+                <li>
+                    <a href="{{ route('admin.customer.view', [$user->user->id]) }}"
+                        >{{ translate('view_order_list') }}</a>
+                </li>
+            </ul>
+            @endif
         </div>
     </div>
 
@@ -32,7 +49,9 @@
                                 @endif
                         </div>
                         <div class="pl-1">
-                            <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                            <small>
+                                {{ \App\CentralLogics\Helpers::time_date_format($con->created_at) }}
+                            </small>
                         </div>
                     </div>
                 @else
@@ -48,7 +67,7 @@
                             @endif
                         </div>
                         <div class="text-right pr-1">
-                            <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                            <small>   {{ \App\CentralLogics\Helpers::date_format($con->created_at) }}  {{ \App\CentralLogics\Helpers::time_format($con->created_at) }}</small>
                             @if ($con->is_seen == 1)
                             <span class="text-primary"><i class="tio-checkmark-circle"></i></span>
                             @else
@@ -72,11 +91,24 @@
 
                 </label>
                 <textarea class="form-control pr--180" id="msg" rows = "1" name="reply"></textarea>
-                <div id="coba">
+                <div class="upload__box">
+                    <div class="upload__img-wrap"></div>
+                    <div id="file-upload-filename" class="upload__file-wrap"></div>
+                    <div class="upload-btn-grp">
+                        <label class="m-0">
+                            <img src="{{asset('/public/assets/admin/img/gallery.png')}}" alt="">
+                            <input type="file" name="images[]" class="d-none upload_input_images" data-max_length="2" accept="image/*"  multiple="" >
+                        </label>
+                        {{-- <label class="m-0">
+                            <img src="{{asset('/public/assets/admin/img/file.png')}}" alt="">
+                            <input type="file" class="d-none" id="file-upload">
+                        </label> --}}
+                        <label class="m-0 emoji-icon-hidden">
+                            <img src="{{asset('/public/assets/admin/img/emoji.png')}}" alt="">
+                        </label>
+                    </div>
                 </div>
-                <button type="submit"
-                 {{-- onclick="replyConvs('{{route('admin.message.store',[$user->id])}}')" --}}
-                        class="btn btn-primary btn--primary con-reply-btn">{{translate('messages.send')}}
+                <button type="submit" class="btn btn-primary btn--primary con-reply-btn">{{translate('messages.send')}}
                 </button>
             </div>
         </form>
@@ -84,6 +116,89 @@
 </div>
 
 <script>
+    $(document).ready(function() {
+        $("#msg").emojioneArea({
+            pickerPosition: "top",
+            tonesStyle: "bullet",
+                events: {
+                    keyup: function (editor, event) {d
+                        console.log(editor.html());
+                        console.log(this.getText());
+                    }
+                }
+            });
+    });
+</script>
+<script>
+    $(document).ready(function () {
+    // Image Upload
+    jQuery(document).ready(function () {
+        ImgUpload();
+    });
+    function ImgUpload() {
+    var imgWrap = "";
+    var imgArray = [];
+
+    $('.upload_input_images').each(function () {
+        $(this).on('change', function (e) {
+        imgWrap = $(this).closest('.upload__box').find('.upload__img-wrap');
+        var maxLength = $(this).attr('data-max_length');
+
+        var files = e.target.files;
+        var filesArr = Array.prototype.slice.call(files);
+        var iterator = 0;
+        filesArr.forEach(function (f, index) {
+
+            if (!f.type.match('image.*')) {
+            return;
+            }
+
+            if (imgArray.length > maxLength) {
+            return false
+            } else {
+            var len = 0;
+            for (var i = 0; i < imgArray.length; i++) {
+                if (imgArray[i] !== undefined) {
+                len++;
+                }
+            }
+            if (len > maxLength) {
+                return false;
+            } else {
+                imgArray.push(f);
+
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                var html = "<div class='upload__img-box'><div style='background-image: url(" + e.target.result + ")' data-number='" + $(".upload__img-close").length + "' data-file='" + f.name + "' class='img-bg'><div class='upload__img-close'></div></div></div>";
+                imgWrap.append(html);
+                iterator++;
+                }
+                reader.readAsDataURL(f);
+            }
+            }
+        });
+        });
+    });
+
+    $('body').on('click', ".upload__img-close", function (e) {
+        var file = $(this).parent().data("file");
+        for (var i = 0; i < imgArray.length; i++) {
+        if (imgArray[i].name === file) {
+            imgArray.splice(i, 1);
+            break;
+        }
+        }
+        $(this).parent().parent().remove();
+    });
+    }
+
+    //File Upload
+    $('#file-upload').change(function(e){
+        var fileName = e.target.files[0].name;
+        $('#file-upload-filename').text(fileName)
+    });
+
+    });
     $(document).ready(function () {
         $('.scroll-down').animate({
             scrollTop: $('#scroll-here').offset().top
@@ -145,11 +260,21 @@
                 processData: false,
                 success: function(data) {
                     if (data.errors && data.errors.length > 0) {
-                        $('button[type=submit], input[type=submit]').prop('disabled',false);
-                        toastr.error('{{ translate('Write something to send massage!') }}', {
-                            CloseButton: true,
-                            ProgressBar: true
-                        });
+
+                        if (data.errors[1] && data.errors[1].code == 'images') {
+                            toastr.error(data.errors[1].message, {
+                                CloseButton: true,
+                                ProgressBar: true
+                            });
+                        } else {
+
+                            $('button[type=submit], input[type=submit]').prop('disabled',false);
+                            toastr.error('{{ translate('Write_something_to_send_massage!') }}', {
+                                CloseButton: true,
+                                ProgressBar: true
+                            });
+                        }
+
                     }else{
 
                         toastr.success('Message sent', {
@@ -160,7 +285,7 @@
                     }
                 },
                 error() {
-                    toastr.error('{{ translate('Write something to send massage!') }}', {
+                    toastr.error('{{ translate('Write_something_to_send_massage!') }}', {
                         CloseButton: true,
                         ProgressBar: true
                     });

@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Add new zone'))
+@section('title',translate('Add_new_zone'))
 
 @push('css_or_js')
 
@@ -13,7 +13,7 @@
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
                     <h1 class="page-header-title">
-                        <i class="tio-free-transform"></i>{{translate('messages.zone')}} {{translate('messages.setup')}}
+                        <img src="{{asset('/public/assets/admin/img/zone.png')}}" alt="" class="mr-2"> {{translate('messages.Add_New_Business_Zone')}}
                     </h1>
                 </div>
             </div>
@@ -21,7 +21,7 @@
         <!-- End Page Header -->
         <div class="row gx-2 gx-lg-3">
             <div class="col-sm-12 col-lg-12 mb-3 mb-lg-2">
-                <form action="{{route('admin.zone.store')}}" method="post" class="shadow--card">
+                <form action="javascript:" method="post" id="zone_form" class="shadow--card">
                     @csrf
                     <div class="row justify-content-between">
                         <div class="col-md-5">
@@ -29,7 +29,7 @@
                                 <div class="zone-setup-top">
                                     <h6 class="subtitle">{{translate('messages.instructions')}}</h6>
                                     <p>
-                                        {{translate('messages.create_zone_by_click_on_map_and_connect_the_dots_together')}}
+                                        {{translate('messages.Create_&_connect_dots_in_a_specific_area_on_the_map_to_add_a_new_business_zone.')}}
                                     </p>
                                 </div>
                                 <div class="zone-setup-item">
@@ -37,7 +37,7 @@
                                         <i class="tio-hand-draw"></i>
                                     </div>
                                     <div class="info">
-                                        {{translate('messages.use_this_drag_map_to_find_proper_area')}}
+                                        {{translate('messages.Use_this_‘Hand_Tool’_to_find_your_target_zone.')}}
                                     </div>
                                 </div>
                                 <div class="zone-setup-item">
@@ -45,7 +45,7 @@
                                         <i class="tio-free-transform"></i>
                                     </div>
                                     <div class="info">
-                                        {{translate('messages.click_this_icon_to_start_pin_points_in_the_map_and_connect_them_to_draw_a_zone._minimum_3_points_required')}}
+                                        {{translate('messages.Use_this_‘Shape_Tool’_to_point_out_the_areas_and_connect_the_dots._A_minimum_of_3_points/dots_is_required.')}}
                                     </div>
                                 </div>
                                 <div class="instructions-image mt-4">
@@ -55,320 +55,62 @@
                         </div>
                         <div class="col-md-6 col-xl-7 zone-setup">
                             <div class="pl-xl-5 pl-xxl-0">
-                                <div class="form-group mb-3">
-                                    <label class="input-label"
-                                        for="exampleFormControlInput1">{{translate('messages.zone')}} {{translate('messages.name')}}</label>
-                                    <input id="name" type="text" name="name" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} {{ translate('abc area') }}" value="{{old('name')}}" required>
+                                {{-- <div class="d-flex"> --}}
+                                    @php($language=\App\Models\BusinessSetting::where('key','language')->first())
+                                    @php($language = $language?->value )
+                                    @php($default_lang = str_replace('_', '-', app()->getLocale()))
+                                    {{-- @if($language) --}}
+                                        <ul class="nav nav-tabs mb-4">
+                                            <li class="nav-item">
+                                                <a class="nav-link lang_link active"
+                                                href="#"
+                                                id="default-link">{{translate('messages.default')}}</a>
+                                            </li>
+                                            @if ($language)
+                                            @forelse (json_decode($language) as $lang)
+                                                <li class="nav-item">
+                                                    <a class="nav-link lang_link"
+                                                        href="#"
+                                                        id="{{ $lang }}-link">{{ \App\CentralLogics\Helpers::get_language_name($lang) . '(' . strtoupper($lang) . ')' }}</a>
+                                                </li>
+                                                @empty
+                                            @endforelse
+                                            @endif
+                                            <span class="form-label-secondary text-danger mt-2"
+                                            data-toggle="tooltip" data-placement="right"
+                                            data-original-title="{{ translate('Choose_your_preferred_language_&_set_your_zone_name.') }}"><img
+                                            src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
+                                            alt="{{ translate('messages.veg_non_veg') }}"></span>
+                                        </ul>
+                                {{-- </div> --}}
+                                <div class="tab-content">
+
+                                    <div class="form-group mb-3 lang_form" id="default-form">
+                                        <label class="input-label" for="exampleFormControlInput1">{{ translate('messages.business_Zone_name')}} ({{ translate('messages.default') }})</label>
+                                        <input type="text" name="name[]"  class="form-control" placeholder="{{translate('messages.Type_new_zone_name_here')}}" maxlength="191" id="default-form-input"  oninvalid="document.getElementById('default-form-input').click()">
+                                    </div>
+                                    <input type="hidden" name="lang[]" value="default">
+                                    @if ($language)
+                                    @forelse (json_decode($language) as $lang)
+                                        <div class="form-group mb-3 d-none lang_form" id="{{$lang}}-form">
+                                            <label class="input-label"
+                                                for="exampleFormControlInput1">{{ translate('messages.business_Zone_name')}} ({{strtoupper($lang)}})</label>
+                                            <input id="name" type="text" name="name[]" class="form-control h--45px" placeholder="{{translate('messages.Type_new_zone_name_here')}}" >
+                                        </div>
+                                        <input type="hidden" name="lang[]" value="{{$lang}}">
+                                    @empty
+                                    @endforelse
+                                    @endif
                                 </div>
-                                <div class="form-group mb-3 initial-hidden">
+
+
+                                <div class="form-group mb-3 d-none">
                                     <label class="input-label"
-                                        for="exampleFormControlInput1">{{translate('messages.Coordinates')}}<span class="input-label-secondary" title="{{translate('messages.draw_your_zone_on_the_map')}}">{{translate('messages.draw_your_zone_on_the_map')}}</span></label>
+                                        for="exampleFormControlInput1">{{ translate('Coordinates') }}<span class="form-label-secondary" data-toggle="tooltip" data-placement="right"
+                                        data-original-title="{{translate('messages.draw_your_zone_on_the_map')}}">{{translate('messages.draw_your_zone_on_the_map')}}</span></label>
                                         <textarea type="text" rows="8" name="coordinates"  id="coordinates" class="form-control" readonly></textarea>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6 col-sm-6 col-12">
-                                        <div class="form-group">
-                                            <label class="input-label text-capitalize d-flex alig-items-center"
-                                                for="country">{{ translate('messages.country') }}</label>
-                                            <select id="country" name="country" class="form-control  js-select2-custom">
-                                                <option value="AF">Afghanistan</option>
-                                                <option value="AX">Åland Islands</option>
-                                                <option value="AL">Albania</option>
-                                                <option value="DZ">Algeria</option>
-                                                <option value="AS">American Samoa</option>
-                                                <option value="AD">Andorra</option>
-                                                <option value="AO">Angola</option>
-                                                <option value="AI">Anguilla</option>
-                                                <option value="AQ">Antarctica</option>
-                                                <option value="AG">Antigua and Barbuda</option>
-                                                <option value="AR">Argentina</option>
-                                                <option value="AM">Armenia</option>
-                                                <option value="AW">Aruba</option>
-                                                <option value="AU">Australia</option>
-                                                <option value="AT">Austria</option>
-                                                <option value="AZ">Azerbaijan</option>
-                                                <option value="BS">Bahamas</option>
-                                                <option value="BH">Bahrain</option>
-                                                <option value="BD">Bangladesh</option>
-                                                <option value="BB">Barbados</option>
-                                                <option value="BY">Belarus</option>
-                                                <option value="BE">Belgium</option>
-                                                <option value="BZ">Belize</option>
-                                                <option value="BJ">Benin</option>
-                                                <option value="BM">Bermuda</option>
-                                                <option value="BT">Bhutan</option>
-                                                <option value="BO">Bolivia, Plurinational State of</option>
-                                                <option value="BQ">Bonaire, Sint Eustatius and Saba</option>
-                                                <option value="BA">Bosnia and Herzegovina</option>
-                                                <option value="BW">Botswana</option>
-                                                <option value="BV">Bouvet Island</option>
-                                                <option value="BR">Brazil</option>
-                                                <option value="IO">British Indian Ocean Territory</option>
-                                                <option value="BN">Brunei Darussalam</option>
-                                                <option value="BG">Bulgaria</option>
-                                                <option value="BF">Burkina Faso</option>
-                                                <option value="BI">Burundi</option>
-                                                <option value="KH">Cambodia</option>
-                                                <option value="CM">Cameroon</option>
-                                                <option value="CA">Canada</option>
-                                                <option value="CV">Cape Verde</option>
-                                                <option value="KY">Cayman Islands</option>
-                                                <option value="CF">Central African Republic</option>
-                                                <option value="TD">Chad</option>
-                                                <option value="CL">Chile</option>
-                                                <option value="CN">China</option>
-                                                <option value="CX">Christmas Island</option>
-                                                <option value="CC">Cocos (Keeling) Islands</option>
-                                                <option value="CO">Colombia</option>
-                                                <option value="KM">Comoros</option>
-                                                <option value="CG">Congo</option>
-                                                <option value="CD">Congo, the Democratic Republic of the</option>
-                                                <option value="CK">Cook Islands</option>
-                                                <option value="CR">Costa Rica</option>
-                                                <option value="CI">Côte d'Ivoire</option>
-                                                <option value="HR">Croatia</option>
-                                                <option value="CU">Cuba</option>
-                                                <option value="CW">Curaçao</option>
-                                                <option value="CY">Cyprus</option>
-                                                <option value="CZ">Czech Republic</option>
-                                                <option value="DK">Denmark</option>
-                                                <option value="DJ">Djibouti</option>
-                                                <option value="DM">Dominica</option>
-                                                <option value="DO">Dominican Republic</option>
-                                                <option value="EC">Ecuador</option>
-                                                <option value="EG">Egypt</option>
-                                                <option value="SV">El Salvador</option>
-                                                <option value="GQ">Equatorial Guinea</option>
-                                                <option value="ER">Eritrea</option>
-                                                <option value="EE">Estonia</option>
-                                                <option value="ET">Ethiopia</option>
-                                                <option value="FK">Falkland Islands (Malvinas)</option>
-                                                <option value="FO">Faroe Islands</option>
-                                                <option value="FJ">Fiji</option>
-                                                <option value="FI">Finland</option>
-                                                <option value="FR">France</option>
-                                                <option value="GF">French Guiana</option>
-                                                <option value="PF">French Polynesia</option>
-                                                <option value="TF">French Southern Territories</option>
-                                                <option value="GA">Gabon</option>
-                                                <option value="GM">Gambia</option>
-                                                <option value="GE">Georgia</option>
-                                                <option value="DE">Germany</option>
-                                                <option value="GH">Ghana</option>
-                                                <option value="GI">Gibraltar</option>
-                                                <option value="GR">Greece</option>
-                                                <option value="GL">Greenland</option>
-                                                <option value="GD">Grenada</option>
-                                                <option value="GP">Guadeloupe</option>
-                                                <option value="GU">Guam</option>
-                                                <option value="GT">Guatemala</option>
-                                                <option value="GG">Guernsey</option>
-                                                <option value="GN">Guinea</option>
-                                                <option value="GW">Guinea-Bissau</option>
-                                                <option value="GY">Guyana</option>
-                                                <option value="HT">Haiti</option>
-                                                <option value="HM">Heard Island and McDonald Islands</option>
-                                                <option value="VA">Holy See (Vatican City State)</option>
-                                                <option value="HN">Honduras</option>
-                                                <option value="HK">Hong Kong</option>
-                                                <option value="HU">Hungary</option>
-                                                <option value="IS">Iceland</option>
-                                                <option value="IN">India</option>
-                                                <option value="ID">Indonesia</option>
-                                                <option value="IR">Iran, Islamic Republic of</option>
-                                                <option value="IQ">Iraq</option>
-                                                <option value="IE">Ireland</option>
-                                                <option value="IM">Isle of Man</option>
-                                                <option value="IL">Israel</option>
-                                                <option value="IT">Italy</option>
-                                                <option value="JM">Jamaica</option>
-                                                <option value="JP">Japan</option>
-                                                <option value="JE">Jersey</option>
-                                                <option value="JO">Jordan</option>
-                                                <option value="KZ">Kazakhstan</option>
-                                                <option value="KE">Kenya</option>
-                                                <option value="KI">Kiribati</option>
-                                                <option value="KP">Korea, Democratic People's Republic of</option>
-                                                <option value="KR">Korea, Republic of</option>
-                                                <option value="KW">Kuwait</option>
-                                                <option value="KG">Kyrgyzstan</option>
-                                                <option value="LA">Lao People's Democratic Republic</option>
-                                                <option value="LV">Latvia</option>
-                                                <option value="LB">Lebanon</option>
-                                                <option value="LS">Lesotho</option>
-                                                <option value="LR">Liberia</option>
-                                                <option value="LY">Libya</option>
-                                                <option value="LI">Liechtenstein</option>
-                                                <option value="LT">Lithuania</option>
-                                                <option value="LU">Luxembourg</option>
-                                                <option value="MO">Macao</option>
-                                                <option value="MK">Macedonia, the former Yugoslav Republic of</option>
-                                                <option value="MG">Madagascar</option>
-                                                <option value="MW">Malawi</option>
-                                                <option value="MY">Malaysia</option>
-                                                <option value="MV">Maldives</option>
-                                                <option value="ML">Mali</option>
-                                                <option value="MT">Malta</option>
-                                                <option value="MH">Marshall Islands</option>
-                                                <option value="MQ">Martinique</option>
-                                                <option value="MR">Mauritania</option>
-                                                <option value="MU">Mauritius</option>
-                                                <option value="YT">Mayotte</option>
-                                                <option value="MX">Mexico</option>
-                                                <option value="FM">Micronesia, Federated States of</option>
-                                                <option value="MD">Moldova, Republic of</option>
-                                                <option value="MC">Monaco</option>
-                                                <option value="MN">Mongolia</option>
-                                                <option value="ME">Montenegro</option>
-                                                <option value="MS">Montserrat</option>
-                                                <option value="MA">Morocco</option>
-                                                <option value="MZ">Mozambique</option>
-                                                <option value="MM">Myanmar</option>
-                                                <option value="NA">Namibia</option>
-                                                <option value="NR">Nauru</option>
-                                                <option value="NP">Nepal</option>
-                                                <option value="NL">Netherlands</option>
-                                                <option value="NC">New Caledonia</option>
-                                                <option value="NZ">New Zealand</option>
-                                                <option value="NI">Nicaragua</option>
-                                                <option value="NE">Niger</option>
-                                                <option value="NG">Nigeria</option>
-                                                <option value="NU">Niue</option>
-                                                <option value="NF">Norfolk Island</option>
-                                                <option value="MP">Northern Mariana Islands</option>
-                                                <option value="NO">Norway</option>
-                                                <option value="OM">Oman</option>
-                                                <option value="PK">Pakistan</option>
-                                                <option value="PW">Palau</option>
-                                                <option value="PS">Palestinian Territory, Occupied</option>
-                                                <option value="PA">Panama</option>
-                                                <option value="PG">Papua New Guinea</option>
-                                                <option value="PY">Paraguay</option>
-                                                <option value="PE">Peru</option>
-                                                <option value="PH">Philippines</option>
-                                                <option value="PN">Pitcairn</option>
-                                                <option value="PL">Poland</option>
-                                                <option value="PT">Portugal</option>
-                                                <option value="PR">Puerto Rico</option>
-                                                <option value="QA">Qatar</option>
-                                                <option value="RE">Réunion</option>
-                                                <option value="RO">Romania</option>
-                                                <option value="RU">Russian Federation</option>
-                                                <option value="RW">Rwanda</option>
-                                                <option value="BL">Saint Barthélemy</option>
-                                                <option value="SH">Saint Helena, Ascension and Tristan da Cunha</option>
-                                                <option value="KN">Saint Kitts and Nevis</option>
-                                                <option value="LC">Saint Lucia</option>
-                                                <option value="MF">Saint Martin (French part)</option>
-                                                <option value="PM">Saint Pierre and Miquelon</option>
-                                                <option value="VC">Saint Vincent and the Grenadines</option>
-                                                <option value="WS">Samoa</option>
-                                                <option value="SM">San Marino</option>
-                                                <option value="ST">Sao Tome and Principe</option>
-                                                <option value="SA">Saudi Arabia</option>
-                                                <option value="SN">Senegal</option>
-                                                <option value="RS">Serbia</option>
-                                                <option value="SC">Seychelles</option>
-                                                <option value="SL">Sierra Leone</option>
-                                                <option value="SG">Singapore</option>
-                                                <option value="SX">Sint Maarten (Dutch part)</option>
-                                                <option value="SK">Slovakia</option>
-                                                <option value="SI">Slovenia</option>
-                                                <option value="SB">Solomon Islands</option>
-                                                <option value="SO">Somalia</option>
-                                                <option value="ZA">South Africa</option>
-                                                <option value="GS">South Georgia and the South Sandwich Islands</option>
-                                                <option value="SS">South Sudan</option>
-                                                <option value="ES">Spain</option>
-                                                <option value="LK">Sri Lanka</option>
-                                                <option value="SD">Sudan</option>
-                                                <option value="SR">Suriname</option>
-                                                <option value="SJ">Svalbard and Jan Mayen</option>
-                                                <option value="SZ">Swaziland</option>
-                                                <option value="SE">Sweden</option>
-                                                <option value="CH">Switzerland</option>
-                                                <option value="SY">Syrian Arab Republic</option>
-                                                <option value="TW">Taiwan, Province of China</option>
-                                                <option value="TJ">Tajikistan</option>
-                                                <option value="TZ">Tanzania, United Republic of</option>
-                                                <option value="TH">Thailand</option>
-                                                <option value="TL">Timor-Leste</option>
-                                                <option value="TG">Togo</option>
-                                                <option value="TK">Tokelau</option>
-                                                <option value="TO">Tonga</option>
-                                                <option value="TT">Trinidad and Tobago</option>
-                                                <option value="TN">Tunisia</option>
-                                                <option value="TR">Turkey</option>
-                                                <option value="TM">Turkmenistan</option>
-                                                <option value="TC">Turks and Caicos Islands</option>
-                                                <option value="TV">Tuvalu</option>
-                                                <option value="UG">Uganda</option>
-                                                <option value="UA">Ukraine</option>
-                                                <option value="AE">United Arab Emirates</option>
-                                                <option value="GB">United Kingdom</option>
-                                                <option value="US">United States</option>
-                                                <option value="UM">United States Minor Outlying Islands</option>
-                                                <option value="UY">Uruguay</option>
-                                                <option value="UZ">Uzbekistan</option>
-                                                <option value="VU">Vanuatu</option>
-                                                <option value="VE">Venezuela, Bolivarian Republic of</option>
-                                                <option value="VN">Viet Nam</option>
-                                                <option value="VG">Virgin Islands, British</option>
-                                                <option value="VI">Virgin Islands, U.S.</option>
-                                                <option value="WF">Wallis and Futuna</option>
-                                                <option value="EH">Western Sahara</option>
-                                                <option value="YE">Yemen</option>
-                                                <option value="ZM">Zambia</option>
-                                                <option value="ZW">Zimbabwe</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6 col-sm-6 col-12">
-                                        @php($currency_code = \App\Models\BusinessSetting::where('key', 'currency')->first())
-                                        <div class="form-group">
-                                            <label class="input-label"
-                                                for="exampleFormControlInput1">{{ translate('messages.currency') }}</label>
-                                            <select name="currency" class="form-control js-select2-custom">
-                                                @foreach (\App\Models\Currency::orderBy('currency_code')->get() as $currency)
-                                                    <option value="{{ $currency['currency_code'] }}"
-                                                        {{ $currency_code ? ($currency_code->value == $currency['currency_code'] ? 'selected' : '') : '' }}>
-                                                        {{ $currency['currency_code'] }} ( {{ $currency['currency_symbol'] }} )
-                                                    </option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group mb-3">
-                                            <label class="input-label">
-                                                {{translate('messages.minimum_delivery_charge')}}
-                                            </label>
-                                            <input id="minimum_delivery_charge" name="minimum_delivery_charge" type="number" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} 10" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <div class="form-group mb-3">
-                                            <label class="input-label">
-                                                {{translate('messages.delivery_charge_per_km')}} ({{\App\CentralLogics\Helpers::currency_symbol()}})
-                                            </label>
-                                            <input id="delivery_charge_per_km" name="per_km_delivery_charge" type="number" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} 10" required>
-                                        </div>
-                                    </div>
-                                    <div class="d-flex g-4 pl-4">
-                                        
-                                        <div class="form-group form-check form--check">
-                                            <input type="checkbox" name="cod" value="1" class="form-check-input"
-                                                    id="cod">
-                                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="cod">{{translate('COD')}}</label>
-                                        </div>
-                                        <div class="form-group form-check form--check">
-                                            <input type="checkbox" name="digital_payment" value="1" class="form-check-input"
-                                                    id="digital_payment">
-                                            <label class="form-check-label ml-2 ml-sm-3 qcont text-dark" for="digital_payment">{{translate('digital_payment')}}</label>
-                                        </div>
-                                        
-                                    </div>
-                                </div>
+
                                 <div class="map-warper overflow-hidden rounded">
                                     <input id="pac-input" class="controls rounded initial-8" title="{{translate('messages.search_your_location_here')}}" type="text" placeholder="{{translate('messages.search_here')}}"/>
                                     <div id="map-canvas" class="h-100 m-0 p-0"></div>
@@ -387,13 +129,13 @@
                 <div class="card">
                     <div class="card-header py-2 flex-wrap border-0 align-items-center">
                         <div class="search--button-wrapper">
-                            <h5 class="card-title">{{translate('messages.zone')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$zones->total()}}</span></h5>
-                            <form action="javascript:" id="search-form" class="my-2 mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
+                            <h5 class="card-title">{{translate('messages.zone_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$zones->total()}}</span></h5>
+                            <form class="my-2 mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
                                             <!-- Search -->
-                                @csrf
+
                                 <div class="input--group input-group input-group-merge input-group-flush">
                                     <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                            placeholder="{{ translate('messages.Search_by_name') }}" aria-label="{{translate('messages.search')}}" required>
+                                            placeholder="{{ translate('messages.Search_by_name') }}" aria-label="{{translate('messages.search')}}">
                                     <button type="submit" class="btn btn--secondary">
                                         <i class="tio-search"></i>
                                     </button>
@@ -402,41 +144,17 @@
                             </form>
                             <!-- Unfold -->
                             <div class="hs-unfold ml-3">
-                                <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle btn export-btn btn-outline-primary btn--primary font--sm" href="javascript:;"
-                                   data-hs-unfold-options='{
-                                     "target": "#usersExportDropdown",
-                                     "type": "css-animation"
-                                   }'>
+                                    <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle btn export-btn btn-outline-primary btn--primary font--sm" href="javascript:;"
+                                    data-hs-unfold-options='{
+                                        "target": "#usersExportDropdown",
+                                        "type": "css-animation"
+                                    }'>
                                     <i class="tio-download-to mr-1"></i> {{translate('messages.export')}}
                                 </a>
 
                                 <div id="usersExportDropdown"
-                                     class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                                    {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                                    <a id="export-copy" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                             src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                             alt="Image Description">
-                                        {{translate('messages.copy')}}
-                                    </a>
-                                    <a id="export-print" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                             src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                             alt="Image Description">
-                                        {{translate('messages.print')}}
-                                    </a>
-                                    <div class="dropdown-divider"></div>--}}
-                                    <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-{{--                                     <form action="{{route('admin.zone.export-zones')}}" method="post">
-                                        @csrf
-                                        <input type="hidden" name="type" value="excel">
-                                        <button type="submit">
-                                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                            src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
-                                            alt="Image Description">
-                                            {{translate('messages.excel')}}
-                                        </button>
-                                    </form> --}}
+                                        class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                                    <span class="dropdown-header">{{translate('messages.download_options')}}</span>
                                     <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.zone.export-zones', ['type'=>'excel'])}}">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                         src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
@@ -445,16 +163,10 @@
                                     </a>
                                     <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.zone.export-zones', ['type'=>'csv'])}}">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                             src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
-                                             alt="Image Description">
-                                        .{{translate('messages.csv')}}
+                                                src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
+                                                alt="Image Description">
+                                        {{translate('messages.csv')}}
                                     </a>
-                                    {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                             src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                             alt="Image Description">
-                                        {{translate('messages.pdf')}}
-                                    </a>--}}
                                 </div>
                             </div>
                             <!-- End Unfold -->
@@ -463,28 +175,32 @@
                     <!-- Table -->
                     <div class="table-responsive datatable-custom">
                         <table id="columnSearchDatatable"
-                               class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table"
-                               data-hs-datatables-options='{
-                                 "order": [],
-                                 "orderCellsTop": true,
-                                 "paging":false
-                               }'>
+                                class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table"
+                                data-hs-datatables-options='{
+                                    "order": [],
+                                    "orderCellsTop": true,
+                                    "paging":false
+                                }'>
                             <thead class="thead-light">
                             <tr>
                                 <th>{{translate('messages.sl')}}</th>
-                                <th class="text-center">{{translate('messages.zone')}} {{translate('messages.id')}}</th>
+                                <th class="text-center">{{translate('messages.zone_id')}}</th>
                                 <th class="pl-5">{{translate('messages.name')}}</th>
                                 <th class="text-center">{{translate('messages.restaurants')}}</th>
                                 <th class="text-center">{{translate('messages.deliverymen')}}</th>
                                 <th >{{translate('messages.status')}}</th>
-                                <th class="w-40px">{{translate('messages.action')}}</th>
+                                <th class="w-40px text-center">{{translate('messages.action')}}</th>
                             </tr>
                             </thead>
 
                             <tbody id="set-rows">
+                                @php($non_mod = 0)
                             @foreach($zones as $key=>$zone)
+                            @php($non_mod = ( ($zone?->minimum_shipping_charge && $zone?->per_km_shipping_charge ) && $non_mod == 0) ? $non_mod:$non_mod+1 )
+
+                            {{-- @php(? $non_mod:$non_mod = 1 ) --}}
                                 <tr>
-                                    <td>{{$key+$zones->firstItem()}}</td>
+                                    <td>{{$key+$zones?->firstItem()}}</td>
                                     <td class="text-center">
                                         <span class="move-left">
                                             {{$zone->id}}
@@ -506,26 +222,38 @@
                                         </span>
                                     </td>
                                     <td>
-                                        <label class="toggle-switch toggle-switch-sm" for="stocksCheckbox{{$zone->id}}">
-                                            <input type="checkbox" onclick="status_form_alert('status-{{$zone['id']}}','{{ translate('All the restaurants & delivery men under this zone will not be shown in the website or app') }}', event)" class="toggle-switch-input" id="stocksCheckbox{{$zone->id}}" {{$zone->status?'checked':''}}>
+                                        <label class="toggle-switch toggle-switch-sm">
+                                            <input type="checkbox" class="toggle-switch-input" id="status-{{$zone['id']}}" {{$zone->status?'checked':''}}
+                                            onclick="toogleStatusModal(event,'status-{{$zone['id']}}','zone-status-on.png','zone-status-off.png','{{translate('Want_to_activate_this_Zone?')}}','{{translate('Want_to_deactivate_this_Zone?')}}',`<p>{{translate('If_you_activate_this_zone,_Customers_can_see_all_restaurants_&_products_available_under_this_Zone_from_the_Customer_App_&_Website.')}}</p>`,`<p>{{translate('If_you_deactivate_this_zone,_Customers_Will_NOT_see_all_restaurants_&_products_available_under_this_Zone_from_the_Customer_App_&_Website.')}}</p>`)"
+                                            >
                                             <span class="toggle-switch-label">
                                                 <span class="toggle-switch-indicator"></span>
                                             </span>
                                         </label>
-                                        <form action="{{route('admin.zone.status',[$zone['id'],$zone->status?0:1])}}" method="get" id="status-{{$zone['id']}}">
+                                        <form action="{{route('admin.zone.status',[$zone['id'],$zone->status?0:1])}}" method="get" id="status-{{$zone['id']}}_form">
                                         </form>
                                     </td>
                                     <td>
-                                        <div class="pl-1">
+                                        <div class="btn--container justify-content-center">
                                             <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                                href="{{route('admin.zone.edit',[$zone['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.zone')}}"><i class="tio-edit"></i>
+                                                href="{{route('admin.zone.edit',[$zone['id']])}}" title="{{translate('messages.edit_zone')}}"><i class="tio-edit"></i>
                                             </a>
-                                            {{--<a class="btn btn-sm btn-white" href="javascript:"
-                                            onclick="form_alert('zone-{{$zone['id']}}','Want to delete this zone ?')" title="{{translate('messages.delete')}} {{translate('messages.zone')}}"><i class="tio-delete-outlined"></i>
-                                            </a>
-                                            <form action="{{route('admin.zone.delete',[$zone['id']])}}" method="post" id="zone-{{$zone['id']}}">
-                                                @csrf @method('delete')
-                                            </form>--}}
+                                            <!-- <div class="popover-wrapper active"> add active class to show -->
+                                            <div class="popover-wrapper hide_data {{ $non_mod == 1 ? 'active':'' }} ">
+                                                <a class="btn active action-btn btn--warning btn-outline-warning" href="{{route('admin.zone.settings',['id'=>$zone['id']])}}" title="{{translate('messages.zone_settings')}}">
+                                                    <i class="tio-settings"></i>
+                                                </a>
+                                                <div class="popover __popover  {{ $non_mod == 1  ? '':'d-none' }}">
+                                                    <div class="arrow"></div>
+                                                    <h3 class="popover-header d-flex justify-content-between">
+                                                        <span>{{ translate('messages.Important!') }}</span>
+                                                        <span onclick="hide_data()" class="tio-clear"></span>
+                                                    </h3>
+                                                    <div class="popover-body">
+                                                        {{ translate('The_Business_Zone_will_NOT_work_if_you_don’t_add_the_minimum_delivery_charge_&_per_km_delivery_charge.') }}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
                                 </tr>
@@ -554,22 +282,58 @@
         </div>
     </div>
 
+
+ 
+
+
+    <div class="modal fade" id="warning-modal">
+        <div class="modal-dialog modal-lg warning-modal">
+            <div class="modal-content">
+                <div class="modal-body">
+                    <div class="text-center mb-3">
+                        <h3 class="modal-title mb-3">{{translate('messages.New_Business_Zone_Created_Successfully!')}}</h3>
+                        <p class="txt">
+                            {{translate('messages.NEXT_IMPORTANT_STEP:_You_need_to_add_‘Delivery_Charge’_with_other_details_from_the_Zone_Settings._If_you_don’t_add_a_delivery_charge,_the_Zone_you_created_won’t_function_properly.')}}
+                        </p>
+                    </div>
+                    <img src="{{asset('/public/assets/admin/img/zone-instruction.png')}}" alt="admin/img" class="w-100">
+                    <div class="mt-3 d-flex flex-wrap align-items-center justify-content-between">
+                        <label class="form-check form--check m-0">
+                            {{-- <input type="checkbox" class="form-check-input rounded"> --}}
+                            {{-- <span class="form-check-label">{{translate("Don't show this anymore")}}</span> --}}
+                        </label>
+                        <div class="btn--container justify-content-end">
+                            <button id="reset_btn" type="reset" class="btn btn--reset" data-dismiss="modal">{{translate('messages.I_Will_Do_It_Later')}}</button>
+                            <button type="submit" class="btn btn--primary" data-dismiss="modal">{{translate('messages.Go_to_Zone_Settings')}}</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @push('script_2')
-    <script>
+
+<script>
+    function hide_data(){
+        // alert('ok');
+        $(".hide_data").removeClass('active');
+    }
+        // $('#warning-modal').modal('show');
         function status_form_alert(id, message, e) {
             e.preventDefault();
             Swal.fire({
-                title: "{{translate('messages.are_you_sure')}}",
+                title: "{{translate('messages.are_you_sure_?')}}",
                 text: message,
                 type: 'warning',
                 showCloseButton: true,
                 showCancelButton: true,
                 cancelButtonColor: 'var(--secondary-clr)',
                 confirmButtonColor: 'var(--primary-clr)',
-                cancelButtonText: 'Cancel',
-                confirmButtonText: 'Yes',
+                cancelButtonText: '{{ translate('Cancel') }}',
+                confirmButtonText: '{{ translate('yes') }}',
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {
@@ -624,6 +388,12 @@
             $('.js-select2-custom').each(function () {
                 var select2 = $.HSCore.components.HSSelect2.init($(this));
             });
+
+            $("#zone_form").on('keydown', function(e){
+                if (e.keyCode === 13) {
+                    e.preventDefault();
+                }
+            })
         });
     </script>
 
@@ -810,7 +580,64 @@
 
     </script>
     <script>
-        $('#search-form').on('submit', function () {
+
+    </script>
+    <script>
+            $('#reset_btn').click(function(){
+                $('.tab-content').find('input:text').val('');
+                lastpolygon.setMap(null);
+                $('#coordinates').val(null);
+            })
+
+
+
+        $(document).on('ready', function() {
+
+            $("#maximum_shipping_charge_status").on('change', function() {
+                if ($("#maximum_shipping_charge_status").is(':checked')) {
+                    $('#maximum_shipping_charge').removeAttr('readonly');
+                } else {
+                    $('#maximum_shipping_charge').attr('readonly', true);
+                    $('#maximum_shipping_charge').val('Ex : 0');
+                }
+            });
+            $("#max_cod_order_amount_status").on('change', function() {
+                if ($("#max_cod_order_amount_status").is(':checked')) {
+                    $('#max_cod_order_amount').removeAttr('readonly');
+                } else {
+                    $('#max_cod_order_amount').attr('readonly', true);
+                    $('#max_cod_order_amount').val('Ex : 0');
+                }
+            });
+
+
+
+        });
+    </script>
+
+<script>
+    $(".lang_link").click(function(e){
+        e.preventDefault();
+        $(".lang_link").removeClass('active');
+        $(".lang_form").addClass('d-none');
+        $(this).addClass('active');
+
+        let form_id = this.id;
+        let lang = form_id.substring(0, form_id.length - 5);
+        console.log(lang);
+        $("#"+lang+"-form").removeClass('d-none');
+        if(lang == '{{$default_lang}}')
+        {
+            $(".from_part_2").removeClass('d-none');
+        }
+        else
+        {
+            $(".from_part_2").addClass('d-none');
+        }
+    });
+
+
+    $('#zone_form').on('submit', function () {
             var formData = new FormData(this);
             $.ajaxSetup({
                 headers: {
@@ -818,7 +645,7 @@
                 }
             });
             $.post({
-                url: '{{route('admin.zone.search')}}',
+                url: '{{route('admin.zone.store')}}',
                 data: formData,
                 cache: false,
                 contentType: false,
@@ -827,24 +654,32 @@
                     $('#loading').show();
                 },
                 success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('#itemCount').html(data.total);
-                    $('.page-area').hide();
+                    if(data.errors){
+                        for (var i = 0; i < data.errors.length; i++) {
+                            toastr.error(data.errors[i].message, {
+                                CloseButton: true,
+                                ProgressBar: true
+                            });
+                        }
+                    }
+                    else{
+                        $('.tab-content').find('input:text').val('');
+                        $('input[name="name"]').val(null);
+                        lastpolygon.setMap(null);
+                        $('#coordinates').val(null);
+                        toastr.success("{{ translate('messages.New_Business_Zone_Created_Successfully!') }}", {
+                                CloseButton: true,
+                                ProgressBar: true
+                            });
+                        $('#set-rows').html(data.view);
+                        $('#itemCount').html(data.total);
+                        $("#warning-modal").modal("show");
+                    }
                 },
                 complete: function () {
                     $('#loading').hide();
                 },
             });
         });
-    </script>
-    <script>
-        $('#reset_btn').click(function(){
-            $('#name').val(null);
-            $('#minimum_delivery_charge').val(null);
-            $('#delivery_charge_per_km').val(null);
-
-            lastpolygon.setMap(null);
-            $('#coordinates').val(null);
-        })
-    </script>
+</script>
 @endpush

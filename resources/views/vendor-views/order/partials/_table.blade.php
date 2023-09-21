@@ -8,10 +8,10 @@
         </td>
         <td>
             <span class="d-block">
-                {{date('d M Y',strtotime($order['created_at']))}}
+                {{ Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat('d M Y') }}
             </span>
             <span class="d-block text-uppercase">
-                {{date(config('timeformat'),strtotime($order['created_at']))}}
+                {{ Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat(config('timeformat')) }}
             </span>
         </td>
         <td>
@@ -27,7 +27,7 @@
                 </a>
             @else
                 <label
-                    class="badge badge-danger">{{translate('messages.invalid')}} {{translate('messages.customer')}} {{translate('messages.data')}}</label>
+                    class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
             @endif
         </td>
         <td>
@@ -41,6 +41,10 @@
                 <strong class="text-success">
                     {{translate('messages.paid')}}
                 </strong>
+                @elseif($order->payment_status=='partially_paid')
+                <strong class="text-success">
+                    {{translate('messages.partially_paid')}}
+                </strong>
                 @else
                     <strong class="text-danger">
                         {{translate('messages.unpaid')}}
@@ -49,6 +53,11 @@
             </div>
 
         </td>
+        @if (isset($order->subscription) && $order->subscription->status != 'canceled' )
+            @php
+                $order->order_status = $order->subscription_log ? $order->subscription_log->order_status : $order->order_status;
+            @endphp
+        @endif
         <td class="text-capitalize text-center">
             @if($order['order_status']=='pending')
                 <span class="badge badge-soft-info mb-1">
@@ -72,7 +81,7 @@
                 </span>
             @else
                 <span class="badge badge-soft-danger mb-1">
-                    {{str_replace('_',' ',$order['order_status'])}}
+                    {{translate(str_replace('_',' ',$order['order_status']))}}
                 </span>
             @endif
 

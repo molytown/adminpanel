@@ -239,6 +239,8 @@
                                 <th class="px-4 w-120px"><h4 class="m-0">{{translate('messages.price')}}</h4></th>
                                 <th class="px-4 w-100px"><h4 class="m-0">{{translate('messages.variations')}}</h4></th>
                                 <th class="px-4 w-100px"><h4 class="m-0">{{ translate('messages.addons') }}</h4></th>
+                                <th class="px-4 w-100px"><h4 class="m-0">{{ translate('Tags') }}</h4></th>
+
                             </tr>
                             <tbody>
                                 <td class="px-4">
@@ -264,7 +266,7 @@
                                     </span>
                                     <span class="d-block mb-1">
                                         <span>
-                                            {{translate('messages.available')}} {{translate('messages.time')}} {{translate('messages.starts')}} :
+                                            {{translate('messages.available_time_starts')}} :
                                         </span>
                                         <strong>
                                             {{date(config('timeformat'), strtotime($product['available_time_starts']))}}
@@ -272,7 +274,7 @@
                                     </span>
                                     <span class="d-block">
                                         <span>
-                                            {{translate('messages.available')}} {{translate('messages.time')}} {{translate('messages.ends')}} :
+                                            {{translate('messages.available_time_ends')}} :
                                         </span>
                                         <strong>
                                             {{date(config('timeformat'), strtotime($product['available_time_ends']))}}
@@ -280,7 +282,7 @@
                                     </span>
                                 </td>
                                 <td class="px-4">
-                                    @foreach(json_decode($product['variations'],true) as $variation)
+                                    {{-- @foreach(json_decode($product['variations'],true) as $variation)
                                         <span class="d-block mb-1 text-capitalize">
                                         <span>
                                             {{$variation['type']}} :
@@ -289,7 +291,47 @@
                                             {{\App\CentralLogics\Helpers::format_currency($variation['price'])}}
                                         </strong>
                                         </span>
-                                    @endforeach
+                                    @endforeach --}}
+
+
+                                    @foreach(json_decode($product->variations,true) as $variation)
+                                    @if(isset($variation["price"]))
+                                    <span class="d-block mb-1 text-capitalize">
+                                        <strong>
+                                            {{ translate('please_update_the_food_variations.') }}
+                                        </strong>
+                                        </span>
+                                        @break
+                                        @else
+                                        <span class="d-block text-capitalize">
+                                                <strong>
+                                        {{$variation['name']}} -
+                                    </strong>
+                                        @if ($variation['type'] == 'multi')
+                                        {{ translate('messages.multiple_select') }}
+                                        @elseif($variation['type'] =='single')
+                                        {{ translate('messages.single_select') }}
+
+                                        @endif
+                                        @if ($variation['required'] == 'on')
+                                        - ({{ translate('messages.required') }})
+                                        @endif
+                                        </span>
+
+                                        @if ($variation['min'] != 0 && $variation['max'] != 0)
+                                       ({{ translate('messages.Min_select') }}: {{ $variation['min'] }} - {{ translate('messages.Max_select') }}: {{ $variation['max'] }})
+                                        @endif
+
+                                            @if (isset($variation['values']))
+                                            @foreach ($variation['values'] as $value)
+                                            <span class="d-block text-capitalize">
+                                                &nbsp;   &nbsp; {{ $value['label']}} :
+                                                <strong>{{\App\CentralLogics\Helpers::format_currency( $value['optionPrice'])}}</strong>
+                                                </span>
+                                            @endforeach
+                                        @endif
+                                    @endif
+                                @endforeach
                                 </td>
                                 <td class="px-4">
                                     @foreach(\App\Models\AddOn::whereIn('id',json_decode($product['add_ons'],true))->get() as $addon)
@@ -303,13 +345,21 @@
                                         </span>
                                     @endforeach
                                 </td>
+                                <td class="px-4">
+                                    @forelse($product->tags as $c)
+                                        {{$c->tag.','}}
+                                        @empty
+                                        {{ translate('No_tags_found') }}
+                                    @endforelse
+                                </td>
                             </tbody>
                         </thead>
                     </table>
                 </div>
             </div>
         </div>
-        @if(\App\CentralLogics\Helpers::get_restaurant_data()->reviews_section)
+        @php($restaurant=\App\CentralLogics\Helpers::get_restaurant_data())
+        @if ($restaurant->restaurant_model == 'commission' && $restaurant->reviews_section || ($restaurant->restaurant_model == 'subscription' && isset($restaurant->restaurant_sub) && $restaurant->restaurant_sub->review))
         <!-- Card -->
         <div class="card">
             <div class="card-header py-2 border-0">

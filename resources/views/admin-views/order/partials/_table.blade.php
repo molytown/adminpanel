@@ -1,5 +1,5 @@
 @foreach($orders as $key=>$order)
-@php($zone_currency=$order->zone_currency ?? null)
+
     <tr class="status-{{$order['order_status']}} class-all">
         <td class="">
             {{$key+1}}
@@ -9,10 +9,13 @@
         </td>
         <td class="text-uppercase">
             <div>
-                {{date('d M Y',strtotime($order['created_at']))}}
+                {{-- {{date('d M Y',strtotime($order['created_at']))}} --}}
+                {{ Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat('d M Y') }}
+
             </div>
             <div>
-                {{date(config('timeformat'),strtotime($order['created_at']))}}
+                {{ Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat(config('timeformat')) }}
+                {{-- {{date(config('timeformat'),strtotime($order['created_at']))}} --}}
             </div>
         </td>
         <td>
@@ -27,32 +30,41 @@
                    </span>
                 </a>
             @else
-                <label class="badge badge-danger">{{translate('messages.invalid')}} {{translate('messages.customer')}} {{translate('messages.data')}}</label>
+                <label class="badge badge-danger">{{translate('messages.invalid_customer_data')}}</label>
             @endif
         </td>
         <td>
             <label class="m-0">
-                <a href="{{route('admin.vendor.view', $order->restaurant_id)}}" class="text--title" alt="view restaurant">
-                    {{Str::limit($order->restaurant?$order->restaurant->name:translate('messages.Restaurant deleted!'),20,'...')}}
+                <a href="{{route('admin.restaurant.view', $order->restaurant_id)}}" class="text--title" alt="view restaurant">
+                    {{Str::limit($order->restaurant?$order->restaurant->name:translate('messages.Restaurant_deleted!'),20,'...')}}
                 </a>
             </label>
         </td>
         <td>
             <div class="text-right mw-85px">
                 <div>
-                    {{\App\CentralLogics\Helpers::format_currency($order['order_amount'],$zone_currency)}}
+                    {{\App\CentralLogics\Helpers::format_currency($order['order_amount'])}}
                 </div>
                 @if($order->payment_status=='paid')
                     <strong class="text-success">
                     {{translate('messages.paid')}}
                     </strong>
-                @else
+                    @elseif($order->payment_status=='partially_paid')
+                    <strong class="text-success">
+                        {{translate('messages.partially_paid')}}
+                    </strong>
+                    @else
                     <strong class="text-danger">
                     {{translate('messages.unpaid')}}
                     </strong>
                 @endif
             </div>
         </td>
+        @if (isset($order->subscription)  && $order->subscription->status != 'canceled' )
+            @php
+                $order->order_status = $order->subscription_log ? $order->subscription_log->order_status : $order->order_status;
+            @endphp
+        @endif
         <td class="text-capitalize text-center">
             @if($order['order_status']=='pending')
                 <span class="badge badge-soft-info mb-1">
@@ -76,11 +88,11 @@
                 </span>
             @elseif($order['order_status']=='failed')
                 <span class="badge badge-soft-danger mb-1">
-                  {{translate('messages.payment')}}  {{translate('messages.failed')}}
+                  {{translate('messages.payment_failed')}}
                 </span>
             @else
                 <span class="badge badge-soft-danger mb-1">
-                  {{str_replace('_',' ',$order['order_status'])}}
+                  {{translate(str_replace('_',' ',$order['order_status']))}}
                 </span>
             @endif
             <div class="text-capitalze opacity-7">
@@ -99,7 +111,7 @@
             <div class="btn--container justify-content-center">
                 <a class="ml-2 btn btn-sm btn--warning btn-outline-warning action-btn" href="{{route('admin.order.details',['id'=>$order['id']])}}"><i class="tio-invisible"></i></a>
 
-                <a class="ml-2 btn btn-sm btn--primary btn-outline-primary download--btn action-btn" href="{{route('admin.order.details',['id'=>$order['id']])}}"><i class="tio-print"></i></a>
+                <a class="ml-2 btn btn-sm btn--primary btn-outline-primary download--btn action-btn" href="{{ route('admin.order.generate-invoice', [$order['id']]) }}"><i class="tio-print"></i></a>
             </div>
         </td>
     </tr>

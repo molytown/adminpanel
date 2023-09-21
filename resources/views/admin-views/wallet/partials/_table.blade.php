@@ -6,12 +6,14 @@
     <td>
         @if($wr->vendor && isset($wr->vendor->restaurants[0]))
         <a class="deco-none"
-           href="{{route('admin.vendor.view',[$wr->vendor['id']])}}">{{ Str::limit($wr->vendor?$wr->vendor->restaurants[0]->name:translate('messages.Restaurant deleted!'), 20, '...') }}</a>
+           href="{{route('admin.restaurant.view',[$wr->vendor['id']])}}">{{ Str::limit($wr->vendor?$wr->vendor->restaurants[0]->name:translate('messages.Restaurant_deleted!'), 20, '...') }}</a>
         @else
-        {{translate('messages.Restaurant deleted!') }}
+        {{translate('messages.Restaurant_deleted!') }}
         @endif
     </td>
-    <td>{{date('Y-m-d '.config('timeformat'),strtotime($wr->created_at))}}</td>
+    <td>
+        {{  \App\CentralLogics\Helpers::time_date_format($wr->created_at) }}
+    </td>
     <td>
         <div>
             @if($wr->approved==0)
@@ -26,11 +28,11 @@
     <td>
         <div class="btn--container justify-content-center">
             @if($wr->vendor)
-            <a href="{{route('admin.vendor.withdraw_view',[$wr['id'],$wr->vendor['id']])}}"
+            <a href="{{route('admin.restaurant.withdraw_view',[$wr['id'],$wr->vendor['id']])}}"
             class="btn btn-sm btn--primary btn-outline-primary action-btn"><i class="tio-invisible"></i>
             </a>
             @else
-            {{translate('messages.restaurant').' '.translate('messages.deleted') }}
+            {{translate('messages.restaurant_deleted') }}
             @endif
             {{--<a class="btn btn-sm btn--warning btn-outline-warning action-btn" href="javascript:"
             onclick="form_alert('withdraw-{{$wr['id']}}','Want to delete this  ?')">{{translate('messages.Delete')}}</a>

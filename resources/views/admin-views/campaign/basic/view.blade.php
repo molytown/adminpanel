@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Campaign view'))
+@section('title',translate('Campaign_View'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -10,7 +10,8 @@
     <div class="content container-fluid">
         <!-- Page Header -->
         <div class="page-header">
-            <h1 class="page-header-title text-break">{{$campaign->title}}</h1>
+            <h1 class="page-header-title text-break">{{$campaign->title}}
+                <span class="badge badge-soft-secondary badge-pill" id="itemCount"> {{ $restaurants->total() }}</span></h1>
         </div>
         <!-- End Page Header -->
         <!-- Card -->
@@ -24,17 +25,17 @@
                                  alt="Image Description">
                     </div>
                     <div class="col-md-8">
-                        <h4>{{translate('messages.short')}} {{translate('messages.description')}} : </h4>
+                        <h4>{{translate('messages.short_description')}} : </h4>
                         <p>{{$campaign->description}}</p>
 
                         <form action="{{route('admin.campaign.addrestaurant',$campaign->id)}}" id="restaurant-add-form" method="POST">
                             @csrf
                             <!-- Search -->
                             <div class="d-flex flex-wrap g-2">
-                                @php($allrestaurants=App\Models\Restaurant::all())
+                                @php($allrestaurants=App\Models\Restaurant::Active()->get(['id','name']))
                                 <div class="flex-grow-1">
-                                    <select name="restaurant_id" id="restaurant_id" class="form-control h--45px" required>
-                                        <option value="" selected disabled>{{ translate('Select Restaurant') }}</option>
+                                    <select name="restaurant_id" id="restaurant_id" class="form-control js-select2-custom h--45px" required>
+                                        <option value="" selected disabled>{{ translate('Select_Restaurant') }}</option>
                                         @forelse($allrestaurants as $restaurant)
                                         @if(!in_array($restaurant->id, $restaurant_ids))
                                             <option value="{{$restaurant->id}}" >{{$restaurant->name}}</option>
@@ -45,7 +46,7 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <button type="submit" class="btn btn--primary">{{translate('messages.add')}} {{translate('messages.restaurant')}}</button>
+                                    <button type="submit" class="btn btn--primary">{{translate('messages.add_restaurant')}}</button>
                                 </div>
                             </div>
                             <!-- End Search -->
@@ -64,11 +65,12 @@
                     <!-- Table -->
                     <div class="card-header border-0 search--button-wrapper">
                         <h5 class="card-title"></h5>
-                        <form action="javascript:" id="search-form">
+                        <form  id="search-form">
                             <!-- Search -->
+                            {{-- <input type="hidden" name="campaign_id" value="{{ $campaign->id }}" > --}}
                             <div class="input--group input-group input-group-merge input-group-flush">
                                 <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                        placeholder="{{translate('messages.search')}}" aria-label="Search" required>
+                                        placeholder="{{translate('messages.search_by_restaurant_name') }}" aria-label="Search" required>
                                 <button type="submit" class="btn btn--secondary">
                                     <i class="tio-search"></i>
                                 </button>
@@ -87,85 +89,28 @@
                             <thead class="thead-light">
                             <tr>
                                 <th>{{ translate('messages.sl') }}</th>
-                                {{-- <th class="w-15p">{{translate('messages.logo')}}</th> --}}
-                                <th class="w-15p">{{translate('messages.restaurant')}}</th>
+                                <th >{{translate('messages.restaurant')}}</th>
                                 <th>{{translate('messages.owner')}}</th>
                                 <th>{{translate('messages.email')}}</th>
-                                <th>{{translate('messages.phone')}}</th>
+                                <th>{{translate('messages.zone')}}</th>
+                                <th>{{translate('messages.status')}}</th>
                                 <th class="text-center">{{translate('messages.action')}}</th>
                             </tr>
                             </thead>
 
                             <tbody id="set-rows">
-                            @foreach($restaurants as $key=>$dm)
-                            <tr>
-                                <td>{{$key+1}}</td>
-                                <td>
-                                    <a href="{{route('admin.vendor.view', $dm->id)}}" alt="view restaurant" class="table-rest-info">
-                                    <img
-                                            onerror="this.src='{{asset('public/assets/admin/img/100x100/food-default-image.png')}}'"
-                                            src="{{asset('storage/app/public/restaurant')}}/{{$dm['logo']}}">
-                                        <div class="info">
-                                            <span class="d-block text-body">
-                                                {{Str::limit($dm->name,20,'...')}}<br>
-                                                <!-- Rating -->
-                                                <span class="rating">
-                                                    @php($restaurant_rating = $dm['rating']==null ? 0 : (array_sum($dm['rating']))/5 )
-                                                    <i class="tio-star"></i> {{$restaurant_rating}}
-                                                </span>
-                                                <!-- Rating -->
-                                            </span>
-                                        </div>
-                                    </a>
-                                </td>
-                                <td>
-                                    <span class="d-block owner--name text-center">
-                                        {{$dm->vendor->f_name.' '.$dm->vendor->l_name}}
-                                    </span>
-                                    <span class="d-block font-size-sm text-center">
-                                        {{$dm['phone']}}
-                                    </span>
-                                </td>
-                                <td>
-                                    {{$dm->zone?$dm->zone->name:translate('messages.zone').' '.translate('messages.deleted')}}
-                                    {{--<span class="d-block font-size-sm">{{$banner['image']}}</span>--}}
-                                </td>
-                                <td>
-                                    @if(isset($dm->vendor->status))
-                                        @if($dm->vendor->status)
-                                        <label class="toggle-switch toggle-switch-sm" for="stocksCheckbox{{$dm->id}}">
-                                            <input type="checkbox" onclick="status_change_alert('{{route('admin.vendor.status',[$dm->id,$dm->status?0:1])}}', '{{translate('messages.you_want_to_change_this_restaurant_status')}}', event)" class="toggle-switch-input" id="stocksCheckbox{{$dm->id}}" {{$dm->status?'checked':''}}>
-                                            <span class="toggle-switch-label">
-                                                <span class="toggle-switch-indicator"></span>
-                                            </span>
-                                        </label>
-                                        @else
-                                        <span class="badge badge-soft-danger">{{translate('messages.denied')}}</span>
-                                        @endif
-                                    @else
-                                        <span class="badge badge-soft-danger">{{translate('messages.pending')}}</span>
-                                    @endif
-                                </td>
-                                <td>
-                                    <div class="btn--container justify-content-center">
-                                        <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                            href="{{route('admin.vendor.edit',[$dm['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.restaurant')}}"><i class="tio-edit"></i>
-                                        </a>
-                                        <a class="btn btn-sm btn--warning btn-outline-warning action-btn"
-                                            href="{{route('admin.vendor.view',[$dm['id']])}}" title="{{translate('messages.view')}} {{translate('messages.restaurant')}}"><i class="tio-invisible"></i>
-                                        </a>
-                                    </div>
-                                    {{--<a class="btn btn-sm btn-white" href="javascript:"
-                                    onclick="form_alert('vendor-{{$dm['id']}}','Want to remove this information ?')" title="{{translate('messages.delete')}} {{translate('messages.restaurant')}}"><i class="tio-delete-outlined text-danger"></i>
-                                    </a>
-                                    <form action="{{route('admin.vendor.delete',[$dm['id']])}}" method="post" id="vendor-{{$dm['id']}}">
-                                        @csrf @method('delete')
-                                    </form>--}}
-                                </td>
-                            </tr>
-                            @endforeach
+                                @include('admin-views.campaign.basic.partials._restaurant_table' ,['restaurants' =>$restaurants])
                             </tbody>
                         </table>
+
+                        @if(count($restaurants) === 0)
+                        <div class="empty--data">
+                            <img src="{{asset('/public/assets/admin/img/empty.png')}}" alt="public">
+                            <h5>
+                                {{translate('no_data_found')}}
+                            </h5>
+                        </div>
+                        @endif
                         <div class="page-area px-4 pb-3">
                             <div class="d-flex align-items-center justify-content-end">
                                 <div>
@@ -186,6 +131,24 @@
 
 @push('script_2')
     <script>
+                function status_change_alert(url, message, e) {
+            e.preventDefault();
+            Swal.fire({
+                title: '{{ translate('Are_you_sure_?') }}',
+                text: message,
+                type: 'warning',
+                showCancelButton: true,
+                cancelButtonColor: 'default',
+                confirmButtonColor: '#FC6A57',
+                cancelButtonText: '{{ translate('no') }}',
+                confirmButtonText: '{{ translate('yes') }}',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    location.href=url;
+                }
+            })
+        }
         $(document).on('ready', function () {
             // INITIALIZATION OF DATATABLES
             // =======================================================
@@ -224,35 +187,6 @@
             // =======================================================
             $('.js-select2-custom').each(function () {
                 var select2 = $.HSCore.components.HSSelect2.init($(this));
-            });
-        });
-    </script>
-
-    <script>
-
-        $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.vendor.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
             });
         });
     </script>

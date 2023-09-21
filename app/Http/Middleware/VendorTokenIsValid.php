@@ -19,6 +19,8 @@ class VendorTokenIsValid
      */
     public function handle(Request $request, Closure $next)
     {
+        Helpers::check_subscription_validity();
+
         $token=$request->bearerToken();
         if(strlen($token)<1)
         {

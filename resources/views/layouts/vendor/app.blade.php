@@ -1,6 +1,12 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
-<head>
+<?php
+    if (env('APP_MODE') == 'demo') {
+        $site_direction = session()->get('site_direction_vendor');
+    }else{
+        $site_direction = session()->has('vendor_site_direction')?session()->get('vendor_site_direction'):'ltr';
+    }
+?>
+<html dir="{{ $site_direction }}" lang="{{ str_replace('_', '-', app()->getLocale()) }}"  class="{{ $site_direction === 'rtl'?'active':'' }}"><head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Title -->
@@ -15,6 +21,7 @@
     <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/vendor.min.css">
     <link rel="stylesheet" href="{{asset('public/assets/admin')}}/vendor/icon-set/style.css">
     <!-- CSS Front Template -->
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/owl.min.css')}}">
     <link rel="stylesheet" href="{{ asset('public/assets/admin') }}/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{ asset('public/assets/admin') }}/css/theme.minc619.css?v=1.0">
     <link rel="stylesheet" href="{{ asset('public/assets/admin') }}/css/style.css">
@@ -27,6 +34,14 @@
 </head>
 
 <body class="footer-offset">
+
+    @if (env('APP_MODE')=='demo')
+    <div class="direction-toggle">
+        <i class="tio-settings"></i>
+        <span></span>
+    </div>
+    @endif
+
     <div class="pre--loader">
     </div>
 {{--loader--}}
@@ -103,6 +118,65 @@
 </main>
 <!-- ========== END MAIN CONTENT ========== -->
 
+    <div class="modal fade" id="toggle-modal">
+        <div class="modal-dialog status-warning-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true" class="tio-clear"></span>
+                    </button>
+                </div>
+                <div class="modal-body pb-5 pt-0">
+                    <div class="max-349 mx-auto mb-20">
+                        <div>
+                            <div class="text-center">
+                                <img id="toggle-image" alt="" class="mb-20">
+                                <h5 class="modal-title" id="toggle-title"></h5>
+                            </div>
+                            <div class="text-center" id="toggle-message">
+                            </div>
+                        </div>
+                        <div class="btn--container justify-content-center">
+                            <button type="button" id="toggle-ok-button" class="btn btn--primary min-w-120" data-dismiss="modal" onclick="confirmToggle()">{{translate('Ok')}}</button>
+                            <button id="reset_btn" type="reset" class="btn btn--cancel min-w-120" data-dismiss="modal">
+                                {{translate("Cancel")}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="toggle-status-modal">
+        <div class="modal-dialog status-warning-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">
+                        <span aria-hidden="true" class="tio-clear"></span>
+                    </button>
+                </div>
+                <div class="modal-body pb-5 pt-0">
+                    <div class="max-349 mx-auto mb-20">
+                        <div>
+                            <div class="text-center">
+                                <img id="toggle-status-image" alt="" class="mb-20">
+                                <h5 class="modal-title" id="toggle-status-title"></h5>
+                            </div>
+                            <div class="text-center" id="toggle-status-message">
+                            </div>
+                        </div>
+                        <div class="btn--container justify-content-center">
+                            <button type="button" id="toggle-status-ok-button" class="btn btn--primary min-w-120" data-dismiss="modal" onclick="confirmStatusToggle()">{{translate('Ok')}}</button>
+                            <button id="reset_btn" type="reset" class="btn btn--cancel min-w-120" data-dismiss="modal">
+                                {{translate("Cancel")}}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 <!-- ========== END SECONDARY CONTENTS ========== -->
 <script src="{{asset('public/assets/admin')}}/js/custom.js"></script>
 <!-- The core Firebase JS SDK is always required and must be listed first -->
@@ -117,6 +191,42 @@
 <script src="{{asset('public/assets/admin')}}/js/theme.min.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/sweet_alert.js"></script>
 <script src="{{asset('public/assets/admin')}}/js/toastr.js"></script>
+<script src="{{asset('public/assets/admin/js/owl.min.js')}}"></script>
+<script>
+    $('.blinkings').on('mouseover', ()=> $('.blinkings').removeClass('active'))
+    $('.blinkings').addClass('open-shadow')
+    setTimeout(() => {
+        $('.blinkings').removeClass('active')
+    }, 10000);
+    setTimeout(() => {
+        $('.blinkings').removeClass('open-shadow')
+    }, 5000);
+</script>
+<script>
+    $(function(){
+        var owl = $('.single-item-slider');
+        owl.owlCarousel({
+            autoplay: false,
+            items:1,
+            onInitialized  : counter,
+            onTranslated : counter,
+            autoHeight: true,
+            dots: true
+        });
+
+        function counter(event) {
+            var element   = event.target;         // DOM element, in this example .owl-carousel
+                var items     = event.item.count;     // Number of items
+                var item      = event.item.index + 1;     // Position of the current item
+
+            // it loop is true then reset counter from 1
+            if(item > items) {
+                item = item - items
+            }
+            $('.slide-counter').html(+item+"/"+items)
+        }
+    });
+</script>
 {!! Toastr::message() !!}
 
 @if ($errors->any())
@@ -130,6 +240,47 @@
     </script>
 @endif
 <!-- JS Plugins Init. -->
+<script>
+
+    $(document).on('ready', function(){
+        $(".direction-toggle").on("click", function () {
+            if($('html').hasClass('active')){
+                $('html').removeClass('active')
+                setDirection(1);
+            }else {
+                setDirection(0);
+                $('html').addClass('active')
+            }
+        });
+        if ($('html').attr('dir') == "rtl") {
+            $(".direction-toggle").find('span').text('Toggle LTR')
+        } else {
+            $(".direction-toggle").find('span').text('Toggle RTL')
+        }
+
+        function setDirection(status) {
+            if (status == 1) {
+                $("html").attr('dir', 'ltr');
+                $(".direction-toggle").find('span').text('Toggle RTL')
+            } else {
+                $("html").attr('dir', 'rtl');
+                $(".direction-toggle").find('span').text('Toggle LTR')
+            }
+            $.get({
+                    url: '{{ route('vendor.business-settings.site_direction_vendor') }}',
+                    dataType: 'json',
+                    data: {
+                        status: status,
+                    },
+                    success: function() {
+                        alert(ok);
+                    },
+
+                });
+            }
+        });
+</script>
+
 <script>
     $(document).on('ready', function () {
         // ONLY DEV
@@ -266,35 +417,10 @@
 </script>
 
 <script>
-    @if(\App\CentralLogics\Helpers::employee_module_permission_check('order'))
-    var order_type = 'all';
-    setInterval(function () {
-        $.get({
-            url: '{{route('vendor.get-restaurant-data')}}',
-            dataType: 'json',
-            success: function (response) {
-                let data = response.data;
-                if (data.new_pending_order > 0) {
-                    order_type = 'pending';
-                    playAudio();
-                    $('#popup-modal').appendTo("body").modal('show');
-                }
-                else if(data.new_confirmed_order > 0)
-                {
-                    order_type = 'confirmed';
-                    playAudio();
-                    $('#popup-modal').appendTo("body").modal('show');
-                }
-            },
-        });
-    }, 10000);
-    @endif
-    function check_order() {
-        location.href = '{{url('/')}}/vendor-panel/order/list/'+order_type;
-    }
+
 
     function check_message() {
-        location.href = '{{url('/')}}/vendor-panel/message/list';
+        location.href = '{{url('/')}}/restaurant-panel/message/list';
     }
 
     function route_alert(route, message) {
@@ -361,68 +487,95 @@
                 return messaging.getToken()
 
             }).then(function (response) {
-                console.log(response);
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                $.ajax({
-                    url: '{{ route('vendor.store.token') }}',
-                    type: 'POST',
-                    data: {
-                        token: response
-                    },
-                    // error: function (error) {
-                    //     alert(error);
-                    // },
-                });
+                @php($restaurant_id=\App\CentralLogics\Helpers::get_restaurant_id())
+                subscribeTokenToTopic(response, "restaurant_panel_{{$restaurant_id}}_message");
+                // $.ajaxSetup({
+                //     headers: {
+                //         'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                //     }
+                // });
+                // $.ajax({
+                //     url: '{{ route('vendor.store.token') }}',
+                //     type: 'POST',
+                //     data: {
+                //         token: response
+                //     },
+                //     // error: function (error) {
+                //     //     alert(error);
+                //     // },
+                // });
             }).catch(function (error) {
                 console.log(error);
             });
     }
 
+    @php($key = \App\Models\BusinessSetting::where('key', 'push_notification_key')->first())
+    function subscribeTokenToTopic(token, topic) {
+        fetch('https://iid.googleapis.com/iid/v1/' + token + '/rel/topics/' + topic, {
+            method: 'POST',
+            headers: new Headers({
+                'Authorization': 'key={{ $key ? $key->value : '' }}'
+            })
+        }).then(response => {
+            if (response.status < 200 || response.status >= 400) {
+                throw 'Error subscribing to topic: ' + response.status + ' - ' + response.text();
+            }
+            console.log('Subscribed to "' + topic + '"');
+        }).catch(error => {
+            console.error(error);
+        })
+    }
     function getUrlParameter(sParam) {
-            var sPageURL = window.location.search.substring(1);
-            var sURLVariables = sPageURL.split('&');
-            for (var i = 0; i < sURLVariables.length; i++) {
-                var sParameterName = sURLVariables[i].split('=');
-                if (sParameterName[0] == sParam) {
-                    return sParameterName[1];
-                }
+        var sPageURL = window.location.search.substring(1);
+        var sURLVariables = sPageURL.split('&');
+        for (var i = 0; i < sURLVariables.length; i++) {
+            var sParameterName = sURLVariables[i].split('=');
+            if (sParameterName[0] == sParam) {
+                return sParameterName[1];
             }
         }
+    }
 
-        function converationList() {
-            $.ajax({
-                url: "{{ route('vendor.message.list') }}",
-                success: function(data) {
-                    $('#conversation-list').empty();
-                    $("#conversation-list").append(data.html);
-                    var user_id = getUrlParameter('user');
-                    $('.customer-list').removeClass('conv-active');
-                    $('#customer-' + user_id).addClass('conv-active');
-                }
-            })
-        }
+    function converationList() {
+        $.ajax({
+            url: "{{ route('vendor.message.list') }}",
+            success: function(data) {
+                $('#conversation-list').empty();
+                $("#conversation-list").append(data.html);
+                var user_id = getUrlParameter('user');
+                $('.customer-list').removeClass('conv-active');
+                $('#customer-' + user_id).addClass('conv-active');
+            }
+        })
+    }
 
-        function conversationView() {
+    function conversationView() {
+        var conversation_id = getUrlParameter('conversation');
+        var user_id = getUrlParameter('user');
+        var url= '{{url('/')}}/restaurant-panel/message/view/'+conversation_id+'/' + user_id;
+        $.ajax({
+            url: url,
+            success: function(data) {
+                $('#view-conversation').html(data.view);
+            }
+        })
+    }
+    @php($order_notification_type = \App\Models\BusinessSetting::where('key', 'order_notification_type')->first())
+    @php($order_notification_type = $order_notification_type ? $order_notification_type->value : 'firebase')
+    var order_type = 'all';
+    messaging.onMessage(function (payload) {
+        console.log(payload.data);
+
+        if(payload.data.order_id && payload.data.type == 'new_order'){
+            @if(\App\CentralLogics\Helpers::employee_module_permission_check('order') && $order_notification_type == 'firebase')
+            order_type = payload.data.order_type
+            playAudio();
+            $('#popup-modal').appendTo("body").modal('show');
+            @endif
+        }else if(payload.data.type == 'message'){
             var conversation_id = getUrlParameter('conversation');
             var user_id = getUrlParameter('user');
-            var url= '{{url('/')}}/vendor-panel/message/view/'+conversation_id+'/' + user_id;
-            $.ajax({
-                url: url,
-                success: function(data) {
-                    $('#view-conversation').html(data.view);
-                }
-            })
-        }
-
-        messaging.onMessage(function (payload) {
-            console.log(payload.data);
-            var conversation_id = getUrlParameter('conversation');
-            var user_id = getUrlParameter('user');
-            var url= '{{url('/')}}/vendor-panel/message/view/'+conversation_id+'/' + user_id;
+            var url= '{{url('/')}}/restaurant-panel/message/view/'+conversation_id+'/' + user_id;
             $.ajax({
                 url: url,
                 success: function(data) {
@@ -437,18 +590,41 @@
             if($('#conversation-list').scrollTop() == 0){
                 converationList();
             }
-            // playAudio();
-            //         $('#popup-modal-msg').appendTo("body").modal('show');
-            // const title = payload.notification.title;
-            // const options = {
-            //     body: payload.notification.body,
-            //     icon: payload.notification.icon,
-            // };
-            // new Notification(title, options);
-        });
+        }
+    });
+    @if(\App\CentralLogics\Helpers::employee_module_permission_check('order') && $order_notification_type == 'manual')
+        setInterval(function () {
+            $.get({
+                url: '{{route('vendor.get-restaurant-data')}}',
+                dataType: 'json',
+                success: function (response) {
+                    let data = response.data;
+                    if (data.new_pending_order > 0) {
+                        order_type = 'pending';
+                        playAudio();
+                        $('#popup-modal').appendTo("body").modal('show');
+                    }
+                    else if(data.new_confirmed_order > 0)
+                    {
+                        order_type = 'confirmed';
+                        playAudio();
+                        $('#popup-modal').appendTo("body").modal('show');
+                    }
+                },
+            });
+        }, 10000);
+        @endif
 
-        startFCM();
-        converationList();
+
+    function check_order() {
+        location.href = '{{url('/')}}/restaurant-panel/order/list/all';
+    }
+    startFCM();
+    converationList();
+
+    if(getUrlParameter('conversation')){
+        conversationView();
+    }
     // conversationView();
 </script>
 <script>
@@ -458,14 +634,54 @@
             ProgressBar: true
         });
     }
+    function set_time_filter(url, id) {
+            var nurl = new URL(url);
+            nurl.searchParams.set('filter', id);
+            location.href = nurl;
+        }
 </script>
-
 <!-- IE Support -->
 <script>
     if (/MSIE \d|Trident.*rv:/.test(navigator.userAgent)) document.write('<script src="{{asset('public/assets/admin')}}/vendor/babel-polyfill/polyfill.min.js"><\/script>');
 </script>
 <script>
     $(window).on('load', ()=> $('.pre--loader').fadeOut(600))
+
+
+    function toogleStatusModal(e, toggle_id, on_image, off_image, on_title, off_title, on_message, off_message) {
+        // console.log($('#'+toggle_id).is(':checked'));
+        e.preventDefault();
+        if ($('#'+toggle_id).is(':checked')) {
+            $('#toggle-status-title').empty().append(on_title);
+            $('#toggle-status-message').empty().append(on_message);
+            $('#toggle-status-image').attr('src', "{{asset('/public/assets/admin/img/modal')}}/"+on_image);
+            $('#toggle-status-ok-button').attr('toggle-ok-button', toggle_id);
+        } else {
+            $('#toggle-status-title').empty().append(off_title);
+            $('#toggle-status-message').empty().append(off_message);
+            $('#toggle-status-image').attr('src', "{{asset('/public/assets/admin/img/modal')}}/"+off_image);
+            $('#toggle-status-ok-button').attr('toggle-ok-button', toggle_id);
+        }
+        $('#toggle-status-modal').modal('show');
+    }
+
+    function confirmStatusToggle() {
+
+        var toggle_id = $('#toggle-status-ok-button').attr('toggle-ok-button');
+        if ($('#'+toggle_id).is(':checked')) {
+            $('#'+toggle_id).prop('checked', false);
+            $('#'+toggle_id).val(0);
+        } else {
+            $('#'+toggle_id).prop('checked', true);
+            $('#'+toggle_id).val(1);
+        }
+        // console.log($('#'+toggle_id+'_form'));
+        console.log(toggle_id);
+        $('#'+toggle_id+'_form').submit();
+
+    }
 </script>
+
+
 </body>
 </html>

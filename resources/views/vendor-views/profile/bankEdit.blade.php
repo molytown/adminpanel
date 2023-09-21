@@ -29,7 +29,7 @@
                                                required maxlength="191">
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="name">{{translate('messages.branch')}} {{translate('messages.name')}}<span class="text-danger">*</span></label>
+                                        <label for="name">{{translate('messages.branch_name')}}<span class="text-danger">*</span></label>
                                         <input type="text" name="branch" value="{{$data->branch}}" class="form-control"
                                                id="name"
                                                required maxlength="191">

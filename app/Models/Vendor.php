@@ -2,15 +2,17 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use App\Models\Restaurant;
 use Carbon\Carbon;
+use App\Models\Restaurant;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
 
 class Vendor extends Authenticatable
 {
     use Notifiable;
-
+    use HasFactory;
+    protected $fillable = ['remember_token'];
     protected $casts = [
         'created_at' => 'datetime',
         'updated_at' => 'datetime'

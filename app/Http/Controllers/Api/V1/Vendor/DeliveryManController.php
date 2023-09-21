@@ -1,25 +1,23 @@
 <?php
 
 namespace App\Http\Controllers\Api\V1\Vendor;
-
-use App\Http\Controllers\Controller;
 use App\Models\DeliveryMan;
-use App\Models\DMReview;
-use App\Models\Zone;
-use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use App\CentralLogics\Helpers;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 class DeliveryManController extends Controller
 {
     public function __construct(Request $request)
     {
         $this->middleware(function ($request, $next) {
-            if(!$request->vendor->restaurants[0]->self_delivery_system)
+            $restaurant=$request?->vendor?->restaurants[0];
+
+            if(($restaurant?->restaurant_model == 'subscription' && $restaurant?->restaurant_sub?->self_delivery != 1)  || ($restaurant?->restaurant_model == 'commission' &&  $restaurant?->self_delivery_system != 1))
             {
                 return response()->json([
                     'errors'=>[
@@ -37,12 +35,12 @@ class DeliveryManController extends Controller
         ->withCount(['orders'=>function($query){
             $query->where('order_status','delivered');
         }])
-        ->where('restaurant_id', $request->vendor->restaurants[0]->id)->latest()->get()->map(function($data){
+        ->where('restaurant_id', $request?->vendor?->restaurants[0]->id)->latest()->get()->map(function($data){
             $data->identity_image = json_decode($data->identity_image);
             $data->orders_count = (double)$data->orders_count;
-            $data['avg_rating'] = (double)(!empty($data->rating[0])?$data->rating[0]->average:0);
-            $data['rating_count'] = (double)(!empty($data->rating[0])?$data->rating[0]->rating_count:0);
-            $data['cash_in_hands'] =$data->wallet?$data->wallet->collected_cash:0;
+            $data['avg_rating'] = (double)($data?->rating[0]?->average ?? 0);
+            $data['rating_count'] = (double)($data?->rating[0]?->rating_count ?? 0);
+            $data['cash_in_hands'] =$data?->wallet?->collected_cash ??0;
             unset($data['rating']);
             unset($data['wallet']);
             return $data;
@@ -67,7 +65,7 @@ class DeliveryManController extends Controller
                     ->orWhere('phone', 'like', "%{$value}%")
                     ->orWhere('identity_number', 'like', "%{$value}%");
             }
-        })->where('restaurant_id', $request->vendor->restaurants[0]->id)->limit(50)->get();
+        })->where('restaurant_id', $request?->vendor?->restaurants[0]?->id)->limit(50)->get();
         return response()->json($delivery_men);
     }
 
@@ -84,10 +82,10 @@ class DeliveryManController extends Controller
         ->withCount(['orders'=>function($query){
             $query->where('order_status','delivered');
         }])
-        ->where('restaurant_id', $request->vendor->restaurants[0]->id)->where(['id' => $request->delivery_man_id])->first();
-        $dm['avg_rating'] = (double)(!empty($dm->rating[0])?$dm->rating[0]->average:0);
-        $dm['rating_count'] = (double)(!empty($dm->rating[0])?$dm->rating[0]->rating_count:0);
-        $dm['cash_in_hands'] =$dm->wallet?$dm->wallet->collected_cash:0;
+        ->where('restaurant_id', $request?->vendor?->restaurants[0]->id)->where(['id' => $request->delivery_man_id])->first();
+        $dm['avg_rating'] = (double)($dm?->rating[0]?->average ?? 0);
+        $dm['rating_count'] = (double)($dm?->rating[0]?->rating_count ?? 0);
+        $dm['cash_in_hands'] =$dm?->wallet?->collected_cash ?? 0;
         unset($dm['rating']);
         unset($dm['wallet']);
         return response()->json($dm, 200);
@@ -100,8 +98,10 @@ class DeliveryManController extends Controller
             'identity_type' => 'required|in:passport,driving_license,nid',
             'identity_number' => 'required',
             'email' => 'required|unique:delivery_men',
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men',
-            'password'=>'required|min:6',
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|unique:delivery_men',
+            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+            'image' => 'nullable|max:2048',
+            'identity_image.*' => 'nullable|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -109,7 +109,7 @@ class DeliveryManController extends Controller
         }
 
         if ($request->has('image')) {
-            $image_name = Helpers::upload('delivery-man/', 'png', $request->file('image'));
+            $image_name = Helpers::upload(dir:'delivery-man/', format:'png', image:$request->file('image'));
         } else {
             $image_name = 'def.png';
         }
@@ -117,7 +117,7 @@ class DeliveryManController extends Controller
         $id_img_names = [];
         if (!empty($request->file('identity_image'))) {
             foreach ($request->identity_image as $img) {
-                $identity_image = Helpers::upload('delivery-man/', 'png', $img);
+                $identity_image = Helpers::upload(dir:'delivery-man/',format: 'png',image: $img);
                 array_push($id_img_names, $identity_image);
             }
             $identity_image = json_encode($id_img_names);
@@ -132,7 +132,7 @@ class DeliveryManController extends Controller
         $dm->phone = $request->phone;
         $dm->identity_number = $request->identity_number;
         $dm->identity_type = $request->identity_type;
-        $dm->restaurant_id =  $request->vendor->restaurants[0]->id;
+        $dm->restaurant_id =  $request?->vendor?->restaurants[0]->id;
         $dm->identity_image = $identity_image;
         $dm->image = $image_name;
         $dm->active = 0;
@@ -189,16 +189,13 @@ class DeliveryManController extends Controller
                         'updated_at'=>now()
                     ]);
                 }
-
             }
-
         }
         catch (\Exception $e) {
-
+            info($e->getMessage());
         }
 
         $delivery_man->save();
-
         return response()->json(['message' => translate('messages.deliveryman_status_updated')], 200);
     }
 
@@ -207,8 +204,10 @@ class DeliveryManController extends Controller
         $validator = Validator::make($request->all(), [
             'f_name' => 'required',
             'email' => 'required|unique:delivery_men,email,'.$id,
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men,phone,'.$id,
-            'password'=>'nullable|min:6',
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|unique:delivery_men,phone,'.$id,
+            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+            'image' => 'nullable|max:2048',
+            'identity_image.*' => 'nullable|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -225,7 +224,7 @@ class DeliveryManController extends Controller
             ],404);
         }
         if ($request->has('image')) {
-            $image_name = Helpers::update('delivery-man/', $delivery_man->image, 'png', $request->file('image'));
+            $image_name = Helpers::update(dir:'delivery-man/',old_image: $delivery_man->image, format:'png', image:$request->file('image'));
         } else {
             $image_name = $delivery_man['image'];
         }
@@ -238,7 +237,7 @@ class DeliveryManController extends Controller
             }
             $img_keeper = [];
             foreach ($request->identity_image as $img) {
-                $identity_image = Helpers::upload('delivery-man/', 'png', $img);
+                $identity_image = Helpers::upload(dir:'delivery-man/',format: 'png',image: $img);
                 array_push($img_keeper, $identity_image);
             }
             $identity_image = json_encode($img_keeper);
@@ -259,8 +258,6 @@ class DeliveryManController extends Controller
         $delivery_man->save();
 
         return response()->json(['message' => translate('messages.deliveryman_updated_successfully')], 200);
-
-        return redirect('vendor-panel/delivery-man/list');
     }
 
     public function delete(Request $request)
@@ -285,15 +282,12 @@ class DeliveryManController extends Controller
         if (Storage::disk('public')->exists('delivery-man/' . $delivery_man['image'])) {
             Storage::disk('public')->delete('delivery-man/' . $delivery_man['image']);
         }
-
         foreach (json_decode($delivery_man['identity_image'], true) as $img) {
             if (Storage::disk('public')->exists('delivery-man/' . $img)) {
                 Storage::disk('public')->delete('delivery-man/' . $img);
             }
         }
-
         $delivery_man->delete();
-
         return response()->json(['message' => translate('messages.deliveryman_deleted_successfully')], 200);
     }
 }
