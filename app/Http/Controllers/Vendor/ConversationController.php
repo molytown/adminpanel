@@ -47,10 +47,7 @@ class ConversationController extends Controller
             $conversations = [];
         }
 
-
         if ($request->ajax()) {
-            // dd($conversations);
-
             $view = view('vendor-views.messages.data',compact('conversations'))->render();
             return response()->json(['html'=>$view]);
         }
@@ -68,7 +65,6 @@ class ConversationController extends Controller
         }
         Message::where(['conversation_id' => $conversation->id])->where('sender_id','!=',$user_id)->update(['is_seen' => 1]);
         $convs = Message::where(['conversation_id' => $conversation_id])->get();
-        // Message::where(['conversation_id' => $conversation_id])->update(['is_seen' => 1]);
         $conversation= Conversation::find($conversation_id);
         $receiver = $conversation->receiver;
         $sender = $conversation->sender;
@@ -97,10 +93,20 @@ class ConversationController extends Controller
     public function store(Request $request, $user_id, $user_type)
     {
         if ($request->has('images')) {
+
+            $validator = Validator::make($request->all(), [
+                'images.*' => 'max:2048',
+            ]);
+
+            if ($validator->fails()) {
+                $validator->getMessageBag()->add('images', 'Max Image Upload limit is 2mb');
+                return response()->json(['errors' => Helpers::error_processor($validator)]);
+            }
+
             $image_name=[];
             foreach($request->images as $key=>$img)
             {
-                $name = Helpers::upload('conversation/', 'png', $img);
+                $name = Helpers::upload(dir:'conversation/', format:'png',image: $img);
                 array_push($image_name,$name);
             }
         } else {
@@ -120,11 +126,11 @@ class ConversationController extends Controller
         if(!$sender){
             $sender = new UserInfo();
             $sender->vendor_id = $vendor->id;
-            $sender->f_name = $vendor->restaurants[0]->name;
+            $sender->f_name = $vendor?->restaurants[0]?->name;
             $sender->l_name = '';
             $sender->phone = $vendor->phone;
             $sender->email = $vendor->email;
-            $sender->image = $vendor->restaurants[0]->logo;
+            $sender->image = $vendor?->restaurants[0]?->logo;
             $sender->save();
         }
 

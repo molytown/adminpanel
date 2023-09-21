@@ -22,14 +22,14 @@
                     </h2>
                 </div>
                 @if(isset($addon))
-                <a href="{{route('admin.addon.add-new')}}" class="btn btn--primary pull-right"><i class="tio-add-circle"></i> {{translate('messages.add')}} {{translate('messages.new')}} {{translate('messages.addon')}}</a>
+                <a href="{{route('admin.addon.add-new')}}" class="btn btn--primary pull-right"><i class="tio-add-circle"></i> {{translate('messages.add_new_addon')}}</a>
                 @endif
             </div>
         </div>
         <!-- End Page Header -->
         @php($language=\App\Models\BusinessSetting::where('key','language')->first())
         @php($language = $language->value ?? null)
-        @php($default_lang = 'en')
+        @php($default_lang = str_replace('_', '-', app()->getLocale()))
         <div class="card">
             <div class="card-body">
                 <form action="{{isset($addon)?route('admin.addon.update',[$addon['id']]):route('admin.addon.store')}}" method="post">
@@ -37,37 +37,45 @@
                     @if($language)
                         @php($default_lang = json_decode($language)[0])
                         <ul class="nav nav-tabs mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link lang_link active" href="#" id="default-link">{{ translate('Default')}}</a>
+                            </li>
                             @foreach(json_decode($language) as $lang)
                                 <li class="nav-item">
-                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                    <a class="nav-link lang_link" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                                 </li>
                             @endforeach
                         </ul>
                     @endif
                     <div class="row">
                         <div class="col-lg-4">
+                            <div class="form-group lang_form" id="default-form">
+                                <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
+                                <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Ex_:_water') }}"   maxlength="191">
+                            </div>
+                            <input type="hidden" name="lang[]" value="default">
                         @if ($language)
                             @foreach(json_decode($language) as $lang)
-                                <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
+                                <div class="form-group d-none lang_form" id="{{$lang}}-form">
                                     <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{strtoupper($lang)}})</label>
-                                    <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Ex :') }} {{translate('Water')}}" maxlength="191" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
+                                    <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Ex_:_water') }}" maxlength="191" oninvalid="document.getElementById('en-link').click()">
                                 </div>
                                 <input type="hidden" name="lang[]" value="{{$lang}}">
                             @endforeach
                         @else
-                            <div class="form-group">
+                            <div class="form-group lang_form" id="default-form">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                                <input type="text" name="name" class="form-control" placeholder="{{ translate('messages.Ex :') }} {{translate('Water')}}" value="{{old('name')}}" required maxlength="191">
+                                <input type="text" name="name[]" class="form-control" placeholder="{{ translate('messages.Ex_:_water') }}"  maxlength="191">
                             </div>
-                            <input type="hidden" name="lang[]" value="{{$lang}}">
+                            <input type="hidden" name="lang[]" value="default">
                         @endif
                         </div>
                         <div class="col-lg-4">
                             <div class="form-group">
                                 <label class="input-label" for="exampleFormControlSelect1">{{translate('messages.restaurant')}}<span
                                         class="input-label-secondary"></span></label>
-                                <select name="restaurant_id" id="restaurant_id" class="js-data-example-ajax form-control"  data-placeholder="{{translate('messages.select')}} {{translate('messages.restaurant')}}" oninvalid="this.setCustomValidity('{{translate('messages.please_select_restaurant')}}')">
 
+                                <select name="restaurant_id" id="restaurant_id" class="js-data-example-ajax form-control"  data-placeholder="{{translate('messages.select_restaurant')}}" oninvalid="this.setCustomValidity('{{translate('messages.please_select_restaurant')}}')">
                                 </select>
                             </div>
                         </div>
@@ -94,9 +102,9 @@
         <div class="card mt-2">
             <div class="card-header py-2 border-0">
                 <div class="search--button-wrapper">
-                    <h5 class="card-title"> {{translate('messages.addon')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$addons->total()}}</span></h5>
+                    <h5 class="card-title"> {{translate('messages.addon_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$addons->total()}}</span></h5>
                     <div class="mr-sm-3">
-                        <select name="restaurant_id" id="restaurant" onchange="set_restaurant_filter('{{route('admin.addon.add-new')}}',this.value)" data-placeholder="{{translate('messages.select')}} {{translate('messages.restaurant')}}" class="js-data-example-ajax form-control"   title="Select Restaurant">
+                        <select name="restaurant_id" id="restaurant" onchange="set_restaurant_filter('{{route('admin.addon.add-new')}}',this.value)" data-placeholder="{{translate('messages.select_restaurant')}}" class="js-data-example-ajax form-control"   title="Select Restaurant">
                             @if(isset($restaurant))
                             <option value="{{$restaurant->id}}" selected>{{$restaurant->name}}</option>
                             @else
@@ -104,119 +112,48 @@
                             @endif
                         </select>
                     </div>
-                    <form id="search-form">
-                        @csrf
+                    <form>
                         <!-- Search -->
                         <div class="input--group input-group input-group-merge input-group-flush">
-                            <input id="datatableSearch" type="search" name="search" class="form-control" placeholder="{{ translate('messages.Ex :') }} {{translate('Search_by_name')}}" aria-label="Search addons">
+                            <input id="datatableSearch" type="search" name="search" value="{{ request()?->search ?? null }}" class="form-control" placeholder="{{translate('Search_by_name')}}" aria-label="Search addons">
                             <button type="submit" class="btn btn--secondary">
                                 <i class="tio-search"></i>
                             </button>
                         </div>
                         <!-- End Search -->
                     </form>
+
+
+
+                    <div class="hs-unfold ml-3">
+                        <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle btn export-btn btn-outline-primary btn--primary font--sm" href="javascript:;"
+                            data-hs-unfold-options='{
+                                "target": "#usersExportDropdown",
+                                "type": "css-animation"
+                            }'>
+                            <i class="tio-download-to mr-1"></i> {{translate('messages.export')}}
+                        </a>
+
+                        <div id="usersExportDropdown"
+                                class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                            <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                            <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.addon.export_addons', ['type'=>'excel', request()->getQueryString()])}}">
+                                <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
+                                        alt="Image Description">
+                                {{translate('messages.excel')}}
+                            </a>
+                            <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.addon.export_addons', ['type'=>'csv' ,request()->getQueryString()])}}">
+                                <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
+                                        alt="Image Description">
+                                {{translate('messages.csv')}}
+                            </a>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div class="card-body p-0">
-                <!-- COlumns started here -->
-                {{--
-                <div class="row justify-content-between align-items-center flex-grow-1 mb-1">
-                    <div class="col-auto">
-                        <div class="hs-unfold">
-                        <a class="js-hs-unfold-invoker btn btn-white" href="javascript:;"
-                            data-hs-unfold-options='{
-                            "target": "#showHideDropdown",
-                            "type": "css-animation"
-                            }'>
-                            <i class="tio-table mr-1"></i> {{translate('messages.columns')}} <span class="badge badge-soft-dark rounded-circle ml-1">5</span>
-                        </a>
-
-                        <div id="showHideDropdown" class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-right dropdown-card">
-                            <div class="card card-sm">
-                                <div class="card-body">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="mr-2">#</span>
-                                        <!-- Checkbox Switch -->
-                                        <label class="toggle-switch toggle-switch-sm" for="toggleColumn_index">
-                                            <input type="checkbox" class="toggle-switch-input" id="toggleColumn_index" checked>
-                                            <span class="toggle-switch-label">
-                                            <span class="toggle-switch-indicator"></span>
-                                            </span>
-                                        </label>
-                                    <!-- End Checkbox Switch -->
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="mr-2">{{translate('messages.name')}}</span>
-                                        <!-- Checkbox Switch -->
-                                        <label class="toggle-switch toggle-switch-sm" for="toggleColumn_name">
-                                            <input type="checkbox" class="toggle-switch-input" id="toggleColumn_name" checked>
-                                            <span class="toggle-switch-label">
-                                            <span class="toggle-switch-indicator"></span>
-                                            </span>
-                                        </label>
-                                    <!-- End Checkbox Switch -->
-                                    </div>
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="mr-2">{{translate('messages.price')}}</span>
-                                        <!-- Checkbox Switch -->
-                                        <label class="toggle-switch toggle-switch-sm" for="toggleColumn_price">
-                                            <input type="checkbox" class="toggle-switch-input" id="toggleColumn_price" checked>
-                                            <span class="toggle-switch-label">
-                                            <span class="toggle-switch-indicator"></span>
-                                            </span>
-                                        </label>
-                                        <!-- End Checkbox Switch -->
-                                    </div>
-
-
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="mr-2">{{translate('messages.restaurant')}}</span>
-
-                                        <!-- Checkbox Switch -->
-                                        <label class="toggle-switch toggle-switch-sm" for="toggleColumn_vendor">
-                                            <input type="checkbox" class="toggle-switch-input" id="toggleColumn_vendor" checked>
-                                            <span class="toggle-switch-label">
-                                            <span class="toggle-switch-indicator"></span>
-                                            </span>
-                                        </label>
-                                        <!-- End Checkbox Switch -->
-                                    </div>
-
-
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="mr-2">{{translate('messages.status')}}</span>
-
-                                        <!-- Checkbox Switch -->
-                                        <label class="toggle-switch toggle-switch-sm" for="toggleColumn_status">
-                                            <input type="checkbox" class="toggle-switch-input" id="toggleColumn_status" checked>
-                                            <span class="toggle-switch-label">
-                                            <span class="toggle-switch-indicator"></span>
-                                            </span>
-                                        </label>
-                                        <!-- End Checkbox Switch -->
-                                    </div>
-
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <span class="mr-2">{{translate('messages.action')}}</span>
-
-                                        <!-- Checkbox Switch -->
-                                        <label class="toggle-switch toggle-switch-sm" for="toggleColumn_action">
-                                            <input type="checkbox" class="toggle-switch-input" id="toggleColumn_action" checked>
-                                            <span class="toggle-switch-label">
-                                            <span class="toggle-switch-indicator"></span>
-                                            </span>
-                                        </label>
-                                        <!-- End Checkbox Switch -->
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        </div>
-                        <!-- End Unfold -->
-                    </div>
-                </div>
-                --}}
-                <!-- COlumns started here -->
                 <div class="table-responsive datatable-custom">
                     <table id="datatable" class="table table-borderless table-thead-bordered table-nowrap table-align-middle card-table"  data-hs-datatables-options='{
                         "search": "#datatableSearch",
@@ -250,7 +187,7 @@
                                         {{\App\CentralLogics\Helpers::format_currency($addon['price'])}}
                                     </div>
                                 </td>
-                                <td  class="pl-3">{{Str::limit($addon->restaurant?$addon->restaurant->name:translate('messages.restaurant').' '.translate('messages.deleted'),25,'...')}}</td>
+                                <td  class="pl-3">{{Str::limit($addon->restaurant?$addon->restaurant->name:translate('messages.restaurant_deleted'),25,'...')}}</td>
                                 <td>
                                     <label class="toggle-switch toggle-switch-sm" for="stausCheckbox{{$addon->id}}">
                                     <input type="checkbox" onclick="location.href='{{route('admin.addon.status',[$addon['id'],$addon->status?0:1])}}'"class="toggle-switch-input" id="stausCheckbox{{$addon->id}}" {{$addon->status?'checked':''}}>
@@ -262,9 +199,9 @@
                                 <td>
                                     <div class="btn--container justify-content-center">
                                         <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                        href="{{route('admin.addon.edit',[$addon['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.addon')}}"><i class="tio-edit"></i></a>
+                                        href="{{route('admin.addon.edit',[$addon['id']])}}" title="{{translate('messages.edit_addon')}}"><i class="tio-edit"></i></a>
                                         <a class="btn btn-sm btn--danger btn-outline-danger action-btn"     href="javascript:"
-                                            onclick="form_alert('addon-{{$addon['id']}}','Want to delete this addon ?')" title="{{translate('messages.delete')}} {{translate('messages.addon')}}"><i class="tio-delete-outlined"></i></a>
+                                            onclick="form_alert('addon-{{$addon['id']}}','Want to delete this addon ?')" title="{{translate('messages.delete_addon')}}"><i class="tio-delete-outlined"></i></a>
                                         <form action="{{route('admin.addon.delete',[$addon['id']])}}"
                                                     method="post" id="addon-{{$addon['id']}}">
                                             @csrf @method('delete')
@@ -320,7 +257,7 @@
           language: {
             zeroRecords: '<div class="text-center p-4">' +
                 '<img class="w-7rem mb-3" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="Image Description">' +
-                '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                 '</div>'
           }
         });
@@ -372,7 +309,7 @@
 
         $('#restaurant').select2({
             ajax: {
-                url: '{{url('/')}}/admin/vendor/get-restaurants',
+                url: '{{url('/')}}/admin/restaurant/get-restaurants',
                 data: function (params) {
                     return {
                         q: params.term, // search term
@@ -398,7 +335,7 @@
 
         $('#restaurant_id').select2({
             ajax: {
-                url: '{{url('/')}}/admin/vendor/get-restaurants',
+                url: '{{url('/')}}/admin/restaurant/get-restaurants',
                 data: function (params) {
                     return {
                         q: params.term, // search term
@@ -421,33 +358,6 @@
             }
         });
 
-
-        $('#search-form').on('submit', function (e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.addon.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
     </script>
     <script>
         $(".lang_link").click(function(e){

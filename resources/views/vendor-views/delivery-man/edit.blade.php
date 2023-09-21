@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title"><i class="tio-edit"></i> {{translate('messages.update')}} {{translate('messages.deliveryman')}}</h1>
+                    <h1 class="page-header-title"><i class="tio-edit"></i> {{translate('messages.update_deliveryman')}}</h1>
                 </div>
             </div>
         </div>
@@ -27,7 +27,7 @@
                             <h5 class="card-title">
                                 <span class="card-title-icon"><i class="tio-user"></i></span>
                                 <span>
-                                    General Information
+                                    {{translate('messages.General_Information')}}
                                 </span>
                             </h5>
                         </div>
@@ -35,7 +35,7 @@
                             <div class="row g-3">
                                 <div class="col-sm-6">
                                     <div class="form-group mb-0">
-                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.first')}} {{translate('messages.name')}}</label>
+                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.first_name')}}</label>
                                         <input type="text" value="{{$delivery_man['f_name']}}" name="f_name"
                                                 class="form-control h--45px" placeholder="{{translate('messages.first_name')}}"
                                                 required>
@@ -43,7 +43,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group mb-0">
-                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.last')}} {{translate('messages.name')}}</label>
+                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.last_name')}}</label>
                                         <input type="text" value="{{$delivery_man['l_name']}}" name="l_name"
                                                 class="form-control h--45px" placeholder="{{translate('messages.last_name')}}"
                                                 required>
@@ -51,7 +51,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group mb-0">
-                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.identity')}} {{translate('messages.type')}}</label>
+                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.identity_type')}}</label>
                                         <select name="identity_type" class="form-control h--45px">
                                             <option
                                                 value="passport" {{$delivery_man['identity_type']=='passport'?'selected':''}}>
@@ -59,7 +59,7 @@
                                             </option>
                                             <option
                                                 value="driving_license" {{$delivery_man['identity_type']=='driving_license'?'selected':''}}>
-                                                {{translate('messages.driving')}} {{translate('messages.license')}}
+                                                {{translate('messages.driving_license')}}
                                             </option>
                                             <option value="nid" {{$delivery_man['identity_type']=='nid'?'selected':''}}>{{translate('messages.nid')}}
                                             </option>
@@ -68,7 +68,7 @@
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group mb-0">
-                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.identity')}} {{translate('messages.number')}}</label>
+                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.identity_number')}}</label>
                                         <input type="text" name="identity_number" value="{{$delivery_man['identity_number']}}"
                                                 class="form-control h--45px"
                                                 placeholder="{{ translate('messages.Ex :') }} DH-23434-LS"
@@ -83,7 +83,7 @@
                 <div class="col-lg-6">
                     <div class="card h-100">
                         <div class="card-header">
-                            <h5 class="form-label m-0" for="exampleFormControlInput1">{{translate('messages.identity')}} {{translate('messages.image')}}
+                            <h5 class="form-label m-0" for="exampleFormControlInput1">{{translate('messages.identity_image')}}
                                 <small class="text-danger">* ( {{translate('messages.ratio')}} 190x120 )</small></h5>
                         </div>
                         <div class="card-body">
@@ -101,8 +101,9 @@
                     <div class="card h-100">
                         <div class="card-header py-3">
                             <h5 class="form-label mb-0">
-                                Delivery Man Image
-                                <small class="text-danger">* ( Ratio 1:1 )</small>
+
+                                {{translate('messages.Delivery_Man_Image')}}
+                                <small class="text-danger">* ({{translate('messages.Ratio')}}  1:1 )</small>
                             </h5>
                         </div>
                         <div class="card-body pt-0 d-flex flex-column">
@@ -114,7 +115,7 @@
                                 <div class="custom-file mt-0">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                 </div>
                         </div>
                     </div>
@@ -125,7 +126,9 @@
                             <h5 class="card-title">
                                 <span class="card-title-icon"><i class="tio-user"></i></span>
                                 <span>
-                                    account Information
+                                    {{translate('messages.account_Information')}}
+
+
                                 </span>
                             </h5>
                         </div>
@@ -151,8 +154,13 @@
 
                                 <div class="col-md-4 col-12">
                                     <div class="form-group mb-0">
-                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.password')}}</label>
-                                        <input type="text" name="password" class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} password">
+                                        <label class="form-label" for="exampleFormControlInput1">{{translate('messages.password')}}
+                                            <span class="input-label-secondary ps-1" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span>
+                                        </label>
+                                        <input type="text" name="password"
+                                        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+
+                                        class="form-control h--45px" placeholder="{{ translate('messages.Ex :') }} password">
                                     </div>
                                 </div>
                             </div>

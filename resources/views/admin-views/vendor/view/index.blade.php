@@ -10,25 +10,24 @@
 @section('content')
 <div class="content container-fluid">
     <!-- Page Header -->
-{{-- {{ dd($restaurant->zone); }} --}}
     <div class="page-header">
         <div class="d-flex flex-wrap justify-content-between align-items-center">
             <h1 class="page-header-title text-break me-2">
                 <i class="tio-shop"></i> <span>{{$restaurant->name}}</span>
             </h1>
             @if($restaurant->vendor->status)
-            <a href="{{route('admin.vendor.edit',[$restaurant->id])}}" class="btn btn--primary my-2">
-                <i class="tio-edit mr-2"></i> {{translate('messages.edit')}} {{translate('messages.restaurant')}}
+            <a href="{{route('admin.restaurant.edit',[$restaurant->id])}}" class="btn btn--primary my-2">
+                <i class="tio-edit mr-2"></i> {{translate('messages.edit_restaurant')}}
             </a>
             @else
                 <div>
                     @if(!isset($restaurant->vendor->status))
                     <a class="btn btn--danger text-capitalize my-2"
-                    onclick="request_alert('{{route('admin.vendor.application',[$restaurant['id'],0])}}','{{translate('messages.you_want_to_deny_this_application')}}')"
+                    onclick="request_alert('{{route('admin.restaurant.application',[$restaurant['id'],0])}}','{{translate('messages.you_want_to_deny_this_application')}}')"
                         href="javascript:">{{translate('messages.deny')}}</a>
                     @endif
                     <a class="btn btn--primary text-capitalize my-2"
-                    onclick="request_alert('{{route('admin.vendor.application',[$restaurant['id'],1])}}','{{translate('messages.you_want_to_approve_this_application')}}')"
+                    onclick="request_alert('{{route('admin.restaurant.application',[$restaurant['id'],1])}}','{{translate('messages.you_want_to_approve_this_application')}}')"
                         href="javascript:">{{translate('messages.approve')}}</a>
                 </div>
             @endif
@@ -37,41 +36,14 @@
         <!-- Nav Scroller -->
         <div class="js-nav-scroller hs-nav-scroller-horizontal">
             <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{route('admin.vendor.view', $restaurant->id)}}">{{translate('messages.overview')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'order'])}}"  aria-disabled="true">{{translate('messages.orders')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'product'])}}"  aria-disabled="true">{{translate('messages.foods')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'reviews'])}}"  aria-disabled="true">{{translate('messages.reviews')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'discount'])}}"  aria-disabled="true">{{translate('discounts')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction'])}}"  aria-disabled="true">{{translate('messages.transactions')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'settings'])}}"  aria-disabled="true">{{translate('messages.settings')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'conversations'])}}"  aria-disabled="true">{{translate('messages.conversations')}}</a>
-                </li>
-            </ul>
+            @include('admin-views.vendor.view.partials._header',['restaurant'=>$restaurant])
+
             <!-- End Nav -->
         </div>
         <!-- End Nav Scroller -->
         @endif
     </div>
         <!-- End Page Header -->
-        @php ( $currency = \App\Models\Currency::where('currency_code',$restaurant->zone->zone_currency)->first() )
-        @php($currency_symbol=$currency->currency_symbol ?? \App\CentralLogics\Helpers::currency_symbol())
-        @php($zone_currency= $restaurant->zone->zone_currency ?? null)
     <!-- Page Heading -->
     <div class="row my-2 g-3">
         <!-- Earnings (Monthly) Card Example -->
@@ -84,11 +56,13 @@
                     <div class="d-flex align-items-center justify-content-center mt-3">
                         <img class="cash-icon mr-3" src="{{asset('/public/assets/admin/img/transactions/cash.png')}}" alt="transactions">
                         <h2
-                        class="cash--title">{{\App\CentralLogics\Helpers::format_currency($wallet->collected_cash,$zone_currency)}}                        </h2>
+
+                            class="cash--title">{{\App\CentralLogics\Helpers::format_currency($wallet->collected_cash)}}
+                        </h2>
                     </div>
                 </div>
                 <div class="card-footer pt-0 bg-transparent">
-                    <a class="btn btn-- bg--title h--45px w-100" href="{{route('admin.account-transaction.index')}}" title="{{translate('messages.goto')}} {{translate('messages.account_transaction')}}">{{translate('messages.collect_cash_from_restaurant')}}</a>
+                    <a class="btn btn-- bg--title h--45px w-100" href="{{route('admin.account-transaction.index')}}" title="{{translate('messages.goto_account_transaction')}}">{{translate('messages.collect_cash_from_restaurant')}}</a>
                 </div>
             </div>
         </div>
@@ -98,8 +72,8 @@
                 <!-- Panding Withdraw Card Example -->
                 <div class="col-sm-6">
                     <div class="resturant-card  bg--2">
-                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->pending_withdraw,$zone_currency)}}</h4>
-                        <span class="subtitle">{{translate('messages.pending')}} {{translate('messages.withdraw')}}</span>
+                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->pending_withdraw)}}</h4>
+                        <span class="subtitle">{{translate('messages.pending_withdraw')}}</span>
                         <img class="resturant-icon" src="{{asset('/public/assets/admin/img/transactions/pending.png')}}" alt="transactions">
                     </div>
                 </div>
@@ -107,8 +81,8 @@
                 <!-- Earnings (Monthly) Card Example -->
                 <div class="col-sm-6">
                     <div class="resturant-card  bg--3">
-                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->total_withdrawn,$zone_currency)}}</h4>
-                        <span class="subtitle">{{translate('messages.total')}} {{translate('messages.withdrawn')}} {{translate('messages.amount')}}</span>
+                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->total_withdrawn)}}</h4>
+                        <span class="subtitle">{{translate('messages.total_withdrawn_amount')}}</span>
                         <img class="resturant-icon" src="{{asset('/public/assets/admin/img/transactions/withdraw-amount.png')}}" alt="transactions">
                     </div>
                 </div>
@@ -116,7 +90,7 @@
                 <!-- Collected Cash Card Example -->
                 <div class="col-sm-6">
                     <div class="resturant-card  bg--5">
-                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->balance,$zone_currency)}}</h4>
+                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->balance)}}</h4>
                         <span class="subtitle">{{translate('messages.withdraw_able_balance')}}</span>
                         <img class="resturant-icon" src="{{asset('/public/assets/admin/img/transactions/withdraw-balance.png')}}" alt="transactions">
                     </div>
@@ -125,7 +99,7 @@
                 <!-- Pending Requests Card Example -->
                 <div class="col-sm-6">
                     <div class="resturant-card  bg--1">
-                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->total_earning,$zone_currency)}}</h4>
+                        <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($wallet->total_earning)}}</h4>
                         <span class="subtitle">{{translate('messages.total_earning')}}</span>
                         <img class="resturant-icon" src="{{asset('/public/assets/admin/img/transactions/earning.png')}}" alt="transactions">
                     </div>
@@ -144,7 +118,7 @@
                             <span class="card-header-icon mr-2">
                                 <i class="tio-shop-outlined"></i>
                             </span>
-                            <span class="ml-1">{{translate('messages.restaurant')}} {{translate('messages.info')}}</span>
+                            <span class="ml-1">{{translate('messages.restaurant_info')}}</span>
                         </h5>
                     </div>
                     <div class="card-body">
@@ -180,16 +154,6 @@
                                                 {{translate('messages.email')}} : {{$restaurant->email}}
                                             </span>
                                         </li>
-
-                                        @if (isset($currency))
-                                        <li>
-                                            <i class="tio-money">
-                                            </i>
-                                            <span class="pl-1">
-                                                {{translate('messages.currency')}} : {{$currency->currency_code}} ({{ $currency->currency_symbol }})
-                                            </span>
-                                        </li>
-                                        @endif
                                     </ul>
                                 </div>
                             </div>
@@ -207,7 +171,7 @@
                             <span class="card-header-icon mr-2">
                                 <i class="tio-user"></i>
                             </span>
-                            <span class="ml-1">{{translate('messages.owner')}} {{translate('messages.info')}}</span>
+                            <span class="ml-1">{{translate('messages.owner_info')}}</span>
                         </h5>
                     </div>
                     <div class="card-body d-flex flex-column justify-content-center">
@@ -239,6 +203,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-lg-6">
                 <div class="card h-100">
                     <div class="card-header">
@@ -270,6 +235,63 @@
                             </li>
                             @endif
                         </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h5 class="card-title m-0 d-flex align-items-center">
+                            <span class="card-header-icon mr-2">
+                                <i class="tio-crown"></i>
+                            </span>
+                            <span class="ml-1">{{translate('messages.Restaurant_Model')}} : {{ translate($restaurant->restaurant_model ?? 'None') }}</span>
+                        </h5>
+                    </div>
+                    <div class="card-body d-flex flex-column justify-content-center">
+                        <div class="resturant--info-address">
+
+                            <ul class="address-info address-info-2 list-unstyled list-unstyled-py-3 text-dark">
+
+                                    @if (isset($restaurant->restaurant_sub) )
+                                    <li>
+                                        <span class="pl-1">
+                                           {{ translate('messages.Package_Name') }} : {{$restaurant->restaurant_sub->package->package_name}}
+                                        </span>
+                                    </li>
+                                    <li>
+                                    <li>
+                                        <span class="pl-1">
+                                        {{ translate('messages.Package_price') }} : {{\App\CentralLogics\Helpers::format_currency($restaurant->restaurant_sub->package->price)}}
+                                        </span>
+                                    </li>
+                                    <li>
+                                        <span class="pl-1">
+                                            {{ translate('messages.Expire_Date') }} :   {{$restaurant->restaurant_sub->expiry_date->format('d M Y')}}
+                                        </span>
+                                    </li>
+                                    <li>
+                                        @if ($restaurant->restaurant_sub->status == 1)
+                                            <span class="badge badge-soft-success">
+                                                {{ translate('messages.Status') }} : {{ translate('messages.active') }}</span>
+                                            @else
+                                            <span class="badge badge-soft-danger">
+                                                {{ translate('messages.Status') }} : {{ translate('messages.inactive') }}</span>
+                                        @endif
+                                    </li>
+                                    @elseif(!isset($restaurant->restaurant_sub) && $restaurant->restaurant_model == 'unsubscribed'  )
+                                    <li>
+                                        <span class="pl-1">
+                                            {{ translate('messages.Not_subscribed_to_any_package') }}
+                                        </span>
+                                    </li>
+                                    @else
+
+
+                                    @endif
+
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -345,22 +367,22 @@
             });
         });
 
-    function request_alert(url, message) {
-        Swal.fire({
-            title: "{{translate('messages.are_you_sure')}}",
-            text: message,
-            type: 'warning',
-            showCancelButton: true,
-            cancelButtonColor: 'default',
-            confirmButtonColor: '#FC6A57',
-            cancelButtonText: "{{translate('messages.no')}}",
-            confirmButtonText: "{{translate('messages.yes')}}",
-            reverseButtons: true
-        }).then((result) => {
-            if (result.value) {
-                location.href = url;
-            }
-        })
-    }
+        function request_alert(url, message) {
+            Swal.fire({
+                title: "{{translate('messages.are_you_sure_?')}}",
+                text: message,
+                type: 'warning',
+                showCancelButton: true,
+                cancelButtonColor: 'default',
+                confirmButtonColor: '#FC6A57',
+                cancelButtonText: "{{translate('messages.no')}}",
+                confirmButtonText: "{{translate('messages.yes')}}",
+                reverseButtons: true
+            }).then((result) => {
+                if (result.value) {
+                    location.href = url;
+                }
+            })
+        }
     </script>
 @endpush

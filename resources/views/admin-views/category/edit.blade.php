@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.Update category'))
+@section('title',translate('messages.Update_Category'))
 
 @push('css_or_js')
 
@@ -17,7 +17,7 @@
                             <img src="{{asset('public/assets/admin/img/sub-category.png')}}" alt="">
                         </div>
                         <span>
-                            {{$category->position?translate('messages.sub').' ':''}}{{translate('messages.category')}} {{translate('messages.update')}}
+                            {{$category->position?translate('messages.sub').' ':''}}{{translate('messages.Category_Update')}}
                         </span>
                     </h2>
                 </div>
@@ -30,16 +30,23 @@
                     @csrf
                     @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                     @php($language = $language->value ?? null)
-                    @php($default_lang = 'en')
+                    @php($default_lang = str_replace('_', '-', app()->getLocale()))
                     @if($language)
-                        @php($default_lang = json_decode($language)[0])
                         <ul class="nav nav-tabs mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link lang_link active" href="#" id="default-link">{{translate('Default')}}</a>
+                            </li>
                             @foreach(json_decode($language) as $lang)
                                 <li class="nav-item">
-                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                    <a class="nav-link lang_link" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                                 </li>
                             @endforeach
                         </ul>
+                        <div class="form-group lang_form" id="default-form">
+                            <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
+                            <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Category_Name') }}" value="{{$category?->getRawOriginal('name')}}"  maxlength="191">
+                            <input type="hidden" name="lang[]" value="default">
+                        </div>
                         @foreach(json_decode($language) as $lang)
                             <?php
                                 if(count($category['translations'])){
@@ -52,18 +59,18 @@
                                     }
                                 }
                             ?>
-                            <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
+                            <div class="form-group d-none lang_form" id="{{$lang}}-form">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{strtoupper($lang)}})</label>
-                                <input id="name" type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_category')}}" maxlength="191" value="{{$lang==$default_lang?$category['name']:($translate[$lang]['name']??'')}}" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
+                                <input id="name" type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_category')}}" maxlength="191" value="{{$translate[$lang]['name'] ?? null}}"  oninvalid="document.getElementById('en-link').click()">
                             </div>
                             <input type="hidden" name="lang[]" value="{{$lang}}">
                         @endforeach
                     @else
-                        <div class="form-group">
-                            <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                            <input id="name" type="text" name="name" class="form-control" placeholder="{{ translate('messages.Ex :') }} {{translate('messages.new_category')}}" value="{{old('name')}}" required maxlength="191">
-                        </div>
-                        <input type="hidden" name="lang[]" value="{{$lang}}">
+                    <div class="form-group lang_form" id="default-form">
+                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
+                        <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Category_Name') }}" value="{{$category['name']}}"  maxlength="191">
+                        <input type="hidden" name="lang[]" value="default">
+                    </div>
                     @endif
                     @if ($category->position != 1)
                     <div class="row">
@@ -75,11 +82,11 @@
                                 </center>
                             </div>
                             <div class="form-group mt-2">
-                                <label>{{translate('messages.image')}}</label><small class="text-danger">* ( {{translate('messages.ratio')}} 1:1)</small>
+                                <label>{{translate('messages.image')}}</label><small class="text-danger">* ( {{translate('messages.ratio_1:1')}} )</small>
                                 <div class="custom-file">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                 </div>
                             </div>
                         </div>

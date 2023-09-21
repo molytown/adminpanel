@@ -15,13 +15,11 @@ class DeliveryManReviewController extends Controller
     public function get_reviews($id)
     {
         $reviews = DMReview::with(['customer', 'delivery_man'])->where(['delivery_man_id' => $id])->active()->get();
-
         $storage = [];
         foreach ($reviews as $item) {
             $item['attachment'] = json_decode($item['attachment']);
             array_push($storage, $item);
         }
-
         return response()->json($storage, 200);
     }
 
@@ -39,10 +37,9 @@ class DeliveryManReviewController extends Controller
             } else {
                 $overallRating = number_format($rating / $totalReviews->count(), 2);
             }
-
             return response()->json(floatval($overallRating), 200);
         } catch (\Exception $e) {
-            return response()->json(['errors' => $e], 403);
+            return response()->json(['errors' => $e->getMessage()], 403);
         }
     }
 
@@ -53,6 +50,7 @@ class DeliveryManReviewController extends Controller
             'order_id' => 'required',
             'comment' => 'required',
             'rating' => 'required|numeric|max:5',
+            'attachment.*' => 'nullable|max:2048',
         ]);
 
         $dm = DeliveryMan::find($request->delivery_man_id);
@@ -64,7 +62,7 @@ class DeliveryManReviewController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
 
-        $multi_review = DMReview::where(['delivery_man_id' => $request->delivery_man_id, 'user_id' => $request->user()->id, 'order_id'=>$request->order_id])->first();
+        $multi_review = DMReview::where(['delivery_man_id' => $request->delivery_man_id, 'user_id' => $request?->user()?->id, 'order_id'=>$request->order_id])->first();
         if (isset($multi_review)) {
             return response()->json([
                 'errors' => [
@@ -87,7 +85,7 @@ class DeliveryManReviewController extends Controller
         }
 
         $review = new DMReview();
-        $review->user_id = $request->user()->id;
+        $review->user_id = $request?->user()?->id;
         $review->delivery_man_id = $request->delivery_man_id;
         $review->order_id = $request->order_id;
         $review->comment = $request->comment;

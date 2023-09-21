@@ -22,12 +22,11 @@
         <div class="card">
             <!-- Header -->
             <div class="card-header flex-wrap justify-content-end">
-                <form action="javascript:" id="search-form">
-                {{-- <form action="{{ route('admin.customer.subscribed') }}"> --}}
+                <form >
                     <div class="input--group input-group input-group-merge input-group-flush">
                         <input id="datatableSearch_" type="search" name="search" class="form-control"
-                            value="{{ request()->get('search') }}" placeholder="{{ translate('Ex: Search for emails') }}"
-                            aria-label="Search" required>
+                            value="{{ request()->get('search') }}" placeholder="{{ translate('Ex:_Search_for_emails') }}"
+                            aria-label="Search">
                         <button type="submit" class="btn btn--secondary">
                                 <i class="tio-search"></i>
                         </button>
@@ -38,6 +37,35 @@
                     </div>
                     <!-- End Search -->
                 </form>
+                 <!-- Unfold -->
+                 <div class="hs-unfold mr-2 ml-2">
+                    <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                        data-hs-unfold-options='{
+                                "target": "#usersExportDropdown",
+                                "type": "css-animation"
+                            }'>
+                        <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                    </a>
+
+                    <div id="usersExportDropdown"
+                        class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                        <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                        <a id="export-excel" class="dropdown-item" href="{{route('admin.customer.subscriber-export',  ['type'=>'excel',request()->getQueryString()])}}">
+                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                alt="Image Description">
+                            {{ translate('messages.excel') }}
+                        </a>
+                        <a id="export-csv" class="dropdown-item" href="{{route('admin.customer.subscriber-export', ['type'=>'csv',request()->getQueryString()])}}">
+                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                alt="Image Description">
+                            .{{ translate('messages.csv') }}
+                        </a>
+                    </div>
+                </div>
+                <!-- End Unfold -->
+
             </div>
             <!-- End Header -->
             <!-- Table -->
@@ -113,31 +141,5 @@
     </div>
 @endsection
 @push('script_2')
-    <script type="text/javascript">
-        $('#search-form').on('submit', function() {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{ url('admin/customer/subscriber-search') }}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function() {
-                    $('#loading').show();
-                },
-                success: function(data) {
-                    $('#set-rows').html(data.view);
-                    $('.card-footer').hide();
-                },
-                complete: function() {
-                    $('#loading').hide();
-                },
-            });
-        });
-    </script>
+
 @endpush

@@ -2,118 +2,156 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\User;
 use App\Models\Order;
-use App\Models\BusinessSetting;
-use App\CentralLogics\Helpers;
+use App\Traits\Processor;
 use Illuminate\Http\Request;
-use KingFlamez\Rave\Facades\Rave as Flutterwave;
+use App\CentralLogics\Helpers;
+use App\Models\PaymentRequest;
+use App\CentralLogics\OrderLogic;
+use Illuminate\Support\Facades\Validator;
 
-class FlutterwaveController extends Controller
+class FlutterwaveV3Controller extends Controller
 {
-    /**
-     * Initialize Rave payment process
-     * @return void
-     */
+    use Processor;
+
+    private $config_values;
+
+    private PaymentRequest $payment;
+    private $user;
+
+    public function __construct(PaymentRequest $payment, User $user)
+    {
+        $config = $this->payment_config('flutterwave', 'payment_config');
+        if (!is_null($config) && $config->mode == 'live') {
+            $this->config_values = json_decode($config->live_values);
+        } elseif (!is_null($config) && $config->mode == 'test') {
+            $this->config_values = json_decode($config->test_values);
+        }
+        $this->payment = $payment;
+        $this->user = $user;
+    }
+
     public function initialize(Request $request)
     {
-        //This generates a payment reference
-        $reference = Flutterwave::generateReference();
-        $order = Order::with(['details','customer'])->where(['id' => $request->order_id, 'user_id'=>$request->customer_id])->first();
-        $user_data = $order->customer;
-        // Enter the details of the payment
-        $data = [
-            'payment_options' => 'card,banktransfer',
-            'amount' => $order->order_amount,
-            'email' => $user_data['email'],
-            'tx_ref' => $reference,
-            'currency' => $order->zone_currency == null? Helpers::currency_code():$order->zone_currency,
-            // 'currency' => Helpers::currency_code(),
-            'redirect_url' => route('flutterwave_callback',['order_id'=>$order->id]),
-            'customer' => [
-                'email' => $user_data['email'],
-                "phone_number" => $user_data['phone'],
-                "name" => $user_data['f_name'].''.$user_data['l_name']
-            ],
+        $validator = Validator::make($request->all(), [
+            'payment_id' => 'required|uuid'
+        ]);
 
-            "customizations" => [
-                "title" => BusinessSetting::where(['key'=>'business_name'])->first()->value??'Stack Food',
-                "description" => $order->id,
+        if ($validator->fails()) {
+            return response()->json($this->response_formatter(GATEWAYS_DEFAULT_400, null, $this->error_processor($validator)), 400);
+        }
+
+        $data = $this->payment::where(['id' => $request['payment_id']])->where(['is_paid' => 0])->first();
+        if (!isset($data)) {
+            return response()->json($this->response_formatter(GATEWAYS_DEFAULT_204), 200);
+        }
+
+        if ($data['additional_data'] != null) {
+            $business = json_decode($data['additional_data']);
+            $business_name = $business->business_name ?? "my_business";
+        } else {
+            $business_name = "my_business";
+        }
+        $payer = json_decode($data['payer_information']);
+
+        //* Prepare our rave request
+        $request = [
+            'tx_ref' => time(),
+            'amount' => $data->payment_amount,
+            'currency' => 'NGN',
+            'payment_options' => 'card',
+            'redirect_url' => route('flutterwave-v3.callback', ['payment_id' => $data->id]),
+            'customer' => [
+                'email' => $payer->email,
+                'name' => $payer->name
+            ],
+            'meta' => [
+                'price' => $data->payment_amount
+            ],
+            'customizations' => [
+                'title' => $business_name,
+                'description' => $data->id
             ]
         ];
 
-        $payment = Flutterwave::initializePayment($data);
+        //http request
+        $curl = curl_init();
+        curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://api.flutterwave.com/v3/payments',
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'POST',
+            CURLOPT_POSTFIELDS => json_encode($request),
+            CURLOPT_HTTPHEADER => array(
+                'Authorization: Bearer ' . $this->config_values->secret_key,
+                'Content-Type: application/json'
+            ),
+        ));
 
-        if ($payment['status'] !== 'success') {
-            $order->order_status = 'failed';
-            $order->failed = now();
-            $order->save();
-            if ($order->callback != null) {
-                return redirect($order->callback . '&status=fail');
-            }else{
-                return \redirect()->route('payment-fail');
-            }
+        $response = curl_exec($curl);
+
+        curl_close($curl);
+
+        $res = json_decode($response);
+        if ($res->status == 'success') {
+            return redirect()->away($res->data->link);
         }
-        return redirect($payment['data']['link']);
 
+        return 'We can not process your payment';
     }
 
-    /**
-     * Obtain Rave callback information
-     * @return void
-     */
-    public function callback(Request $request, $order_id)
+    public function callback(Request $request)
     {
-        $order = Order::with(['details'])->where(['id' => $order_id])->first();
-        //Payment successful response
-        // array (
-        //     'status' => 'completed',
-        //     'tx_ref' => 'flw_166339765163256f133120d',
-        //     'transaction_id' => '716320049',
-        // )
-        if (in_array($request->status, ['successful','completed'])) {
+        if ($request['status'] == 'successful') {
+            $txid = $request['transaction_id'];
+            $curl = curl_init();
+            curl_setopt_array($curl, array(
+                CURLOPT_URL => "https://api.flutterwave.com/v3/transactions/{$txid}/verify",
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_ENCODING => "",
+                CURLOPT_MAXREDIRS => 10,
+                CURLOPT_TIMEOUT => 0,
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                CURLOPT_CUSTOMREQUEST => "GET",
+                CURLOPT_HTTPHEADER => array(
+                    "Content-Type: application/json",
+                    "Authorization: Bearer " . $this->config_values->secret_key,
+                ),
+            ));
+            $response = curl_exec($curl);
+            curl_close($curl);
 
-            $transactionID = Flutterwave::getTransactionIDFromCallback();
-            $data = Flutterwave::verifyTransaction($transactionID);
+            $res = json_decode($response);
+            if ($res->status) {
+                $amountPaid = $res->data->charged_amount;
+                $amountToPay = $res->data->meta->price;
+                if ($amountPaid >= $amountToPay) {
 
-            try {
-                $order->transaction_reference = $transactionID;
-                $order->payment_method = 'flutterwave';
-                $order->payment_status = 'paid';
-                $order->order_status = 'confirmed';
-                $order->confirmed = now();
-                $order->save();
-                Helpers::send_order_notification($order);
-            } catch (\Exception $e) {
-                info($e->getMessage());
-            }
+                    $this->payment::where(['id' => $request['payment_id']])->update([
+                        'payment_method' => 'flutterwave',
+                        'is_paid' => 1,
+                        'transaction_id' => $txid,
+                    ]);
 
-            if ($order->callback != null) {
-                return redirect($order->callback . '&status=success');
-            }else{
-                return \redirect()->route('payment-success');
-            }
-        }
-        // elseif ($status ==  'cancelled'){
-        //     //Put desired action/code after transaction has been cancelled here
-        // }
-        else{
-            $order->order_status = 'failed';
-            $order->failed = now();
-            $order->save();
-            if ($order->callback != null) {
-                return redirect($order->callback . '&status=fail');
-            }else{
-                return \redirect()->route('payment-fail');
+                    $data = $this->payment::where(['id' => $request['payment_id']])->first();
+
+                    if (isset($data) && function_exists($data->success_hook)) {
+                        call_user_func($data->success_hook, $data);
+                    }
+                    return $this->payment_response($data,'success');
+                }
             }
         }
-        // Get the transaction from your DB using the transaction reference (txref)
-        // Check if you have previously given value for the transaction. If you have, redirect to your successpage else, continue
-        // Confirm that the currency on your db transaction is equal to the returned currency
-        // Confirm that the db transaction amount is equal to the returned amount
-        // Update the db transaction record (including parameters that didn't exist before the transaction is completed. for audit purpose)
-        // Give value for the transaction
-        // Update the transaction to note that you have given value for the transaction
-        // You can also redirect to your success page from here
-
+        $payment_data = $this->payment::where(['id' => $request['payment_id']])->first();
+        if (isset($payment_data) && function_exists($payment_data->failure_hook)) {
+            call_user_func($payment_data->failure_hook, $payment_data);
+        }
+        return $this->payment_response($payment_data,'fail');
     }
 }

@@ -33,7 +33,9 @@
                         </div>
                     </div>
                     <div class="pl-1">
-                        <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                        <small>
+                            {{ \App\CentralLogics\Helpers::time_date_format($con->created_at)  }}
+                        </small>
                     </div>
                 @else
                     <div class="pt-1 pb-1">
@@ -49,7 +51,9 @@
                         </div>
                     </div>
                     <div class="text-right pr-1">
-                        <small>{{date('d M Y',strtotime($con->created_at))}} {{date(config('timeformat'),strtotime($con->created_at))}}</small>
+                        <small>
+                            {{ \App\CentralLogics\Helpers::time_date_format($con->created_at)  }}
+                        </small>
                     </div>
                 @endif
             @endforeach
@@ -65,7 +69,7 @@
             <div class="quill-custom_">
                 <textarea class="form-control" name="reply"></textarea>
                 <button type="submit" onclick="replyConvs('{{route('admin.message.store',[$user->id])}}')"
-                        class="btn btn-primary btn--primary con-reply-btn">{{translate('messages.send')}} {{translate('messages.reply')}}
+                        class="btn btn-primary btn--primary con-reply-btn">{{translate('messages.send_reply')}}
                 </button>
             </div>
         </form>

@@ -24,7 +24,7 @@
     <!-- CSS Front Template -->
     <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/bootstrap.min.css">
     <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/theme.minc619.css?v=1.0">
-    <link rel="stylesheet" href="{{asset('public/assets/admin')}}/css/style.css">
+    <link rel="stylesheet" href="{{asset('public/assets/admin/css/style.css')}}">
 
     <script
         src="{{asset('public/assets/admin')}}/vendor/hs-navbar-vertical-aside/hs-navbar-vertical-aside-mini-cache.js"></script>
@@ -39,13 +39,21 @@
 <!-- Page Content-->
 <div class="container pb-5 mb-2 mb-md-4">
     <div class="row">
+        <div class="col-md-12">
+            <div id="payment-redirection" class="initial-hidden">
+                <div class="loading--2">
+                    <div class="text-center"><h1>{{translate('messages.Redirecting_to_the_payment_page')}}......</h1></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
         <div class="col-md-12 mb-5 pt-5">
             <center class="">
                 <h1>Payment method</h1>
             </center>
         </div>
         @php($order=\App\Models\Order::find(session('order_id')))
-        @php($order_zone=\App\Models\Zone::find($order->zone_id))
         <section class="col-lg-12">
             <div class="checkout_details mt-3">
                 <div class="row">
@@ -74,15 +82,14 @@
                                 <div class="card-body pt-1 h-70px">
                                     @php($config=\App\CentralLogics\Helpers::get_business_settings('razor_pay'))
                                     @php($order=\App\Models\Order::find(session('order_id')))
-                                    @php($currency_codez=$order->zone_currency == null? \App\CentralLogics\Helpers::currency_code():$order->zone_currency)
                                     <form action="{!!route('payment-razor',['order_id'=>$order['id']])!!}" method="POST">
                                     @csrf
                                     <!-- Note that the amount is in paise = 50 INR -->
                                         <!--amount need to be in paisa-->
                                         <script src="https://checkout.razorpay.com/v1/checkout.js"
                                                 data-key="{{ Config::get('razor.razor_key') }}"
-                                                data-amount="{{$order->order_amount*100}}"
-                                                data-buttontext="Pay {{$order->order_amount}} {{\App\CentralLogics\Helpers::currency_code()}}"
+                                                data-amount="{{($order->order_amount - $order->partially_paid_amount)*100}}"
+                                                data-buttontext="Pay {{$order->order_amount - $order->partially_paid_amount}} {{\App\CentralLogics\Helpers::currency_code()}}"
                                                 data-name="{{\App\Models\BusinessSetting::where(['key'=>'business_name'])->first()->value}}"
                                                 data-description="{{$order['id']}}"
                                                 data-image="{{asset('storage/app/public/business/'.\App\Models\BusinessSetting::where(['key'=>'logo'])->first()->value)}}"
@@ -92,7 +99,7 @@
                                         </script>
                                     </form>
                                     <button class="btn btn-block click-if-alone" type="button"
-                                            onclick="{{$currency_codez=='INR'?"$('.razorpay-payment-button').click()":"toastr.error('Your currency is not supported by Razor Pay.')"}}">
+                                            onclick="{{\App\CentralLogics\Helpers::currency_code()=='INR'?"$('.razorpay-payment-button').click()":"toastr.error('Your currency is not supported by Razor Pay.')"}}">
                                         <img width="100"
                                              src="{{asset('public/assets/admin/img/razorpay.png')}}"/>
                                     </button>
@@ -106,14 +113,14 @@
                     @if($config['status'])
                         <div class="col-md-6 mb-4 cursor-pointer">
                             <div class="card">
-                                <div class="card-body pb-0 pt-1 h-70px">
-                                    <form class="needs-validation" method="POST" id="payment-form"
-                                          action="{{route('pay-paypal',request()->getQueryString())}}">
-                                        {{ csrf_field() }}
+                                <div class="card-body pb-0 pt-1 h--70px">
+                                    <form class="needs-validation" method="GET"
+                                          action="{{route('paypal.pay')}}">
                                         <button class="btn btn-block click-if-alone" type="submit">
                                             <img width="100"
                                                  src="{{asset('public/assets/admin/img/paypal.png')}}"/>
                                         </button>
+                                        <input type="hidden" name="order_id" value="{{$order->id}}">
                                     </form>
                                 </div>
                             </div>
@@ -157,46 +164,20 @@
                             </div>
                         </div>
                     @endif
-
-
+        
                     @php($config=\App\CentralLogics\Helpers::get_business_settings('paystack'))
                     @if($config['status'])
                         <div class="col-md-6 mb-4 cursor-pointer">
                             <div class="card">
-                                <div class="card-body py-0 h-70px">
-                                    @php($config=\App\CentralLogics\Helpers::get_business_settings('paystack'))
-                                    @php($order=\App\Models\Order::find(session('order_id')))
-                                    <form method="POST" action="{{ route('paystack-pay') }}" accept-charset="UTF-8"
-                                          class="form-horizontal"
-                                          role="form">
-                                        @csrf
-                                        <div class="row">
-                                            <div class="col-md-8 col-md-offset-2">
-                                                <input type="hidden" name="email"
-                                                       value="{{$order->customer->email!=null?$order->customer->email:'required@email.com'}}"> {{-- required --}}
-                                                <input type="hidden" name="orderID" value="{{$order['id']}}">
-                                                <input type="hidden" name="amount"
-                                                       value="{{$order['order_amount']*100}}"> {{-- required in kobo --}}
-                                                <input type="hidden" name="quantity" value="1">
-                                                <input type="hidden" name="currency"
-                                                       value="{{$order->zone_currency == null? $currency:$order->zone_currency}}">
-                                                <input type="hidden" name="metadata"
-                                                       value="{{ json_encode($array = ['key_name' => 'value',]) }}"> {{-- For other necessary things you want to add to your payload. it is optional though --}}
-                                                <input type="hidden" name="reference"
-                                                       value="{{ Paystack::genTranxRef() }}"> {{-- required --}}
-                                                <p>
-                                                    <button class="paystack-payment-button initial-hidden"
-                                                            type="submit"
-                                                            value="Pay Now!"></button>
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </form>
-                                    <button class="btn btn-block click-if-alone" type="button"
-                                            onclick="$('.paystack-payment-button').click()">
-                                        <img width="100"
-                                             src="{{asset('public/assets/admin/img/paystack.png')}}"/>
-                                    </button>
+                                <div class="card-body py-0 h--70px">
+                                    <form id="paymentForm">
+                                        <input type="hidden" id="publicKey" value="{{ $config['publicKey'] }}">
+                                        <input type="hidden" value="{{ $order->customer->email }}" id="email-address" required />
+                                        <input type="hidden" value="{{ round($order->order_amount - $order->partially_paid_amount )}}" id="amount" required />
+                                        <button class="btn btn-block click-if-alone" type="submit" onclick="payWithPaystack()">
+                                          <img width="100" src="{{asset('public/assets/admin/img/paystack.png')}}"/>
+                                        </button>
+                                      </form>
                                 </div>
                             </div>
                         </div>
@@ -209,13 +190,12 @@
                                 <div class="card-body pt-1 h-70px">
                                     @php($config=\App\CentralLogics\Helpers::get_business_settings('senang_pay'))
                                     @php($user=\App\Models\User::where(['id'=>$order['user_id']])->first())
-                                    @php($currency_codez=$order->zone_currency == null? \App\CentralLogics\Helpers::currency_code():$order->zone_currency)
                                     @php($secretkey = $config['secret_key'])
                                     @php($data = new \stdClass())
                                     @php($data->merchantId = $config['merchant_id'])
                                     @php($data->detail = 'payment')
                                     @php($data->order_id = $order->id)
-                                    @php($data->amount = $order->order_amount)
+                                    @php($data->amount = $order->order_amount - $order->partially_paid_amount)
                                     @php($data->name = $user->f_name.' '.$user->l_name)
                                     @php($data->email = $user->email)
                                     @php($data->phone = $user->phone)
@@ -233,7 +213,7 @@
                                     </form>
 
                                     <button class="btn btn-block click-if-alone" type="button"
-                                            onclick="{{$currency_codez=='MYR'?"document.order.submit()":"toastr.error('Your currency is not supported by Senang Pay.')"}}">
+                                            onclick="{{\App\CentralLogics\Helpers::currency_code()=='MYR'?"document.order.submit()":"toastr.error('Your currency is not supported by Senang Pay.')"}}">
                                         <img width="100"
                                              src="{{asset('public/assets/admin/img/senangpay.png')}}"/>
                                     </button>
@@ -283,7 +263,6 @@
                                     <form class="needs-validation" method="POST" id="payment-form-paymob"
                                         action="{{route('paymob-credit')}}">
                                         {{ csrf_field() }}
-                                        <input type="hidden" name="order_id" value="{{$order['id']}}">
                                         <button class="btn btn-block click-if-alone" type="submit">
                                             <img width="150"
                                                 src="{{asset('public/assets/admin/img/paymob.png')}}"/>
@@ -298,10 +277,10 @@
                     @if(isset($config)  && $config['status'])
                         <div class="col-md-6 mb-4 cursor-pointer">
                             <div class="card">
-                                <div class="card-body h-100px">
-                                    <button class="btn btn-block click-if-alone" id="bKash_button" onclick="BkashPayment()">
-                                        <img width="100" src="{{asset('public/assets/admin/img/bkash.png')}}"/>
-                                    </button>
+                                <div class="card-body h--100px">
+                                    <a class="btn btn-block click-if-alone" href="{{route('bkash-make-payment',request()->getQueryString())}}">
+                                        <img class="initial--40" src="{{asset('public/assets/admin/img/bkash.png')}}"/>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -345,19 +324,6 @@
                             </div>
                         </div>
                     @endif
-
-                    @php($config=\App\CentralLogics\Helpers::get_business_settings('monetbil'))
-                    @if(isset($config) && $config['status'])
-                        <div class="col-md-6 mb-4 cursor-pointer">
-                            <div class="card">
-                                <div class="card-body h-100px">
-                                    <a class="btn btn-block click-if-alone" href="{{route('monetbil-payment',request()->getQueryString())}}">
-                                        <img class="initial-70 mt-0" src="{{asset('public/assets/admin/img/payment/monetbil.png')}}"/>
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    @endif
                 </div>
             </div>
         </section>
@@ -380,142 +346,55 @@
     setTimeout(function () {
         $('.stripe-button-el').hide();
         $('.razorpay-payment-button').hide();
+        $('#payment-redirection').hide();
     }, 10)
 </script>
 
-@if(env('APP_MODE')=='live')
-    <script id="myScript"
-            src="https://scripts.pay.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout.js"></script>
-@else
-    <script id="myScript"
-            src="https://scripts.sandbox.bka.sh/versions/1.2.0-beta/checkout/bKash-checkout-sandbox.js"></script>
-@endif
+<script src="https://js.paystack.co/v2/inline.js"></script>
 
+<script>
+    const paymentForm = document.getElementById('paymentForm');
+    paymentForm.addEventListener("submit", payWithPaystack, false);
+    function payWithPaystack(e) {
+        e.preventDefault();
+        showLoader();
+        const channels = ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'];
+        const paystack = new PaystackPop();
+        paystack.newTransaction({
+            key: document.getElementById("publicKey").value, // Replace with your public key
+            email: document.getElementById("email-address").value,
+            amount: document.getElementById("amount").value * 100,
+            ref: '{{$order->id}}',
+            channels: channels,
+            currency: "{{$currency}}",
 
-<script type="text/javascript">
-    $.ajaxSetup({
-        headers: {
-            'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-        }
-    });
-    function BkashPayment() {
-        $('#loading').show();
-        // get token
-        $.ajax({
-            url: "{{ route('bkash-get-token') }}",
-            type: 'POST',
-            contentType: 'application/json',
-            success: function (data) {
-                $('#loading').hide();
-                $('pay-with-bkash-button').trigger('click');
-                if (data.hasOwnProperty('msg')) {
-                    showErrorMessage(data) // unknown error
-                }
+            onSuccess: (transaction) => {
+                $("#loading").show();
+                window.location.href = "{{ route('paystack-callback') }}?reference=" + transaction.reference;
+
             },
-            error: function (err) {
-                $('#loading').hide();
-                showErrorMessage(err);
+            onCancel: () => {
+                window.location.href = "{{ route('paystack-callback') }}?reference=" + {{$order->id}};
             }
         });
     }
-
-    let paymentID = '';
-    bKash.init({
-        paymentMode: 'checkout',
-        paymentRequest: {},
-        createRequest: function (request) {
-            setTimeout(function () {
-                createPayment(request);
-            }, 2000)
-        },
-        executeRequestOnAuthorization: function (request) {
-            $.ajax({
-                url: '{{ route('bkash-execute-payment') }}',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify({
-                    "paymentID": paymentID
-                }),
-                success: function (data) {
-                    if (data) {
-                        if (data.paymentID != null) {
-                            BkashSuccess(data);
-                        } else {
-                            showErrorMessage(data);
-                            bKash.execute().onError();
-                        }
-                    } else {
-                        $.get('{{ route('bkash-query-payment') }}', {
-                            payment_info: {
-                                payment_id: paymentID
-                            }
-                        }, function (data) {
-                            if (data.transactionStatus === 'Completed') {
-                                BkashSuccess(data);
-                            } else {
-                                createPayment(request);
-                            }
-                        });
-                    }
-                },
-                error: function (err) {
-                    bKash.execute().onError();
-                }
-            });
-        },
-        onClose: function () {
-            // for error handle after close bKash Popup
-        }
-    });
-
-    function createPayment(request) {
-        // because of createRequest function finds amount from this request
-        request['amount'] = "{{round($order->order_amount,2)}}"; // max two decimal points allowed
-        $.ajax({
-            url: '{{ route('bkash-create-payment') }}',
-            data: JSON.stringify(request),
-            type: 'POST',
-            contentType: 'application/json',
-            success: function (data) {
-                $('#loading').hide();
-                if (data && data.paymentID != null) {
-                    paymentID = data.paymentID;
-                    bKash.create().onSuccess(data);
-                } else {
-                    bKash.create().onError();
-                }
-            },
-            error: function (err) {
-                $('#loading').hide();
-                showErrorMessage(err.responseJSON);
-                bKash.create().onError();
-            }
-        });
-    }
-
-    function BkashSuccess(data) {
-        $.post('{{ route('bkash-success') }}', {
-            payment_info: data
-        }, function (res) {
-            location.href = '{{ route('payment-success')}}';
-        });
-    }
-
-    function showErrorMessage(response) {
-        let message = 'Unknown Error';
-        if (response.hasOwnProperty('errorMessage')) {
-            let errorCode = parseInt(response.errorCode);
-            let bkashErrorCode = [2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012, 2013, 2014,
-                2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029, 2030,
-                2031, 2032, 2033, 2034, 2035, 2036, 2037, 2038, 2039, 2040, 2041, 2042, 2043, 2044, 2045, 2046,
-                2047, 2048, 2049, 2050, 2051, 2052, 2053, 2054, 2055, 2056, 2057, 2058, 2059, 2060, 2061, 2062,
-                2063, 2064, 2065, 2066, 2067, 2068, 2069, 503,
-            ];
-            if (bkashErrorCode.includes(errorCode)) {
-                message = response.errorMessage
-            }
-        }
-        Swal.fire("Payment Failed!", message, "error");
+    
+    function showLoader() {
+        const loader = document.createElement("div");
+        loader.style.position = "fixed";
+        loader.style.top = "0";
+        loader.style.left = "0";
+        loader.style.width = "100%";
+        loader.style.height = "100%";
+        loader.style.background = "rgba(0, 0, 0, 0.5)";
+        loader.style.display = "flex";
+        loader.style.justifyContent = "center";
+        loader.style.alignItems = "center";
+        const spinner = document.createElement("div");
+        spinner.className = "spinner-border text-light";
+        spinner.setAttribute("role", "status");
+        loader.appendChild(spinner);
+        document.body.appendChild(loader);
     }
 </script>
 
@@ -524,7 +403,7 @@
         let total = $('.checkout_details .click-if-alone').length;
         if (Number.parseInt(total) == 1) {
             $('.click-if-alone')[0].click()
-            $('.checkout_details').html('<div class="text-center"><h1>{{translate('messages.Redirecting_to_the_payment_page')}}......</h1></div>');
+            $('#payment-redirection').show();
         }
     }
     @if(!Session::has('toastr::messages'))

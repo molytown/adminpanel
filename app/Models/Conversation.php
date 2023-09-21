@@ -12,7 +12,8 @@ class Conversation extends Model
     protected $casts = [
         'sender_id' => 'integer',
         'receiver_id' => 'integer',
-        'last_message_id' => 'integer'
+        'last_message_id' => 'integer',
+        'unread_message_count' => 'integer'
     ];
 
     public function messages()

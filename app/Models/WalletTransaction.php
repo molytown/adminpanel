@@ -13,6 +13,7 @@ class WalletTransaction extends Model
 
     protected $casts = [
         'user_id' => 'integer',
+        'delivery_man_id' => 'integer',
         'credit' => 'float',
         'debit' => 'float',
         'admin_bonus'=>'float',
@@ -24,5 +25,9 @@ class WalletTransaction extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+    public function delivery_man()
+    {
+        return $this->belongsTo(DeliveryMan::class,'delivery_man_id');
     }
 }

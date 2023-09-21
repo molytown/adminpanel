@@ -23,45 +23,10 @@
         <!-- End Page Header -->
         <!-- Nav Scroller -->
         <div class="js-nav-scroller hs-nav-scroller-horizontal">
-            <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'index') }}">{{ translate('messages.text') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'links') }}"
-                        aria-disabled="true">{{ translate('messages.button_links') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'speciality') }}"
-                        aria-disabled="true">{{ translate('messages.speciality') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'testimonial') }}"
-                        aria-disabled="true">{{ translate('messages.testimonial') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'feature') }}"
-                        aria-disabled="true">{{ translate('messages.feature') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'image') }}"
-                        aria-disabled="true">{{ translate('messages.image') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'backgroundChange') }}"
-                        aria-disabled="true">{{ translate('messages.header_footer_bg') }}</a>
-                </li>
-            </ul>
-            <!-- End Nav -->
-        </div>
+                <!-- Nav -->
+                @include('admin-views.business-settings.landing-page-settings.top-menu-links.top-menu-links')
+                <!-- End Nav -->
+            </div>
         <!-- End Nav Scroller -->
     </div>
         <!-- End Page Header -->
@@ -77,7 +42,7 @@
                     <form action="{{route('admin.business-settings.landing-page-settings', 'image')}}" method="POST" enctype="multipart/form-data" class="d-flex flex-column h-100">
                         @csrf
                         <div class="form-group">
-                            <span class="input-label text-center mb-3 d-block">{{translate('messages.top_content_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 772 X 899 px )</small></span>
+                            <span class="input-label text-center mb-3 d-block">{{translate('messages.top_content_background_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 1241 X 1755 px )</small></span>
                             <label class="d-block">
                                 <div class="custom-file d-none">
                                     <input type="file" name="top_content_image" id="customFileEg1" class="custom-file-input"
@@ -99,38 +64,12 @@
                         </div>
                     </form>
                 </div>
-                <div class="col-sm-6 col-xl-3">
-                    <form action="{{route('admin.business-settings.landing-page-settings', 'image')}}" method="POST" enctype="multipart/form-data" class="d-flex flex-column h-100">
-                        @csrf
-                        <div class="form-group">
-                            <span class="input-label text-center mb-3 d-block" >{{translate('messages.about_us_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 1241 X 1755 px )</small></span>
-                            <label class="d-block">
-                                <div class="custom-file d-none">
-                                    <input type="file" name="about_us_image" id="customFileEg2" class="custom-file-input"
-                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" >
-                                </div>
 
-                                <center id="image-viewer-section2" >
-                                    <img class="initial-7" id="viewer2"
-                                            src="{{asset('public/assets/landing')}}/image/{{isset($landing_page_images['about_us_image'])?$landing_page_images['about_us_image']:'about_us_image.png'}}"
-                                            onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.png')}}'"
-                                            alt=""/>
-                                </center>
-                            </label>
-                        </div>
-                        <div class="form-group text-center mb-0 mt-auto">
-                            <div class="landing--page-btns btn--container justify-content-center">
-                                <label class="btn btn--reset" for="customFileEg2">{{ translate('Change Image') }}</label>
-                                <button type="submit" class="btn btn--primary">{{translate('messages.upload')}}</button>
-                            </div>
-                        </div>
-                    </form>
-                </div>
                 <div class="col-sm-6 col-xl-3">
                     <form action="{{route('admin.business-settings.landing-page-settings', 'image')}}" method="POST" enctype="multipart/form-data" class="d-flex flex-column h-100">
                         @csrf
                         <div class="form-group">
-                            <span class="input-label text-center mb-3 d-block" >{{translate('messages.feature_section_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 1241 X 1755 px )</small></span>
+                            <span class="input-label text-center mb-3 d-block" >{{translate('messages.top_content_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 772 X 899 px )</small></span>
                             <label class="d-block">
                                 <div class="custom-file d-none">
                                     <input type="file" name="feature_section_image" id="customFileEg3" class="custom-file-input"
@@ -153,11 +92,40 @@
                         </div>
                     </form>
                 </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <form action="{{route('admin.business-settings.landing-page-settings', 'image')}}" method="POST" enctype="multipart/form-data" class="d-flex flex-column h-100">
+                        @csrf
+                        <div class="form-group">
+                            <span class="input-label text-center mb-3 d-block" >{{translate('messages.about_us_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 772 X 899 px )</small></span>
+                            <label class="d-block">
+                                <div class="custom-file d-none">
+                                    <input type="file" name="about_us_image" id="customFileEg2" class="custom-file-input"
+                                            accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" >
+                                </div>
+
+                                <center id="image-viewer-section2" >
+                                    <img class="initial-7" id="viewer2"
+                                            src="{{asset('public/assets/landing')}}/image/{{isset($landing_page_images['about_us_image'])?$landing_page_images['about_us_image']:'about_us_image.png'}}"
+                                            onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.png')}}'"
+                                            alt=""/>
+                                </center>
+                            </label>
+                        </div>
+                        <div class="form-group text-center mb-0 mt-auto">
+                            <div class="landing--page-btns btn--container justify-content-center">
+                                <label class="btn btn--reset" for="customFileEg2">{{ translate('Change Image') }}</label>
+                                <button type="submit" class="btn btn--primary">{{translate('messages.upload')}}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="col-sm-6 col-xl-3">
                     <form action="{{route('admin.business-settings.landing-page-settings', 'image')}}" method="POST" enctype="multipart/form-data" class="d-flex flex-column h-100">
                             @csrf
                         <div class="form-group">
-                            <span class="input-label text-center mb-3 d-block" >{{translate('messages.mobile_app_section_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 1241 X 1755 px )</small></span>
+                            <span class="input-label text-center mb-3 d-block" >{{translate('messages.join_us_image')}}<small class="text-danger">* ( {{translate('messages.size')}}: 772 X 899 px )</small></span>
                             <label class="d-block">
                                 <div class="custom-file d-none">
                                     <input type="file" name="mobile_app_section_image" id="customFileEg4" class="custom-file-input"

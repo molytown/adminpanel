@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title"> <span class="card-header-icon"><i class="tio-edit"></i></span> {{translate('messages.attribute')}} {{translate('messages.update')}}</h1>
+                    <h1 class="page-header-title"> <span class="card-header-icon"><i class="tio-edit"></i></span> {{translate('messages.attribute_update')}}</h1>
                 </div>
             </div>
         </div>

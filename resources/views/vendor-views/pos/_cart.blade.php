@@ -16,6 +16,7 @@
             $discount = 0;
             $discount_type = 'amount';
             $discount_on_product = 0;
+            $variation_price  = 0;
         ?>
         @if(session()->has('cart') && count( session()->get('cart')) > 0)
             <?php
@@ -33,6 +34,7 @@
             @foreach(session()->get('cart') as $key => $cartItem)
             @if(is_array($cartItem))
                 <?php
+                $variation_price += $cartItem['variation_price'];
                 $product_subtotal = ($cartItem['price']) * $cartItem['quantity'];
                 $discount_on_product += ($cartItem['discount'] * $cartItem['quantity']);
                 $subtotal += $product_subtotal;
@@ -48,7 +50,7 @@
                     </div>
                 </td>
                 <td class="align-items-center text-center">
-                    <input type="number" data-key="{{$key}}" class="w-50px text-center" value="{{$cartItem['quantity']}}" min="1" onkeyup="updateQuantity(event)" class="rounded border">
+                    <input type="number" data-key="{{$key}}" class="w-50px text-center" value="{{$cartItem['quantity']}}" min="1" onkeyup="updateQuantity(event)"   max="{{$cartItem['maximum_cart_quantity'] ?? '9999999999'}}" class="rounded border">
                 </td>
                 <td class="text-center px-0 py-1">
                     <div class="btn">
@@ -80,13 +82,19 @@ if(session()->has('address') && count(session()->get('address'))>0){
 $total = $subtotal + $addon_price;
 $discount_amount = $discount_type == 'percent' && $discount > 0 ? (($total - $discount_on_product) * $discount) / 100 : $discount;
 $total -= $discount_amount + $discount_on_product;
+$tax_included = \App\Models\BusinessSetting::where(['key'=>'tax_included'])->first() ?  \App\Models\BusinessSetting::where(['key'=>'tax_included'])->first()->value : 0;
 $total_tax_amount = $tax > 0 ? ($total * $tax) / 100 : 0;
+
+$tax_a=$total_tax_amount;
+if ($tax_included ==  1){
+    $tax_a=0;
+}
 $total = $total + $delivery_fee;
 if (isset($cart['paid'])) {
     $paid = $cart['paid'];
-    $change = $total+$total_tax_amount-$paid;
+    $change = $total+$tax_a-$paid;
 }else{
-    $paid = $total+$total_tax_amount;
+    $paid = $total+$tax_a;
     $change = 0;
 }
 ?>
@@ -99,7 +107,12 @@ if (isset($cart['paid'])) {
             <dt  class="col-6 font-regular">{{translate('messages.addon')}}:</dt>
             <dd class="col-6 text-right">{{\App\CentralLogics\Helpers::format_currency($addon_price)}}</dd>
 
-            <dt  class="col-6 font-regular">{{translate('messages.subtotal')}}:</dt>
+            <dt  class="col-6 font-regular">{{translate('messages.subtotal')}}
+
+                @if ($tax_included ==  1)
+                ({{ translate('messages.TAX_Included') }})
+                @endif
+                :</dt>
             <dd class="col-6 text-right">{{\App\CentralLogics\Helpers::format_currency($subtotal+$addon_price)}}</dd>
 
 
@@ -112,11 +125,17 @@ if (isset($cart['paid'])) {
             <dt  class="col-6 font-regular">{{translate('messages.extra_discount')}} :</dt>
             <dd class="col-6 text-right"><button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-discount"><i class="tio-edit"></i></button>- {{\App\CentralLogics\Helpers::format_currency(round($discount_amount,2))}}</dd>
 
-            <dt  class="col-6 font-regular">{{ translate('messages.tax') }}  : </dt>
-            <dd class="col-6 text-right"><button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-tax"><i class="tio-edit"></i></button>{{\App\CentralLogics\Helpers::format_currency(round($total_tax_amount,2))}}</dd>
+            @if ($tax_included !=  1)
+            <dt class="col-6 font-regular">{{ translate('messages.vat/tax') }}:</dt>
+            <dd class="col-6 text-right">
+                <button class="btn btn-sm" type="button" data-toggle="modal" data-target="#add-tax"><i class="tio-edit"></i></button>
+                +
+                {{\App\CentralLogics\Helpers::format_currency(round($total_tax_amount,2))}}
+            </dd>
+            @endif
             <dd class="col-12"><hr class="m-0"></dd>
             <dt  class="col-6 font-regular">{{ translate('Total') }}: </dt>
-            <dd class="col-6 text-right h4 b"> {{\App\CentralLogics\Helpers::format_currency(round($total+$total_tax_amount, 2))}} </dd>
+            <dd class="col-6 text-right h4 b"> {{\App\CentralLogics\Helpers::format_currency(round($total+$tax_a, 2))}} </dd>
         </dl>
         <div class="pos--payment-options mt-3 mb-3">
             <h5 class="mb-3">{{ translate($add ? 'messages.Payment Method' : 'Paid by') }}</h5>
@@ -127,7 +146,7 @@ if (isset($cart['paid'])) {
                     <li>
                         <label>
                             <input type="radio" name="type" value="cash" hidden checked>
-                            <span>{{ translate('Cash On Delivery') }}</span>
+                            <span>{{ translate('Cash_On_Delivery') }}</span>
                         </label>
                     </li>
                     @endif
@@ -138,7 +157,7 @@ if (isset($cart['paid'])) {
                         <span>{{ translate('messages.Cash') }}</span>
                     </label>
                 </li>
-                 <li>
+                <li>
                     <label>
                         <input type="radio" name="type" value="card" hidden="">
                         <span>{{ translate('messages.Card') }}</span>
@@ -170,7 +189,7 @@ if (isset($cart['paid'])) {
                 <button type="submit" class="btn  btn--primary btn-sm btn-block">{{ translate('place_order') }} </button>
             </div>
             <div class="col-sm-6">
-                <a href="#" class="btn btn--reset btn-sm btn-block" onclick="emptyCart()">{{  translate('Clear Cart') }}</a>
+                <a href="#" class="btn btn--reset btn-sm btn-block" onclick="emptyCart()">{{  translate('Clear_Cart') }}</a>
             </div>
         </div>
         {{-- <div class="row pt-2 button--bottom-fixed g-1 bg-white">
@@ -278,7 +297,7 @@ if (isset($cart['paid'])) {
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-light border-bottom py-3">
-                <h5 class="modal-title flex-grow-1 text-center">{{ translate('Delivery Information') }}</h5>
+                <h5 class="modal-title flex-grow-1 text-center">{{ translate('Delivery_Information') }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -347,7 +366,8 @@ if (isset($cart['paid'])) {
                                     {{ translate('* pin the address in the map to calculate delivery fee') }}
                                 </span>
                                 <div>
-                                    <span>{{ translate('Delivery fee') }} :</span>
+                                    <span>{{ translate('Delivery_fee') }} :</span>
+                                    <input type="hidden" name="distance" id="distance">
                                     <input type="hidden" name="delivery_fee" id="delivery_fee" value="{{ $old ? $old['delivery_fee'] : '' }}">
                                     <strong>{{ $old ? $old['delivery_fee'] : 0 }} {{ \App\CentralLogics\Helpers::currency_symbol() }}</strong>
                                 </div>
@@ -360,7 +380,7 @@ if (isset($cart['paid'])) {
                     <div class="col-md-12">
                         <div class="btn--container justify-content-end">
                             <button class="btn btn-sm btn--primary w-100" type="button" onclick="deliveryAdressStore()">
-                                {{  translate('Update') }} {{ translate('messages.Delivery address') }}
+                                {{  translate('Update_Delivery address') }}
                             </button>
                         </div>
                     </div>

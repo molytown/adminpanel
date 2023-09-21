@@ -21,7 +21,7 @@
             <div class="col-md-4 col-sm-6">
                 <div class="grid-card top-selling-food-card pt-0" onclick="location.href='{{route('admin.food.view',[$item['id']])}}'">
                     <div class="position-relative">
-                        <span class="sold--count-badge">{{translate('messages.sold')}} : {{$item['order_count']}}</span>
+                        <span class="sold--count-badge"><span>{{translate('messages.sold')}}</span> <span>:</span> <span>{{$item['order_count']}}</span></span>
                         <img class="initial-43"
                             src="{{asset('storage/app/public/product')}}/{{$item['image']}}"
                             onerror="this.src='{{asset('public/assets/admin/img/100x100/food.png')}}'"

@@ -85,8 +85,7 @@
                             <i class="tio-settings"></i>
                         </span>
                         <span>
-                            {{ translate('messages.wallet') }}
-                            {{ translate('messages.settings') }}
+                            {{ translate('messages.wallet_settings') }}
                         </span>
                     </h5>
                 </div>
@@ -99,7 +98,7 @@
                                     for="refund_to_wallet">
                                     <span class="pr-2">{{ translate('messages.refund_to_wallet') }}<span
                                             class="input-label-secondary"
-                                            title="{{ translate('messages.refund_to_wallet_hint') }}"><img
+                                            title="{{ translate('messages.When_a_order_will_refund,_order_amount_will_add_to_customer_wallet') }}"><img
                                                 src="{{ asset('/public/assets/admin/img/info-circle.svg') }}"
                                                 alt="{{ translate('messages.show_hide_food_menu') }}"></span> :</span>
                                     <input type="checkbox" class="toggle-switch-input" name="refund_to_wallet"
@@ -121,8 +120,7 @@
                             <i class="tio-settings"></i>
                         </span>
                         <span>
-                            {{ translate('messages.customer_loyalty_point') }}
-                            {{ translate('messages.settings') }}
+                            {{ translate('messages.customer_loyalty_point_settings') }}
                         </span>
                     </h5>
                 </div>
@@ -131,7 +129,7 @@
                         <div class="col-sm-6 col-lg-4">
                             <div class="form-group m-0">
                                 <label class="input-label"
-                                    for="loyalty_point_exchange_rate">{{ translate('messages.point_to_currency_exchange_rate', ['currency' => \App\CentralLogics\Helpers::currency_code()]) }}</label>
+                                    for="loyalty_point_exchange_rate">{{ translate('messages.point_to_currency_exchange_rate') \App\CentralLogics\Helpers::currency_code() }}</label>
                                 <input type="number" class="form-control" name="loyalty_point_exchange_rate"
                                     value="{{ $data['loyalty_point_exchange_rate'] ?? '0' }}">
                             </div>
@@ -177,7 +175,7 @@
                         <div class="col-sm-6 col-12">
                             <div class="form-group m-0">
                                 <label class="input-label"
-                                    for="referrer_earning_exchange_rate">{{ translate('messages.referrer_to_currency', ['currency' => \App\CentralLogics\Helpers::currency_code()]) }}</label>
+                                    for="referrer_earning_exchange_rate">{{ translate('messages.referrer_to_currency') \App\CentralLogics\Helpers::currency_code() }}</label>
                                     <input type="number step=0.01" class="form-control" name="ref_earning_exchange_rate"
                                     value="{{ $data['ref_earning_exchange_rate'] ?? '0' }}">
                             </div>

@@ -41,11 +41,11 @@
                         </option>
                         <option
                             value="today" {{$params['statistics_type'] == 'today'?'selected':''}}>
-                            {{__("messages.Today's Statistics")}}
+                            {{translate("messages.Today’s Statistics")}}
                         </option>
                         <option
                             value="this_month" {{$params['statistics_type'] == 'this_month'?'selected':''}}>
-                            {{__("messages.This Month's Statistics")}}
+                            {{translate("messages.This Month’s Statistics")}}
                         </option>
                     </select>
                 </div>
@@ -90,8 +90,8 @@
                                 <canvas id="updatingData" class="h-20rem" data-hs-chartjs-options='{
                                     "type": "bar",
                                     "data": {
-                                    "labels": ["Jan","Feb","Mar","April","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
-                                    "datasets": [{
+                                        "labels": ["{{ translate('messages.Jan') }}","{{ translate('messages.Feb') }}","{{ translate('messages.Mar') }}","{{ translate('messages.April') }}","{{ translate('messages.May') }}","{{ translate('messages.Jun') }}","{{ translate('messages.Jul') }}","{{ translate('messages.Aug') }}","{{ translate('messages.Sep') }}","{{ translate('messages.Oct') }}","{{ translate('messages.Nov') }}","{{ translate('messages.Dec') }}"],
+                                        "datasets": [{
                                         "data": [{{$earning[1]}},{{$earning[2]}},{{$earning[3]}},{{$earning[4]}},{{$earning[5]}},{{$earning[6]}},{{$earning[7]}},{{$earning[8]}},{{$earning[9]}},{{$earning[10]}},{{$earning[11]}},{{$earning[12]}}],
                                         "backgroundColor": "#7ECAFF",
                                         "hoverBackgroundColor": "#7ECAFF",

@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.update').' '.translate('messages.notification'))
+@section('title',translate('messages.update_notification'))
 
 @push('css_or_js')
 
@@ -17,7 +17,7 @@
                             <img src="{{asset('/public/assets/admin/img/bell.png')}}" alt="public">
                         </div>
                         <span>
-                            {{translate('messages.notification')}} {{translate('messages.update')}}
+                            {{translate('messages.notification_update')}}
                         </span>
                     </h1>
                 </div>
@@ -39,8 +39,8 @@
                             <div class="form-group">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.zone')}}</label>
                                 <select id="zone" name="zone" class="form-control js-select2-custom" >
-                                    <option value="all" {{isset($notification->zone_id)?'':'selected'}}>{{translate('messages.all')}} {{translate('messages.zone')}}</option>
-                                    @foreach(\App\Models\Zone::orderBy('name')->get() as $z)
+                                    <option value="all" {{isset($notification->zone_id)?'':'selected'}}>{{translate('messages.all_zone')}}</option>
+                                    @foreach(\App\Models\Zone::orderBy('name')->get(['id','name']) as $z)
                                         <option value="{{$z['id']}}"  {{$notification->zone_id==$z['id']?'selected':''}}>{{$z['name']}}</option>
                                     @endforeach
                                 </select>
@@ -50,7 +50,7 @@
                             <div class="form-group">
                                 <label class="input-label" for="tergat">{{translate('messages.send_to')}}</label>
 
-                                <select id="tergat" name="tergat" class="form-control" id="tergat" data-placeholder="{{translate('messages.select')}} {{translate('messages.tergat')}}" required>
+                                <select id="tergat" name="tergat" class="form-control" id="tergat" data-placeholder="{{translate('messages.select_tergat')}}" required>
                                     <option value="customer" {{$notification->tergat=='customer'?'selected':''}}>{{translate('messages.customer')}}</option>
                                     <option value="deliveryman" {{$notification->tergat=='deliveryman'?'selected':''}}>{{translate('messages.deliveryman')}}</option>
                                     <option value="restaurant" {{$notification->tergat=='restaurant'?'selected':''}}>{{translate('messages.restaurant')}}</option>
@@ -64,11 +64,11 @@
                                     <img  class="initial-30" id="viewer"
                                         src="{{asset('storage/app/public/notification')}}/{{$notification['image']}}"  onerror="src='{{asset('public/assets/admin/img/900x400/img1.jpg')}}'" alt="image"/>
                                 </center>
-                                <label>{{translate('messages.notification')}} {{translate('messages.banner')}}</label><small class="text-danger">* ( {{translate('messages.ratio')}} 3:1 )</small>
+                                <label>{{translate('messages.notification_banner')}}</label><small class="text-danger">* ( {{translate('messages.ratio_3:1')}} )</small>
                                 <div class="custom-file">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                 </div>
                             </div>
                         </div>

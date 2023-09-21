@@ -2,7 +2,6 @@
 
 namespace App\CentralLogics;
 
-use App\Models\Coupon;
 use App\Models\Order;
 use App\Models\Restaurant;
 use Carbon\Carbon;
@@ -32,6 +31,7 @@ class CouponLogic
 
         $start_date = Carbon::parse($coupon->start_date);
         $expire_date = Carbon::parse($coupon->expire_date);
+        $customer_ids=json_decode($coupon->customer_id, true);
 
         $today = Carbon::now();
         if($start_date->format('Y-m-d') > $today->format('Y-m-d') || $expire_date->format('Y-m-d') < $today->format('Y-m-d'))
@@ -40,9 +40,17 @@ class CouponLogic
         }
 
         if($coupon->coupon_type == 'restaurant_wise' && !in_array($restaurant_id, json_decode($coupon->data, true)))
-        {  
-            return 404;   
+        {
+            return 404;
         }
+        if($coupon->created_by == 'vendor' && $restaurant_id != $coupon->restaurant_id  ){
+            return 404;
+        }
+
+        if((!in_array("all", $customer_ids) && !in_array($user_id,$customer_ids)) ){
+        return 408; //unauthorized user
+        }
+
         else if($coupon->coupon_type == 'zone_wise')
         {
             if(json_decode($coupon->data, true)){

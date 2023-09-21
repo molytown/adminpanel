@@ -97,7 +97,6 @@
 
                     <!-- Body -->
                     <div class="card-body">
-                    @php($zone_currency=$order->zone_currency ?? null)
                     @php($sub_total=0)
                     @php($total_tax=0)
                     @php($total_dis_on_pro=0)
@@ -130,7 +129,7 @@
                                                 @endif
 
                                                 @foreach(json_decode($detail['add_on_ids'],true) as $key2 =>$id)
-                                                    @php($addon=\App\Models\AddOn::find($id))
+                                                    @php($addon=\App\Models\AddOn::withOutGlobalScope(App\Scopes\RestaurantScope::class)->find($id))
                                                     @if($key2==0)<strong><u>Addons : </u></strong>@endif
 
                                                     @if($add_on_qtys==null)
@@ -142,7 +141,7 @@
                                                     <div class="font-size-sm text-body">
                                                         <span>{{$addon['name']}} :  </span>
                                                         <span class="font-weight-bold">
-                                                            {{$add_on_qty}} x {{\App\CentralLogics\Helpers::format_currency($addon['price'],$zone_currency)}}
+                                                            {{$add_on_qty}} x {{\App\CentralLogics\Helpers::format_currency($addon['price'])}}
                                                         </span>
                                                     </div>
                                                     @php($add_ons_cost+=$addon['price']*$add_on_qty)
@@ -153,11 +152,11 @@
                                                 @if($detail['discount_on_product']!=0)
                                                     <h5>
                                                         <strike>
-                                                            {{\App\CentralLogics\Helpers::format_currency(\App\CentralLogics\Helpers::variation_price(json_decode($detail['product_details'],true),$detail['variation']) ,$zone_currency)}}
+                                                            {{\App\CentralLogics\Helpers::format_currency(\App\CentralLogics\Helpers::variation_price(json_decode($detail['product_details'],true),$detail['variation']))}}
                                                         </strike>
                                                     </h5>
                                                 @endif
-                                                <h6>{{\App\CentralLogics\Helpers::format_currency($detail['price']-$detail['discount_on_product'],$zone_currency)}}</h6>
+                                                <h6>{{\App\CentralLogics\Helpers::format_currency($detail['price']-$detail['discount_on_product'])}}</h6>
                                             </div>
                                             <div class="col col-md-1 align-self-center">
                                                 <h5>{{$detail['quantity']}}</h5>
@@ -165,7 +164,7 @@
 
                                             <div class="col col-md-3 align-self-center text-right">
                                                 @php($amount=($detail['price']-$detail['discount_on_product'])*$detail['quantity'])
-                                                <h5>{{\App\CentralLogics\Helpers::format_currency($amount,$zone_currency)}}</h5>
+                                                <h5>{{\App\CentralLogics\Helpers::format_currency($amount)}}</h5>
                                             </div>
                                         </div>
                                     </div>
@@ -181,21 +180,21 @@
                             <div class="col-md-9 col-lg-8">
                                 <dl class="row text-sm-right">
                                     <dt class="col-sm-6">Items Price:</dt>
-                                    <dd class="col-sm-6">{{\App\CentralLogics\Helpers::format_currency($sub_total,$zone_currency)}}</dd>
+                                    <dd class="col-sm-6">{{\App\CentralLogics\Helpers::format_currency($sub_total)}}</dd>
                                     <dt class="col-sm-6">Tax / VAT:</dt>
-                                    <dd class="col-sm-6">{{\App\CentralLogics\Helpers::format_currency($total_tax,$zone_currency)}}</dd>
+                                    <dd class="col-sm-6">{{\App\CentralLogics\Helpers::format_currency($total_tax)}}</dd>
                                     <dt class="col-sm-6">Addon Cost:</dt>
                                     <dd class="col-sm-6">
-                                        {{\App\CentralLogics\Helpers::format_currency($add_ons_cost,$zone_currency)}}
+                                        {{\App\CentralLogics\Helpers::format_currency($add_ons_cost)}}
                                         <hr>
                                     </dd>
 
                                     <dt class="col-sm-6">Subtotal:</dt>
                                     <dd class="col-sm-6">
-                                        {{\App\CentralLogics\Helpers::format_currency($sub_total+$total_tax+$add_ons_cost,$zone_currency)}}</dd>
+                                        {{\App\CentralLogics\Helpers::format_currency($sub_total+$total_tax+$add_ons_cost)}}</dd>
                                     <dt class="col-sm-6">Coupon Discount:</dt>
                                     <dd class="col-sm-6">
-                                        - {{\App\CentralLogics\Helpers::format_currency($order['coupon_discount_amount'],$zone_currency)}}</dd>
+                                        - {{\App\CentralLogics\Helpers::format_currency($order['coupon_discount_amount'])}}</dd>
                                     <dt class="col-sm-6">Delivery Fee:</dt>
                                     <dd class="col-sm-6">
                                         @if($order['order_type']=='take_away')
@@ -203,12 +202,12 @@
                                         @else
                                             @php($del_c=$order['delivery_charge'])
                                         @endif
-                                        {{\App\CentralLogics\Helpers::format_currency($del_c,$zone_currency)}}
+                                        {{\App\CentralLogics\Helpers::format_currency($del_c)}}
                                         <hr>
                                     </dd>
 
                                     <dt class="col-sm-6">Total:</dt>
-                                    <dd class="col-sm-6">{{\App\CentralLogics\Helpers::format_currency($sub_total+$del_c+$total_tax+$add_ons_cost-$order['coupon_discount_amount'],$zone_currency)}}</dd>
+                                    <dd class="col-sm-6">{{\App\CentralLogics\Helpers::format_currency($sub_total+$del_c+$total_tax+$add_ons_cost-$order['coupon_discount_amount'])}}</dd>
                                 </dl>
                                 <!-- End Row -->
                             </div>

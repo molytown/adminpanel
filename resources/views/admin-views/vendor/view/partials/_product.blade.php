@@ -13,13 +13,13 @@
     </td>
     <td>
     <div>
-        {{Str::limit($food->category,20,'...')}}
+        {{ Str::limit(($food?->category?->parent ? $food?->category?->parent?->name : $food?->category?->name )  ?? translate('messages.uncategorize')
+        , 20, '...') }}
     </div>
     </td>
     <td>
-        @php($zone_currency= $food->restaurant->zone->zone_currency ?? null)
         <div class="table--food-price text-right">
-            @php($price = \App\CentralLogics\Helpers::format_currency($food['price'],$zone_currency))
+            @php($price = \App\CentralLogics\Helpers::format_currency($food['price']))
             {{$price}}
         </div>
     </td>
@@ -34,10 +34,10 @@
     <td>
         <div class="btn--container justify-content-center">
             <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                href="{{route('admin.food.edit',[$food['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.food')}}"><i class="tio-edit"></i>
+                href="{{route('admin.food.edit',[$food['id']])}}" title="{{translate('messages.edit_food')}}"><i class="tio-edit"></i>
             </a>
             <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:"
-                onclick="form_alert('food-{{$food['id']}}','Want to delete this item ?')" title="{{translate('messages.delete')}} {{translate('messages.food')}}"><i class="tio-delete-outlined"></i>
+                onclick="form_alert('food-{{$food['id']}}','Want to delete this item ?')" title="{{translate('messages.delete_food')}}"><i class="tio-delete-outlined"></i>
             </a>
             <form action="{{route('admin.food.delete',[$food['id']])}}"
                     method="post" id="food-{{$food['id']}}">

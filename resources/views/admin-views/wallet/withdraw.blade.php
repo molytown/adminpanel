@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Withdraw Request'))
+@section('title',translate('Withdraw_Request'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -11,7 +11,7 @@
 
     <div class="d-flex flex-wrap align-items-center justify-content-between mb-3">
         <h2 class="page-header-title text-capitalize m-0">
-            {{ translate('Restaurant Withdraw Transaction') }}
+            {{ translate('Restaurant_Withdraw_Transaction') }}
         </h2>
     </div>
         <!-- Page Heading -->
@@ -20,13 +20,13 @@
                 <div class="card">
                     <div class="card-header py-2 border-0">
                         <div class="search--button-wrapper">
-                            <h5 class="card-title">{{ translate('Withdraw Request Table')}} <span id="itemCount"
+                            <h5 class="card-title">{{ translate('Withdraw_Request_Table')}} <span id="itemCount"
                                     class="badge badge-soft-dark ml-2">{{$withdraw_req->total()}}</span></h5>
 
-                            <form action="javascript:" id="search-form" class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
+                            <form  class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
                                 <!-- Search -->
                                 <div class="input--group input-group input-group-merge input-group-flush">
-                                    <input id="datatableSearch_" type="search" name="search" class="form-control" placeholder="{{ translate('Ex : Search by Restaurant name of Phone number') }}" aria-label="Search" required="">
+                                    <input id="datatableSearch_" type="search" name="search" value="{{ request()?->search ?? null}}" class="form-control" placeholder="{{ translate('Ex:_search_by_Restaurant_name_of_Phone_number') }}" aria-label="Search">
                                     <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                                 </div>
                                 <!-- End Search -->
@@ -67,60 +67,23 @@
 
                                 <div id="usersExportDropdown"
                                         class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                                    {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                                    <a id="export-copy" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                                src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                                alt="Image Description">
-                                        {{translate('messages.copy')}}
-                                    </a>
-                                    <a id="export-print" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                                src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                                alt="Image Description">
-                                        {{translate('messages.print')}}
-                                    </a>
-                                    <div class="dropdown-divider"></div>--}}
-                                    <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                                    {{-- <form action="{{route('admin.vendor.withdraw-list-export')}}" method="post">
-                                        @csrf
-                                        <input type="hidden" name="type" value="excel">
-                                        <button type="submit">
-                                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                            src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
-                                            alt="Image Description">
-                                            {{translate('messages.excel')}}
-                                        </button>
-                                    </form> --}}
-                                    <a id="export-excel" class="dropdown-item" href="{{route('admin.vendor.withdraw-list-export', ['type'=>'excel'])}}">
+
+                                    <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+
+                                    <a id="export-excel" class="dropdown-item" href="{{route('admin.restaurant.withdraw-list-export', ['type'=>'excel',request()->getQueryString()])}}">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                                 src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                                 alt="Image Description">
                                         {{translate('messages.excel')}}
                                     </a>
 
-                                    {{-- <form action="{{route('admin.vendor.withdraw-list-export')}}" method="post">
-                                        @csrf
-                                        <input type="hidden" name="type" value="csv">
-                                        <button type="submit">
-                                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                            src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
-                                            alt="Image Description">
-                                            .{{translate('messages.csv')}}
-                                        </button>
-                                    </form> --}}
-                                    <a id="export-csv" class="dropdown-item" href="{{route('admin.vendor.withdraw-list-export', ['type'=>'csv'])}}">
+                                    <a id="export-csv" class="dropdown-item" href="{{route('admin.restaurant.withdraw-list-export', ['type'=>'csv',request()->getQueryString()])}}">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                                 src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                                 alt="Image Description">
-                                        .{{translate('messages.csv')}}
+                                        {{translate('messages.csv')}}
                                     </a>
-                                    {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                                src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                                alt="Image Description">
-                                        {{translate('messages.pdf')}}
-                                    </a>--}}
+
                                 </div>
                             </div>
                             <!-- Export Button Static -->
@@ -150,12 +113,13 @@
                                         <td>
                                             @if($wr->vendor && isset($wr->vendor->restaurants[0]))
                                             <a class="deco-none"
-                                               href="{{route('admin.vendor.view',[$wr->vendor['id']])}}">{{ Str::limit($wr->vendor?$wr->vendor->restaurants[0]->name:translate('messages.Restaurant deleted!'), 20, '...') }}</a>
+                                               href="{{route('admin.restaurant.view',[$wr->vendor['id']])}}">{{ Str::limit($wr->vendor?$wr->vendor->restaurants[0]->name:translate('messages.Restaurant_deleted!'), 20, '...') }}</a>
                                             @else
-                                            {{translate('messages.Restaurant deleted!') }}
+                                            {{translate('messages.Restaurant_deleted!') }}
                                             @endif
                                         </td>
-                                        <td>{{date('Y-m-d '.config('timeformat'),strtotime($wr->created_at))}}</td>
+                                        <td>
+                                             {{  \App\CentralLogics\Helpers::time_date_format($wr->created_at) }}
                                         <td>
                                             <div>
                                                 @if($wr->approved==0)
@@ -170,11 +134,11 @@
                                         <td>
                                             <div class="btn--container justify-content-center">
                                                 @if($wr->vendor)
-                                                <a href="{{route('admin.vendor.withdraw_view',[$wr['id'],$wr->vendor['id']])}}"
+                                                <a href="{{route('admin.restaurant.withdraw_view',[$wr['id'],$wr->vendor['id']])}}"
                                                 class="btn btn-sm btn--primary btn-outline-primary action-btn"><i class="tio-invisible"></i>
                                                 </a>
                                                 @else
-                                                {{translate('messages.restaurant').' '.translate('messages.deleted') }}
+                                                {{translate('messages.restaurant_deleted') }}
                                                 @endif
                                                 {{--<a class="btn btn-sm btn--warning btn-outline-warning action-btn" href="javascript:"
                                                 onclick="form_alert('withdraw-{{$wr['id']}}','Want to delete this  ?')">{{translate('messages.Delete')}}</a>
@@ -210,32 +174,7 @@
 
 @push('script_2')
     <script>
-            $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.vendor.withdraw_list_search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('#itemCount').html(data.total);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
+
 
         function status_filter(type) {
             $.ajaxSetup({
@@ -244,7 +183,7 @@
                 }
             });
             $.post({
-                url: '{{route('admin.vendor.status-filter')}}',
+                url: '{{route('admin.restaurant.status-filter')}}',
                 data: {
                     withdraw_status_filter: type
                 },

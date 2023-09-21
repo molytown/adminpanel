@@ -1,18 +1,19 @@
 @extends('layouts.admin.app')
 
-@section('title', translate('Food List'))
+@section('title', translate('Food_List'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
 @endpush
 
 @section('content')
+
     <div class="content container-fluid">
         <!-- Page Header -->
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-md-auto mb-md-0 mb-3 mr-auto">
-                    <h1 class="page-header-title"> {{ translate('messages.food') }} {{ translate('messages.list') }}<span
+                    <h1 class="page-header-title"> {{ translate('messages.food_list') }}<span
                             class="badge badge-soft-dark ml-2" id="foodCount">{{ $foods->total() }}</span></h1>
                 </div>
                 @if ($toggle_veg_non_veg)
@@ -31,9 +32,9 @@
                 <div class="col-md-auto mb-3 mb-md-0 min-240">
                     <select name="restaurant_id" id="restaurant"
                         onchange="set_restaurant_filter('{{ url()->full() }}',this.value)"
-                        data-placeholder="{{ translate('messages.select') }} {{ translate('messages.restaurant') }}"
+                        data-placeholder="{{ translate('messages.select_restaurant') }}"
                         class="js-data-example-ajax form-control"
-                        onchange="getRestaurantData('{{ url('/') }}/admin/vendor/get-addons?data[]=0&restaurant_id=',this.value,'add_on')"
+                        onchange="getRestaurantData('{{ url('/') }}/admin/restaurant/get-addons?data[]=0&restaurant_id=',this.value,'add_on')"
                         required title="Select Restaurant"
                         oninvalid="this.setCustomValidity('{{ translate('messages.please_select_restaurant') }}')">
                         @if ($restaurant)
@@ -74,10 +75,10 @@
                         <div class="search--button-wrapper">
                             <h5 class="card-title d-none d-xl-block"></h5>
                             <form id="search-form">
-                                @csrf
-                                <!-- Search -->
+
+
                                 <div class="input--group input-group input-group-merge input-group-flush">
-                                    <input id="datatableSearch" name="search" type="search" class="form-control"
+                                    <input id="datatableSearch" name="search" type="search" value="{{ request()?->search ?? null }}" class="form-control"
                                         placeholder="{{translate('Search_by_name')}}"
                                         aria-label="{{ translate('messages.search_here') }}">
                                     <button type="submit" class="btn btn--secondary">
@@ -86,6 +87,36 @@
                                 </div>
                                 <!-- End Search -->
                             </form>
+
+                            <div class="hs-unfold mr-2">
+                                <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                    data-hs-unfold-options='{
+                                            "target": "#usersExportDropdown",
+                                            "type": "css-animation"
+                                        }'>
+                                    <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                                </a>
+
+                                <div id="usersExportDropdown"
+                                    class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+
+                                    <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                    <a id="export-excel" class="dropdown-item" href="{{ route('admin.food.export', ['type' => 'excel', request()->getQueryString()]) }}">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                            alt="Image Description">
+                                        {{ translate('messages.excel') }}
+                                    </a>
+                                    <a id="export-csv" class="dropdown-item" href="{{ route('admin.food.export', ['type' => 'csv', request()->getQueryString()]) }}">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                            alt="Image Description">
+                                        .{{ translate('messages.csv') }}
+                                    </a>
+
+                                </div>
+                            </div>
+                            <!-- Unfold -->
                             <!-- Unfold -->
                             <div class="hs-unfold m-2 ml-lg-3">
                                 <a class="js-hs-unfold-invoker btn btn-white" href="javascript:;"
@@ -256,15 +287,16 @@
                                             </a>
                                         </td>
                                         <td>
-                                            {{ Str::limit($food->category, 20, '...') }}
+                                            {{ Str::limit(($food?->category?->parent ? $food?->category?->parent?->name : $food?->category?->name )  ?? translate('messages.uncategorize')
+                                            , 20, '...') }}
                                         </td>
                                         <td>
                                             @if ($food->restaurant)
-                                                <a class="text--title" href="{{route('admin.vendor.view',['restaurant'=>$food->restaurant_id])}}" title="{{translate('view_restaurant')}}">
+                                                <a class="text--title" href="{{route('admin.restaurant.view',['restaurant'=>$food->restaurant_id])}}" title="{{translate('view_restaurant')}}">
                                                     {{ Str::limit($food->restaurant->name, 20, '...') }}
                                                 </a>
                                             @else
-                                                <span class="text--danger text-capitalize">{{ Str::limit( translate('messages.Restaurant deleted!'), 20, '...') }}<span>
+                                                <span class="text--danger text-capitalize">{{ Str::limit( translate('messages.Restaurant_deleted!'), 20, '...') }}<span>
                                             @endif
                                         </td>
                                         <td>{{ \App\CentralLogics\Helpers::format_currency($food['price']) }}</td>
@@ -284,12 +316,12 @@
                                             <div class="btn--container justify-content-center">
                                                 <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
                                                     href="{{ route('admin.food.edit', [$food['id']]) }}"
-                                                    title="{{ translate('messages.edit') }} {{ translate('messages.food') }}"><i
+                                                    title="{{ translate('messages.edit_food') }}"><i
                                                         class="tio-edit"></i>
                                                 </a>
                                                 <a class="btn btn-sm btn--warning btn-outline-warning action-btn" href="javascript:"
                                                     onclick="form_alert('food-{{ $food['id'] }}','{{ translate('messages.Want_to_delete_this_item') }}')"
-                                                    title="{{ translate('messages.delete') }} {{ translate('messages.food') }}"><i
+                                                    title="{{ translate('messages.delete_food') }}"><i
                                                         class="tio-delete-outlined"></i>
                                                 </a>
                                             </div>
@@ -347,7 +379,7 @@
                 language: {
                     zeroRecords: '<div class="text-center p-4">' +
                         '<img class="w-7rem mb-3" src="{{ asset('public/assets/admin/svg/illustrations/sorry.svg') }}" alt="Image Description">' +
-                        '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                        '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                         '</div>'
                 }
             });
@@ -402,7 +434,7 @@
 
         $('#restaurant').select2({
             ajax: {
-                url: '{{ url('/') }}/admin/vendor/get-restaurants',
+                url: '{{ url('/') }}/admin/restaurant/get-restaurants',
                 data: function(params) {
                     return {
                         q: params.term, // search term
@@ -452,32 +484,6 @@
             }
         });
 
-        $('#search-form').on('submit', function(e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{ route('admin.food.search') }}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function() {
-                    $('#loading').show();
-                },
-                success: function(data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                    $('#foodCount').html(data.count);
-                },
-                complete: function() {
-                    $('#loading').hide();
-                },
-            });
-        });
+
     </script>
 @endpush

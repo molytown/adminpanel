@@ -33,32 +33,8 @@
             </span>
 
             <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', $restaurant->id)}}">{{translate('messages.overview')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'order'])}}"  aria-disabled="true">{{translate('messages.orders')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'product'])}}"  aria-disabled="true">{{translate('messages.foods')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'reviews'])}}"  aria-disabled="true">{{translate('messages.reviews')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'discount'])}}"  aria-disabled="true">{{translate('discounts')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction'])}}"  aria-disabled="true">{{translate('messages.transactions')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'settings'])}}"  aria-disabled="true">{{translate('messages.settings')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'conversations'])}}"  aria-disabled="true">{{translate('messages.conversations')}}</a>
-                </li>
-            </ul>
+            @include('admin-views.vendor.view.partials._header',['restaurant'=>$restaurant])
+
             <!-- End Nav -->
         </div>
         <!-- End Nav Scroller -->
@@ -72,7 +48,8 @@
             <div class="order-info-icon icon-sm">
                 <img src="{{asset('/public/assets/admin/img/resturant/foods/all.png')}}" alt="public">
             </div>
-                @php($food = \App\Models\Food::where(['restaurant_id'=>$restaurant->id])->count())
+                @php($food = \App\Models\Food::withoutGlobalScope(\App\Scopes\RestaurantScope::class)
+                ->where(['restaurant_id'=>$restaurant->id])->count())
                 @php($food = ($food == null) ? 0 : $food)
                 <h6 class="card-subtitle">{{translate('messages.all')}}<span class="amount text--primary">{{$food}}</span></h6>
         </div>
@@ -81,33 +58,34 @@
             <div class="order-info-icon icon-sm">
                 <img src="{{asset('/public/assets/admin/img/resturant/foods/active.png')}}" alt="public">
             </div>
-                @php($food = \App\Models\Food::where(['restaurant_id'=>$restaurant->id, 'status'=>1])->count())
+                @php($food = \App\Models\Food::withoutGlobalScope(\App\Scopes\RestaurantScope::class)->
+                where(['restaurant_id'=>$restaurant->id, 'status'=>1])->count())
                 @php($food = ($food == null) ? 0 : $food)
-                <h6 class="card-subtitle">{{translate('Active Food')}}<span class="amount text--primary">{{$food}}</span></h6>
+                <h6 class="card-subtitle">{{translate('Active_Food')}}<span class="amount text--primary">{{$food}}</span></h6>
         </div>
         <span class="order-info-seperator"></span>
         <div class="order-info-item">
             <div class="order-info-icon icon-sm">
                 <img src="{{asset('/public/assets/admin/img/resturant/foods/inactive.png')}}" alt="public">
             </div>
-                @php($food = \App\Models\Food::where(['restaurant_id'=>$restaurant->id, 'status'=>0])->count())
+                @php($food = \App\Models\Food::withoutGlobalScope(\App\Scopes\RestaurantScope::class)->
+                where(['restaurant_id'=>$restaurant->id, 'status'=>0])->count())
                 @php($food = ($food == null) ? 0 : $food)
-                <h6 class="card-subtitle">{{translate('Inactive Food')}}<span class="amount text--primary">{{$food}}</span></h6>
+                <h6 class="card-subtitle">{{translate('Inactive_Food')}}<span class="amount text--primary">{{$food}}</span></h6>
         </div>
     </div>
     <!-- End Page Header -->
     <!-- Page Heading -->
-    @php($foods = \App\Models\Food::withoutGlobalScope(\App\Scopes\RestaurantScope::class)->where('restaurant_id', $restaurant->id)->latest()->paginate(25))
     <div class="card h-100">
         <div class="card-header flex-wrap border-0 py-2">
             <div class="search--button-wrapper">
                 <h3 class="card-title d-flex align-items-center"> <span class="card-header-icon mr-1"><i class="tio-restaurant"></i></span> {{translate('messages.foods')}} <span class="badge badge-soft-dark ml-2 badge-circle">{{$foods->total()}}</span></h3>
-                <form action="javascript:" id="search-form" class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
+                <form class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
                     <!-- Search -->
                     <input type="hidden" name="restaurant_id" value="{{$restaurant->id}}">
                     <div class="input--group input-group input-group-merge input-group-flush">
-                        <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                placeholder="{{ translate('Search by name...') }}" aria-label="{{translate('messages.search')}}" required>
+                        <input id="datatableSearch_" type="search" name="search" class="form-control" value="{{ request()?->search ?? null }}"
+                                placeholder="{{ translate('Search_by_name.') }}" aria-label="{{translate('messages.search')}}" required>
                         <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                     </div>
                     <!-- End Search -->
@@ -124,40 +102,27 @@
 
                     <div id="usersExportDropdown"
                             class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                        <a id="export-copy" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                    alt="Image Description">
-                            {{translate('messages.copy')}}
-                        </a>
-                        <a id="export-print" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                    alt="Image Description">
-                            {{translate('messages.print')}}
-                        </a>
-                        <div class="dropdown-divider"></div>--}}
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
 
-                        <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.food.restaurant-food-export', ['type'=>'excel', 'restaurant_id'=>$restaurant->id])}}">
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+
+                        <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.food.restaurant-food-export', ['type'=>'excel', 'restaurant_id'=>$restaurant->id, request()->getQueryString()])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                             src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                             alt="Image Description">
                             {{translate('messages.excel')}}
                         </a>
 
-                        <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.food.restaurant-food-export', ['type'=>'csv', 'restaurant_id'=>$restaurant->id])}}">
+                        <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.food.restaurant-food-export', ['type'=>'csv', 'restaurant_id'=>$restaurant->id, request()->getQueryString()])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
                     </div>
                 </div>
                 <!-- Static Export Button -->
                 <a href="{{route('admin.food.add-new')}}" class="btn btn--primary pull-right"><i
-                            class="tio-add-circle"></i> {{translate('messages.add')}} {{translate('messages.new')}} {{translate('messages.food')}}</a>
+                            class="tio-add-circle"></i> {{translate('messages.add_new_food')}}</a>
             </div>
         </div>
         <div class="table-responsive datatable-custom">
@@ -182,11 +147,14 @@
                 </thead>
 
                 <tbody id="set-rows">
-                @php($foods = \App\Models\Food::withoutGlobalScope(\App\Scopes\RestaurantScope::class)->where('restaurant_id', $restaurant->id)->latest()->paginate(25))
+
                 @foreach($foods as $key=>$food)
 
                 <tr>
-                    <td class="text-center">{{$key+1}}</td>
+                    <td class="text-center">
+
+                        {{$key+$foods->firstItem()}}
+                    </td>
                     <td class="py-2">
                         <a class="media align-items-center" href="{{route('admin.food.view',[$food['id']])}}">
                             <img class="avatar avatar-lg mr-3" src="{{asset('storage/app/public/product')}}/{{$food['image']}}"
@@ -198,13 +166,13 @@
                     </td>
                     <td>
                     <div>
-                        {{Str::limit($food->category,20,'...')}}
+                        {{ Str::limit(($food?->category?->parent ? $food?->category?->parent?->name : $food?->category?->name )  ?? translate('messages.uncategorize')
+                        , 20, '...') }}
                     </div>
                     </td>
                     <td>
-                        @php($zone_currency= $restaurant->zone->zone_currency ?? null)
                         <div class="table--food-price text-right">
-                            @php($price = \App\CentralLogics\Helpers::format_currency($food['price'],$zone_currency))
+                            @php($price = \App\CentralLogics\Helpers::format_currency($food['price']))
                             {{$price}}
                         </div>
                     </td>
@@ -219,10 +187,10 @@
                     <td>
                         <div class="btn--container justify-content-center">
                             <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                href="{{route('admin.food.edit',[$food['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.food')}}"><i class="tio-edit"></i>
+                                href="{{route('admin.food.edit',[$food['id']])}}" title="{{translate('messages.edit_food')}}"><i class="tio-edit"></i>
                             </a>
                             <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:"
-                                onclick="form_alert('food-{{$food['id']}}','Want to delete this item ?')" title="{{translate('messages.delete')}} {{translate('messages.food')}}"><i class="tio-delete-outlined"></i>
+                                onclick="form_alert('food-{{$food['id']}}','Want to delete this item ?')" title="{{translate('messages.delete_food')}}"><i class="tio-delete-outlined"></i>
                             </a>
                             <form action="{{route('admin.food.delete',[$food['id']])}}"
                                     method="post" id="food-{{$food['id']}}">
@@ -296,30 +264,5 @@
             });
         });
 
-        $('#search-form').on('submit', function () {
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.food.search-vendor')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
     </script>
 @endpush

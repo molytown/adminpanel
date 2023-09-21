@@ -12,14 +12,14 @@
         <span class="badge badge-soft--info my-2">{{translate('messages.zone')}} : {{$zone_name}}</span>
     </div>
     <div class="statistics--select">
-        <select class="custom-select" name="statistics_type" onchange="order_stats_set_filter('{{ url()->full() }}',this.value)">
+        <select class="custom-select" name="statistics_type" onchange="order_stats_update(this.value)">
             <option
                 value="overall" {{$params['statistics_type'] == 'overall'?'selected':''}}>
-                {{translate('messages.Overall Statistics')}}
+                {{translate('messages.Overall_Statistics')}}
             </option>
             <option
                 value="today" {{$params['statistics_type'] == 'today'?'selected':''}}>
-                {{__("messages.Today's Statistics")}}
+                {{translate('messages.Today’s_Statistics')}}
             </option>
         </select>
     </div>
@@ -30,28 +30,28 @@
         <div class="resturant-card dashboard--card bg--2 cursor-pointer" onclick="location.href='{{route('admin.order.list',['delivered'])}}'">
 
             <h4 class="title">{{$data['delivered']}}</h4>
-            <span class="subtitle">{{translate('messages.delivered')}} {{translate('messages.orders')}}</span>
+            <span class="subtitle">{{translate('messages.delivered_orders')}}</span>
             <img class="resturant-icon" src="{{asset('/public/assets/admin/img/dashboard/1.png')}}" alt="dashboard">
         </div>
     </div>
     <div class="col-xl-3 col-sm-6">
         <div class="resturant-card dashboard--card bg--3 cursor-pointer" onclick="location.href='{{route('admin.order.list',['canceled'])}}'">
             <h4 class="title">{{$data['canceled']}}</h4>
-            <span class="subtitle">{{translate('messages.canceled')}} {{translate('messages.orders')}}</span>
+            <span class="subtitle">{{translate('messages.canceled_orders')}}</span>
             <img class="resturant-icon" src="{{asset('/public/assets/admin/img/dashboard/2.png')}}" alt="dashboard">
         </div>
     </div>
     <div class="col-xl-3 col-sm-6">
         <div class="resturant-card dashboard--card bg--5 cursor-pointer" onclick="location.href='{{route('admin.order.list',['refunded'])}}'">
             <h4 class="title">{{$data['refunded']}}</h4>
-            <span class="subtitle">{{translate('messages.refunded')}} {{translate('messages.orders')}}</span>
+            <span class="subtitle">{{translate('messages.refunded_orders')}}</span>
             <img class="resturant-icon" src="{{asset('/public/assets/admin/img/dashboard/3.png')}}" alt="dashboard">
         </div>
     </div>
     <div class="col-xl-3 col-sm-6">
         <div class="resturant-card dashboard--card bg--14 cursor-pointer" onclick="location.href='{{route('admin.order.list',['failed'])}}'">
             <h4 class="title">{{$data['refund_requested']}}</h4>
-            <span class="subtitle">{{translate('messages.payment')}} {{translate('messages.failed')}} {{translate('messages.orders')}}</span>
+            <span class="subtitle">{{translate('messages.payment_failed_orders')}}</span>
             <img class="resturant-icon" src="{{asset('/public/assets/admin/img/dashboard/4.png')}}" alt="dashboard">
         </div>
     </div>

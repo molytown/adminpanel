@@ -2,7 +2,7 @@
 <div class="card-header">
     <h5 class="card-header-title">
         <img src="{{asset('/public/assets/admin/img/dashboard/top-deliveryman.png')}}" alt="dashboard" class="card-header-icon">
-        <span>{{ translate('Top Deliveryman') }}</span>
+        <span>{{ translate('Top_Deliveryman') }}</span>
     </h5>
     @php($params=session('dash_params'))
     @if($params['zone_id']!='all')
@@ -25,7 +25,7 @@
                         src="{{asset('storage/app/public/delivery-man')}}/{{$item['image']??''}}">
                     </center>
                     <div class="text-center mt-2">
-                        <h5 class="name m-0">{{$item['f_name']??'Not exist'}}</h5>
+                        <h5 class="name m-0">{{$item['f_name'] ?? translate('messages.Not_exist')}}</h5>
                         <h5 class="info m-0 mt-1"><span class="text-warning">{{$item['order_count']}}</span> {{ translate('Orders') }}</h5>
                     </div>
                 </div>

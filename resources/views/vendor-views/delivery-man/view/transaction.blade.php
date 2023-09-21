@@ -30,7 +30,7 @@
         <div class="card mb-3 mb-lg-5 mt-2">
             <div class="card-header border-0">
                 <h5 class="qcont pr-3 m-0">
-                    {{ translate('messages.order')}} {{ translate('messages.transactions')}}
+                    {{ translate('messages.order_transactions')}}
                     {{-- <span class="badge badge-soft-secondary">
                         10
                     </span> --}}
@@ -48,9 +48,9 @@
                         <thead class="thead-light">
                             <tr>
                                 <th class="text-center w-5p">{{ translate('messages.sl') }}</th>
-                                <th class="text-center w-30p">{{translate('messages.order')}} {{translate('messages.id')}}</th>
+                                <th class="text-center w-30p">{{translate('messages.order_id')}}</th>
                                 <th class="text-center w-30p">
-                                    {{translate('messages.deliveryman')}} {{translate('messages.earned')}}
+                                    {{translate('messages.deliveryman_earned')}}
                                 </th>
                             </tr>
                         </thead>
@@ -87,14 +87,14 @@
 <script>
     function request_alert(url, message) {
         Swal.fire({
-            title: 'Are you sure?',
+            title: '{{ translate('Are_you_sure?') }}',
             text: message,
             type: 'warning',
             showCancelButton: true,
             cancelButtonColor: 'default',
             confirmButtonColor: '#FC6A57',
-            cancelButtonText: 'No',
-            confirmButtonText: 'Yes',
+            cancelButtonText: '{{ translate('no') }}',
+            confirmButtonText: '{{ translate('yes') }}',
             reverseButtons: true
         }).then((result) => {
             if (result.value) {

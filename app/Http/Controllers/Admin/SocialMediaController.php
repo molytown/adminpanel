@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\SocialMedia;
+use Illuminate\Support\Str;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
 
 class SocialMediaController extends Controller
 {
@@ -18,15 +20,6 @@ class SocialMediaController extends Controller
         return view('admin-views.business-settings.social-media');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function create()
-    {
-        //
-    }
 
     /**
      * Store a newly created resource in storage.
@@ -100,27 +93,37 @@ class SocialMediaController extends Controller
      * @param  \App\Models\SocialMedia  $socialMedia
      * @return \Illuminate\Http\Response
      */
-    public function destroy(SocialMedia $socialMedia)
-    {
-        //
-    }
+
 
     public function fetch(Request $request)
     {
         if ($request->ajax()) {
-            $data = SocialMedia::orderBy('id', 'desc')->get();
+            $data = SocialMedia::orderBy('id', 'desc')->get()
+            ->map(function ($data) {
+                return [
+                    'id' => $data->id,
+                    'name' => translate($data->name),
+                    'link' => $data->link,
+                    'status' => $data->status,
+                ];
+            });
+
             return response()->json($data);
         }
     }
 
     public function social_media_status_update(Request $request)
     {
-        SocialMedia::where(['id' => $request['id']])->update([
-            'status' => $request['status'],
-        ]);
-        return response()->json([
-            'success' => 1,
-        ], 200);
+        // dd($request['id']);
+        $data=SocialMedia::find($request?->id);
+        $data->status =  $data->status ? 0 :1;
+        $data?->save();
+        if($data->status == 1){
+            Toastr::success(Str::title($data->name).' '.translate('messages.is_Enabled!'));
+        } else{
+            Toastr::warning(Str::title($data->name).' '.translate('messages.is_Disabled!'));
+        }
+        return back();
     }
 
 }

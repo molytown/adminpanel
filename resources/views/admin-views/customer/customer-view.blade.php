@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Customer Details'))
+@section('title',translate('Customer_Details'))
 
 @push('css_or_js')
 
@@ -12,7 +12,7 @@
         <div class="d-print-none pb-2">
             <div class="row align-items-center">
                 <div class="col-auto mb-2 mb-sm-0">
-                    <h1 class="page-header-title">{{translate('messages.customer')}} {{translate('messages.id')}} #{{$customer['id']}}</h1>
+                    <h1 class="page-header-title">{{translate('messages.customer_id')}} #{{$customer['id']}}</h1>
                     <span class="d-block">
                         <i class="tio-date-range"></i> {{translate('messages.joined_at')}} : {{date('d M Y '.config('timeformat'),strtotime($customer['created_at']))}}
                     </span>
@@ -21,12 +21,12 @@
                 <div class="col-auto ml-auto">
                     <a class="btn btn-icon btn-sm btn-soft-secondary rounded-circle mr-1"
                        href="{{route('admin.customer.view',[$customer['id']-1])}}"
-                       data-toggle="tooltip" data-placement="top" title="{{ translate('Previous customer') }}">
+                       data-toggle="tooltip" data-placement="top" title="{{ translate('Previous_customer') }}">
                         <i class="tio-arrow-backward"></i>
                     </a>
                     <a class="btn btn-icon btn-sm btn-soft-secondary rounded-circle"
                        href="{{route('admin.customer.view',[$customer['id']+1])}}" data-toggle="tooltip"
-                       data-placement="top" title="{{ translate('Next customer') }}">
+                       data-placement="top" title="{{ translate('Next_customer') }}">
                         <i class="tio-arrow-forward"></i>
                     </a>
                 </div>
@@ -38,7 +38,7 @@
             <div class="col-lg-6 col-md-6 col-sm-6">
                 <div class="resturant-card bg--2">
                     <img class="resturant-icon" src="{{asset('/public/assets/admin/img/dashboard/1.png')}}" alt="dashboard">
-                    <div class="for-card-text font-weight-bold  text-uppercase mb-1">{{translate('messages.wallet')}} {{translate('messages.balance')}}</div>
+                    <div class="for-card-text font-weight-bold  text-uppercase mb-1">{{translate('messages.wallet_balance')}}</div>
                     <div class="for-card-count">{{$customer->wallet_balance??0}}</div>
                 </div>
             </div>
@@ -47,7 +47,7 @@
             <div class="col-lg-6 col-md-6 col-sm-6">
                 <div class="resturant-card bg--3">
                     <img class="resturant-icon" src="{{asset('/public/assets/admin/img/dashboard/3.png')}}" alt="dashboard">
-                    <div class="for-card-text font-weight-bold  text-uppercase mb-1">{{translate('messages.loyalty_point')}} {{translate('messages.balance')}}</div>
+                    <div class="for-card-text font-weight-bold  text-uppercase mb-1">{{translate('messages.loyalty_point_balance')}}</div>
                     <div class="for-card-count">{{$customer->loyalty_point??0}}</div>
                 </div>
             </div>
@@ -57,15 +57,57 @@
             <div class="col-lg-8 mb-3 mb-lg-0">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-header-title">{{ translate('messages.Order List') }} <span class="badge badge-soft-secondary">{{ count($orders) }}</span></h5>
-                        <div>
-                            <div class="input--group input-group">
-                                <input type="text" id="column1_search" class="form-control form-control-sm"
-                                            placeholder="{{ translate('Ex: Search Here by ID...') }}">
-                                <button type="button" class="btn btn--secondary">
-                                    <i class="tio-search"></i>
-                                </button>
-                            </div>
+                        <h5 class="card-header-title">{{ translate('messages.Order_List') }} <span class="badge badge-soft-secondary" id="itemCount">{{ $orders->total() }}</span></h5>
+                        <div  style="flex-grow:0;" class="search--button-wrapper">
+
+
+                            <!-- Search -->
+                            <form >
+                                <input type="hidden" name="id"   value="{{ $customer->id }}" id="">
+                                <div class="input--group input-group input-group-merge input-group-flush">
+                                    <input id="datatableSearch_" type="search" name="search" class="form-control" value="{{request()->get('search')}}"
+                                            placeholder="{{  translate('Ex:_Search_Here_by_ID...') }}" aria-label="Search" required>
+                                    <button type="submit" class="btn btn--secondary">
+                                        <i class="tio-search"></i>
+                                    </button>
+                                </div>
+                            </form>
+                                <!-- End Search -->
+                                       <!-- Unfold -->
+                    <div class="hs-unfold mr-2">
+                        <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                            data-hs-unfold-options='{
+                                    "target": "#usersExportDropdown",
+                                    "type": "css-animation"
+                                }'>
+                            <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                        </a>
+
+                        <div id="usersExportDropdown"
+                            class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                            <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                            <a id="export-excel" class="dropdown-item" href="{{route('admin.customer.order-export', ['type'=>'excel','id'=>$customer->id,request()->getQueryString()])}}">
+                                <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                    src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                    alt="Image Description">
+                                {{ translate('messages.excel') }}
+                            </a>
+                            <a id="export-csv" class="dropdown-item" href="{{route('admin.customer.order-export', ['type'=>'csv','id'=>$customer->id,request()->getQueryString()])}}">
+                                <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                    src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                    alt="Image Description">
+                                .{{ translate('messages.csv') }}
+                            </a>
+                            {{-- <a id="export-pdf" class="dropdown-item" href="javascript:;">
+                                <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                    src="{{ asset('public/assets/admin') }}/svg/components/pdf.svg"
+                                    alt="Image Description">
+                                {{ translate('messages.pdf') }}
+                            </a> --}}
+                        </div>
+                    </div>
+                    <!-- End Unfold -->
+
                         </div>
                     </div>
                     <!-- Table -->
@@ -80,37 +122,17 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>{{ translate('messages.sl') }}</th>
-                                    <th class="text-center w-50p">{{translate('messages.order')}} {{translate('messages.id')}}</th>
-                                    <th class="w-50p text-center">{{translate('messages.total')}} {{translate('messages.amount')}}</th>
+                                    <th class="text-center w-50p">{{translate('messages.order_id')}}</th>
+                                    <th class="w-50p text-center">{{translate('messages.total_amount')}}</th>
                                     <th class="text-center w-100px">{{translate('messages.action')}}</th>
                                 </tr>
                             </thead>
 
-                            <tbody>
-                            @foreach($orders as $key=>$order)
-                                <tr>
-                                    <td>{{$key+$orders->firstItem()}}</td>
-                                    <td class="table-column-pl-0 text-center">
-                                        <a href="{{route('admin.order.details',['id'=>$order['id']])}}">{{$order['id']}}</a>
-                                    </td>
-                                    <td>
-                                        <div class="text-center">
-                                            {{\App\CentralLogics\Helpers::format_currency($order['order_amount'])}}
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="btn--container justify-content-center">
-                                        <a class="btn btn-sm btn--warning btn-outline-warning action-btn"
-                                                    href="{{route('admin.order.details',['id'=>$order['id']])}}" title="{{translate('messages.view')}}"><i
-                                                            class="tio-visible-outlined"></i></a>
-                                        <a class="btn btn-sm btn--primary btn-outline-primary action-btn" target="_blank"
-                                                    href="{{route('admin.order.generate-invoice',[$order['id']])}}" title="{{translate('messages.invoice')}}"><i
-                                                            class="tio-print"></i> </a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
+
+                            <tbody id="set-rows">
+                                @include('admin-views.customer.partials._list_table')
                             </tbody>
+
                         </table>
                         @if(count($orders) === 0)
                         <div class="empty--data">
@@ -126,7 +148,7 @@
                                 {{-- <div>
                                     1-15 of 380
                                 </div> --}}
-                                <div>
+                                <div class="hide-page">
                                     {!! $orders->links() !!}
                                 </div>
                             </div>
@@ -149,7 +171,7 @@
                                 @if($customer)
                                     {{$customer['f_name'].' '.$customer['l_name']}}
                                     @else
-                                    Customer
+                                    {{ translate('messages.Customer') }}
                                 @endif
                             </span>
                         </h4>
@@ -186,7 +208,7 @@
                             </div>
                             <hr>
                             <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h5>{{translate('messages.contact')}} {{translate('messages.info')}}</h5>
+                                <h5>{{translate('messages.contact_info')}}</h5>
                             </div>
                             @foreach($customer->addresses as $address)
                                 <ul class="list-unstyled list-unstyled-py-2">
@@ -251,5 +273,7 @@
                 var select2 = $.HSCore.components.HSSelect2.init($(this));
             });
         });
+
     </script>
+
 @endpush

@@ -13,7 +13,7 @@
         <div class="justify-content-between text-center">
             <div class="product-price text-center">
                 <span class="text-accent font-weight-bold text-yellow">
-                    {{ \App\CentralLogics\Helpers::format_currency($product['price'] - \App\CentralLogics\Helpers::product_discount_calculate($product, $product['price'], $restaurant_data),$zone_currency) }}
+                    {{ \App\CentralLogics\Helpers::format_currency($product['price'] - \App\CentralLogics\Helpers::product_discount_calculate($product, $product['price'], $restaurant_data)) }}
                 </span>
             </div>
         </div>

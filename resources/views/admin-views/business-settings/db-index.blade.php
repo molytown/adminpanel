@@ -14,7 +14,7 @@
                     <img src="{{asset('/public/assets/admin/img/clean-database.png')}}" alt="public">
                 </div>
                 <span>
-                    {{ translate('Clean database') }}
+                    {{ translate('Clean_database') }}
                 </span>
             </h1>
         </div>
@@ -33,7 +33,7 @@
                                 <div class="form-group form-check form--check">
                                     <input type="checkbox" name="tables[]" value="{{ $table }}"
                                     class="form-check-input" id="{{ $table }}">
-                                    <label class="form-check-label text-dark pl-2 flex-grow-1 {{ Session::get('direction') === 'rtl' ? 'mr-4' : '' }}"
+                                    <label class="form-check-label text-dark pl-2 flex-grow-1"
                                     for="{{ $table }}">{{ Str::limit($table, 20) }} <span class="badge-pill badge-secondary mx-2">{{ $rows[$key] }}</span></label>
                                 </div>
                             </div>
@@ -174,14 +174,14 @@
         $("form").on('submit', function(e) {
             e.preventDefault();
             Swal.fire({
-                title: '{{ translate('Are you sure?') }}',
-                text: "{{ translate('Sensitive_data! Make_sure_before_changing.') }}",
+                title: '{{ translate('Are_you_sure?') }}',
+                text: "{{ translate('Sensitive_data_!_Make_sure_before_changing.') }}",
                 type: 'warning',
                 showCancelButton: true,
                 cancelButtonColor: 'default',
                 confirmButtonColor: '#FC6A57',
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
+                cancelButtonText: '{{ translate('no') }}',
+                confirmButtonText: '{{ translate('yes') }}',
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {

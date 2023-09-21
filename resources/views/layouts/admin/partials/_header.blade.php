@@ -32,11 +32,48 @@
                 <!-- Navbar -->
                 <ul class="navbar-nav align-items-center flex-row">
 
+
+                    <li class="nav-item d-none d-sm-inline-block mr-2">
+                        <div class="hs-unfold">
+                            <div>
+                                @php( $local = session()->has('local')?session('local'):'en')
+                                @php($lang = \App\Models\BusinessSetting::where('key', 'system_language')->first())
+                                @if ($lang)
+                                <div
+                                    class="topbar-text dropdown disable-autohide text-capitalize d-flex">
+                                    <a class=" text-dark dropdown-toggle d-flex align-items-center nav-link "
+                                    href="#" data-toggle="dropdown">
+                                    @foreach(json_decode($lang['value'],true) as $data)
+                                    @if($data['code']==$local)
+                                    {{-- <i class="tio-globe"></i> --}}
+                                    <img class="rounded mr-1"  width="20" src="{{ asset('/public/assets/admin/img/lang.png') }}" alt="">
+                                                {{$data['code']}}
+                                            @endif
+                                        @endforeach
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        @foreach(json_decode($lang['value'],true) as $key =>$data)
+                                            @if($data['status']==1)
+                                                <li>
+                                                    <a class="dropdown-item py-1"
+                                                        href="{{route('admin.lang',[$data['code']])}}">
+                                                        <span class="text-capitalize">{{$data['code']}}</span>
+                                                    </a>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </li>
+
                     <li class="nav-item d-none d-sm-inline-block mr-4">
                         <!-- Notification -->
                         <div class="hs-unfold">
                             <a class="js-hs-unfold-invoker btn btn-icon btn-soft-secondary rounded-circle"
-                               href="{{route('admin.message.list')}}">
+                                href="{{route('admin.message.list')}}">
                                 <i class="tio-messages-outlined"></i>
                                 @php($message=\App\Models\Conversation::whereUserType('admin')->where('unread_message_count','>','0')->count())
                                 @if($message!=0)
@@ -50,9 +87,12 @@
                         <!-- Notification -->
                         <div class="hs-unfold">
                             <a class="js-hs-unfold-invoker btn btn-icon btn-soft-secondary rounded-circle"
-                               href="{{route('admin.order.list',['status'=>'pending'])}}">
+                                href="{{route('admin.order.list',['status'=>'pending'])}}">
                                 <i class="tio-shopping-cart-outlined"></i>
-                                <span class="btn-status btn-sm-status btn-status-danger"></span>
+                                @php($count=\App\Models\Order::where('checked' ,0 )->count())
+                                    @if($count!=0)
+                                    <span class="btn-status btn-sm-status btn-status-danger"></span>
+                                    @endif
                             </a>
                         </div>
                         <!-- End Notification -->
@@ -121,9 +161,15 @@
                                     cancelButtonText: '{{ translate('messages.cancel') }}',
                                     }).then((result) => {
                                     if (result.value) {
-                                    location.href='{{route('admin.auth.logout')}}';
+                                    location.href='{{route('logout')}}';
                                     } else{
-                                    Swal.fire('{{ translate('messages.canceled') }}', '', 'info',)
+                                    Swal.fire({
+                                    title: '{{ translate('messages.canceled') }}',
+                                    showDenyButton: false,
+                                    showCancelButton: false,
+                                    confirmButtonColor: '#FC6A57',
+                                    confirmButtonText: '{{ translate('messages.ok') }}',
+                                    })
                                     }
                                     })">
                                     <span class="text-truncate pr-2" title="Sign out">{{translate('messages.sign_out')}}</span>

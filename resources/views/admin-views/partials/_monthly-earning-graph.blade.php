@@ -1,36 +1,30 @@
+
 <div class="card-body">
     <div class="row mb-3">
         <div class="col-12">
-            @php($currency_symbol=\App\CentralLogics\Helpers::currency_symbol())
             @php($params=session('dash_params'))
             @if($params['zone_id']!='all')
-                @php($zone=\App\Models\Zone::where('id',$params['zone_id'])->first())
-                @php($zone_name=$zone->name)
-                @php ( $currency = \App\Models\Currency::where('currency_code',$zone->zone_currency)->first() )
-                    @if (isset($currency->currency_symbol))
-                        @php($currency_symbol=$currency->currency_symbol ?? \App\CentralLogics\Helpers::currency_symbol())
-                @endif
-            @elseif($params['country_code'] && $params['country_code'] != 'all')
-              @php($zone=\App\Models\Zone::where('zone_country',$params['country_code'])->first())
-                @php($zone_name=$zone->name)
-                @php ( $currency = \App\Models\Currency::where('currency_code',$zone->zone_currency)->first() )
-                    @if (isset($currency->currency_symbol))
-                        @php($currency_symbol=$currency->currency_symbol ?? \App\CentralLogics\Helpers::currency_symbol())
-                @endif
+                @php($zone_name=\App\Models\Zone::where('id',$params['zone_id'])->first()->name)
             @else
             @php($zone_name=translate('All'))
         @endif
             <div class="d-flex flex-wrap justify-content-center align-items-center">
                 <span class="h5 m-0 mr-3 fz--11 d-flex align-items-center mb-2 mb-md-0">
                     <span class="legend-indicator bg-7ECAFF"></span>
-                    {{translate('messages.admin_commission')}} : {{$currency_symbol." " .number_format(array_sum($commission), config('round_up_to_digit'))}}
+                    <span>{{translate('messages.admin_commission')}}</span> <span>:</span> <span>{{\App\CentralLogics\Helpers::format_currency(array_sum($commission))}}</span>
                 </span>
                 <span class="h5 m-0 fz--11 d-flex align-items-center mb-2 mb-md-0">
                     <span class="legend-indicator bg-0661CB"></span>
-                    {{translate('messages.total_sell')}} : {{$currency_symbol." " .number_format(array_sum($total_sell), config('round_up_to_digit'))}}
-                </span>
+                    <span>{{translate('messages.total_sell')}}</span> <span>:</span> <span>{{\App\CentralLogics\Helpers::format_currency(array_sum($total_sell))}}</span>
+                </span> &nbsp;&nbsp;
+        @if (\App\CentralLogics\Helpers::subscription_check())
+        <span class="h5 m-0 fz--11 d-flex align-items-center mb-2 mb-md-0">
+            <span class="legend-indicator bg-dddd"></span>
+            <span>{{translate('Subscription')}}</span> <span>:</span> <span>{{\App\CentralLogics\Helpers::format_currency(array_sum($total_subs))}}</span>
+        </span>
+        @endif
 
-            </div>
+        </div>
           </div>
           <div class="col-12">
               <div class="text-right mt--xl--10"><span class="badge badge-soft--info">{{translate('messages.zone')}} : {{$zone_name}}</span>
@@ -42,25 +36,35 @@
     <!-- Bar Chart -->
     <div class="d-flex align-items-center">
       <div class="chart--extension">
-        {{ $currency_symbol }} ({{translate('messages.currency')}})
+        {{ \App\CentralLogics\Helpers::currency_symbol() }}({{translate('messages.currency')}})
       </div>
       <div class="chartjs-custom w-75 flex-grow-1">
           <canvas id="updatingData" class="h-20rem"
                   data-hs-chartjs-options='{
                     "type": "bar",
                     "data": {
-                      "labels": ["Jan","Feb","Mar","April","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+                      "labels": ["{{ translate('messages.Jan') }}","{{ translate('messages.Feb') }}","{{ translate('messages.Mar') }}","{{ translate('messages.April') }}","{{ translate('messages.May') }}","{{ translate('messages.Jun') }}","{{ translate('messages.Jul') }}","{{ translate('messages.Aug') }}","{{ translate('messages.Sep') }}","{{ translate('messages.Oct') }}","{{ translate('messages.Nov') }}","{{ translate('messages.Dec') }}"],
                       "datasets": [{
                         "data": [{{$commission[1]}},{{$commission[2]}},{{$commission[3]}},{{$commission[4]}},{{$commission[5]}},{{$commission[6]}},{{$commission[7]}},{{$commission[8]}},{{$commission[9]}},{{$commission[10]}},{{$commission[11]}},{{$commission[12]}}],
                         "backgroundColor": "#7ECAFF",
                         "hoverBackgroundColor": "#7ECAFF",
                         "borderColor": "#7ECAFF"
                       },
+                      @if (\App\CentralLogics\Helpers::subscription_check())
+                      {
+                        "data": [{{$total_subs[1]}},{{$total_subs[2]}},{{$total_subs[3]}},{{$total_subs[4]}},{{$total_subs[5]}},{{$total_subs[6]}},{{$total_subs[7]}},{{$total_subs[8]}},{{$total_subs[9]}},{{$total_subs[10]}},{{$total_subs[11]}},{{$total_subs[12]}}],
+                        "backgroundColor": "#44f279",
+                        "borderColor": "#44f279"
+                      },
+                      @endif
                       {
                         "data": [{{$total_sell[1]}},{{$total_sell[2]}},{{$total_sell[3]}},{{$total_sell[4]}},{{$total_sell[5]}},{{$total_sell[6]}},{{$total_sell[7]}},{{$total_sell[8]}},{{$total_sell[9]}},{{$total_sell[10]}},{{$total_sell[11]}},{{$total_sell[12]}}],
                         "backgroundColor": "#0661CB",
                         "borderColor": "#0661CB"
-                      }]
+                      }
+
+
+                      ]
                     },
                     "options": {
                       "scales": {
@@ -112,6 +116,12 @@
     </div>
     <!-- End Bar Chart -->
 </div>
+
+@push('script')
+    <script src="{{asset('public/assets/admin')}}/vendor/chart.js/dist/Chart.min.js"></script>
+    <script src="{{asset('public/assets/admin')}}/vendor/chart.js.extensions/chartjs-extensions.js"></script>
+    <script src="{{asset('public/assets/admin')}}/vendor/chartjs-plugin-datalabels/dist/chartjs-plugin-datalabels.min.js"></script>
+@endpush
 
 <script>
     // INITIALIZATION OF CHARTJS

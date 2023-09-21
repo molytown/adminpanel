@@ -1,7 +1,7 @@
 @foreach($conversations as $conv)
 @php($user= $conv->sender_type == 'delivery_man' ? $conv->receiver :  $conv->sender)
 @if (isset($user))
-    @php($unchecked=($conv->last_message->sender_id == $user->id) ? $conv->unread_message_count : 0)
+    @php($unchecked=($conv->last_message?->sender_id == $user->id) ? $conv->unread_message_count : 0)
     <input type="hidden" id="deliver_man" value="{{ $dm->id }}">
     <div
         class="chat-user-info d-flex border-bottom p-3 align-items-center customer-list {{$unchecked!=0?'conv-active':''}}"
@@ -31,7 +31,7 @@
         </div>
         <div class="chat-user-info-content">
             <h5 class="mb-0 d-flex justify-content-between">
-                <span class=" mr-3">{{ translate('Account not found') }}</span>
+                <span class=" mr-3">{{ translate('Account_not_found') }}</span>
             </h5>
         </div>
     </div>

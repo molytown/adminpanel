@@ -79,15 +79,17 @@
 
 .fa-ul {
   list-style-type: none;
-  margin-left: 2.5em;
-  padding-left: 0;
+  -webkit-margin-start: 2.5em;
+          margin-inline-start: 2.5em;
+  -webkit-padding-start: 0;
+          padding-inline-start: 0;
 }
 .fa-ul > li {
   position: relative;
 }
 
 .fa-li {
-  left: -2em;
+  inset-inline-start: -2em;
   position: absolute;
   text-align: center;
   width: 2em;
@@ -113,33 +115,24 @@
 .far.fa-pull-left,
 .fal.fa-pull-left,
 .fab.fa-pull-left {
-  margin-right: 0.3em;
+  -webkit-margin-end: 0.3em;
+          margin-inline-end: 0.3em;
 }
 .fa.fa-pull-right,
 .fas.fa-pull-right,
 .far.fa-pull-right,
 .fal.fa-pull-right,
 .fab.fa-pull-right {
-  margin-left: 0.3em;
+  -webkit-margin-start: 0.3em;
+          margin-inline-start: 0.3em;
 }
 
 .fa-spin {
-  -webkit-animation: fa-spin 2s infinite linear;
-          animation: fa-spin 2s infinite linear;
+  animation: fa-spin 2s infinite linear;
 }
 
 .fa-pulse {
-  -webkit-animation: fa-spin 1s infinite steps(8);
-          animation: fa-spin 1s infinite steps(8);
-}
-
-@-webkit-keyframes fa-spin {
-  0% {
-    transform: rotate(0deg);
-  }
-  100% {
-    transform: rotate(360deg);
-  }
+  animation: fa-spin 1s infinite steps(8);
 }
 
 @keyframes fa-spin {
@@ -200,7 +193,7 @@
 
 .fa-stack-1x,
 .fa-stack-2x {
-  left: 0;
+  inset-inline-start: 0;
   position: absolute;
   text-align: center;
   width: 100%;

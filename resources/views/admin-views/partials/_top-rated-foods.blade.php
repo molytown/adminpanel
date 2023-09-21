@@ -28,7 +28,7 @@
                         alt="{{$item->name}} image">
                 </center>
                 <div class="text-center mt-3">
-                    <h5 class="name m-0 mb-1">{{Str::limit($item->name??translate('messages.Food deleted!'),20,'...')}}</h5>
+                    <h5 class="name m-0 mb-1">{{Str::limit($item->name??translate('messages.Food_deleted!'),20,'...')}}</h5>
                     <div class="rating">
                         <span class="text-warning"><i class="tio-star"></i> {{round($item['avg_rating'],1)}}</span>
                         <span class="text--title">({{$item['rating_count']}}  {{ translate('Reviews') }})</span>

@@ -25,11 +25,11 @@
                     <div class="card-body">
                         <div class="col-md-8 mt-4">
                             <h4>{{translate('messages.bank_name')}}
-                                : {{$data->bank_name ? $data->bank_name : 'No Data found'}}</h4>
-                            <h6>{{translate('messages.branch')}} : {{$data->branch ? $data->branch : 'No Data found'}}</h6>
+                                : {{$data->bank_name ? $data->bank_name : translate('No_Data_found')}}</h4>
+                            <h6>{{translate('messages.branch')}} : {{$data->branch ? $data->branch :  translate('No_Data_found')}}</h6>
                             <h6>{{translate('messages.holder_name')}}
-                                : {{$data->holder_name ? $data->holder_name : 'No Data found'}}</h6>
-                            <h6>{{translate('messages.account_no')}} : {{$data->account_no ? $data->account_no : 'No Data found'}}</h6>
+                                : {{$data->holder_name ? $data->holder_name : translate('No_Data_found')}}</h6>
+                            <h6>{{translate('messages.account_no')}} : {{$data->account_no ? $data->account_no : translate('No_Data_found')}}</h6>
 
 
                             <a class="btn btn-primary"

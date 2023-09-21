@@ -37,12 +37,12 @@
                             <div class="form-group">
                                 <label class="form-label" for="amount">{{translate('messages.amount')}}</label>
 
-                                <input type="number" class="form-control h--45px" name="amount" id="amount" step=".01" required>
+                                <input type="number" class="form-control h--45px" name="amount" min="0" id="amount" step=".001" required>
                             </div>
                         </div>
                         <div class="col-12">
                             <div class="form-group">
-                                <label class="form-label" for="referance">{{translate('messages.reference')}} <small>({{translate('messages.optional')}})</small></label>
+                                <label class="form-label" for="referance">{{translate('messages.reference')}} &nbsp; <small class="mt-1">({{translate('messages.optional')}})</small></label>
 
                                 <input type="text" class="form-control h--45px" name="referance" id="referance">
                             </div>
@@ -100,7 +100,7 @@
 
             Swal.fire({
                 title: '{{translate('messages.are_you_sure')}}',
-                text: '{{translate('messages.you_want_to_add_fund')}}'+$('#amount').val()+' {{\App\CentralLogics\Helpers::currency_code().' '.translate('messages.to')}} '+$('#customer option:selected').text()+'{{translate('messages.to_wallet')}}',
+                text: '{{translate('messages.you_want_to_add_fund')}}'+$('#amount').val()+' {{\App\CentralLogics\Helpers::currency_code().' '.translate('messages.to')}} '+$('#customer option:selected').text()+'{{translate('messages.wallet')}}',
                 type: 'info',
                 showCancelButton: true,
                 cancelButtonColor: 'default',
@@ -133,7 +133,7 @@
                                 $('#customer').val(null).trigger('change');
                                 $('#amount').val(null).trigger('change');
                                 $('#referance').val(null).trigger('change');
-                                toastr.success('{{__("messages.fund_added_successfully")}}', {
+                                toastr.success('{{translate("messages.fund_added_successfully")}}', {
                                     CloseButton: true,
                                     ProgressBar: true
                                 });

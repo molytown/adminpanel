@@ -18,6 +18,9 @@ class RestaurantWallet extends Model
 
     public function getBalanceAttribute()
     {
+        if ($this->total_earning <= 0){
+            return (int)0;
+        }
         return $this->total_earning - ($this->total_withdrawn + $this->pending_withdraw + $this->collected_cash);
     }
 }

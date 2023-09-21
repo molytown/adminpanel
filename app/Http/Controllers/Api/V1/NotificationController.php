@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Notification;
 use App\Models\UserNotification;
 use Illuminate\Http\Request;
-use App\CentralLogics\Helpers;
 
 class NotificationController extends Controller
 {
@@ -23,10 +22,10 @@ class NotificationController extends Controller
         try {
             $notifications = Notification::active()->where('tergat', 'customer')->where(function($q)use($zone_id){
                 $q->whereNull('zone_id')->orWhereIn('zone_id', $zone_id);
-            })->where('created_at', '>=', \Carbon\Carbon::today()->subDays(15))->orWhere('updated_at', '>=', \Carbon\Carbon::today()->subDays(15))->get();
+            })->where('created_at', '>=', \Carbon\Carbon::today()->subDays(15))->get();
             $notifications->append('data');
 
-            $user_notifications = UserNotification::where('user_id', $request->user()->id)->where('created_at', '>=', \Carbon\Carbon::today()->subDays(15))->get();
+            $user_notifications = UserNotification::where('user_id', $request?->user()?->id)->where('created_at', '>=', \Carbon\Carbon::today()->subDays(15))->get();
             $notifications =  $notifications->merge($user_notifications);
             return response()->json($notifications, 200);
         } catch (\Exception $e) {

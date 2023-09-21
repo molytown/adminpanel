@@ -19,19 +19,21 @@ class CampaignController extends Controller
                 'errors' => $errors
             ], 200);
         }
+        $longitude= $request->header('longitude');
+        $latitude= $request->header('latitude');
         $zone_id= json_decode($request->header('zoneId'), true);
         try {
             $campaigns = Campaign::whereHas('restaurants', function($query)use($zone_id){
                 $query->whereIn('zone_id', $zone_id);
             })
-            ->with('restaurants',function($query)use($zone_id){
-                return $query->WithOpen()->whereIn('zone_id', $zone_id);
+            ->with('restaurants',function($query)use($zone_id,$longitude,$latitude){
+                return $query->WithOpen($longitude,$latitude)->whereIn('zone_id', $zone_id)->wherePivot('campaign_status', 'confirmed')->active();
             })
             ->running()->active()->get();
             $campaigns=Helpers::basic_campaign_data_formatting($campaigns, true);
             return response()->json($campaigns, 200);
         } catch (\Exception $e) {
-            return response()->json([], 200);
+            return response()->json([$e->getMessage()], 200);
         }
     }
     public function basic_campaign_details(Request $request){
@@ -52,11 +54,13 @@ class CampaignController extends Controller
             return response()->json(['errors' => Helpers::error_processor($validator)], 403);
         }
         try {
+            $longitude= $request->header('longitude');
+            $latitude= $request->header('latitude');
             $campaign = Campaign::with(['restaurants'=>function($q)use($zone_id){
                 $q->whereIn('zone_id', $zone_id);
             }])
-            ->with('restaurants',function($query)use($zone_id){
-                return $query->WithOpen()->whereIn('zone_id', $zone_id);
+            ->with('restaurants',function($query)use($zone_id,$longitude,$latitude){
+                return $query->WithOpen($longitude,$latitude)->whereIn('zone_id', $zone_id)->wherePivot('campaign_status', 'confirmed')->active();
             })
             ->running()->active()->whereId($request->basic_campaign_id)->first();
 
@@ -66,7 +70,7 @@ class CampaignController extends Controller
 
             return response()->json($campaign, 200);
         } catch (\Exception $e) {
-            return response()->json([], 200);
+            return response()->json([$e->getMessage()], 200);
         }
     }
     public function get_item_campaigns(Request $request){
@@ -85,7 +89,7 @@ class CampaignController extends Controller
             $campaigns= Helpers::product_data_formatting($campaigns, true, false, app()->getLocale());
             return response()->json($campaigns, 200);
         } catch (\Exception $e) {
-            return response()->json([], 200);
+            return response()->json([$e->getMessage()], 200);
         }
     }
 }

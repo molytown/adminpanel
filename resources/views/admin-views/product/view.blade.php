@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Food Preview'))
+@section('title',translate('Food_Preview'))
 
 @push('css_or_js')
 
@@ -15,7 +15,7 @@
                     {{$product['name']}}
                 </h1>
                 <a href="{{route('admin.food.edit',[$product['id']])}}" class="btn btn--primary">
-                    <i class="tio-edit"></i> {{translate('Edit Info')}}
+                    <i class="tio-edit"></i> {{translate('Edit_Info')}}
                 </a>
             </div>
         </div>
@@ -192,7 +192,7 @@
                                     <!-- Review Ratings -->
                                     <li class="d-flex align-items-center font-size-sm">
                                         @php($two=$product->rating?json_decode($product->rating, true)[2]:0)
-                                        <span class="progress-name mr-3">{{ translate('Below Average') }}</span>
+                                        <span class="progress-name mr-3">{{ translate('Below_Average') }}</span>
                                         <div class="progress flex-grow-1">
                                             <div class="progress-bar" role="progressbar"
                                                     style="width: {{$total==0?0:($two/$total)*100}}%;"
@@ -227,7 +227,7 @@
 
                     <div class="card-body d-flex flex-column justify-content-center">
                     @if($product->restaurant)
-                        <a class="resturant--information-single" href="{{route('admin.vendor.view', $product->restaurant_id)}}" title="{{$product->restaurant['name']}}">
+                        <a class="resturant--information-single" href="{{route('admin.restaurant.view', $product->restaurant_id)}}" title="{{$product->restaurant['name']}}">
                             <img class="avatar-img initial-54" onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
                             src="{{asset('storage/app/public/restaurant/'.$product->restaurant->logo)}}"
                             alt="Image Description">
@@ -241,7 +241,7 @@
                             </div>
                         </a>
                     @else
-                        <div class="badge badge-soft-danger py-2">{{translate('messages.restaurant')}} {{translate('messages.deleted')}}</div>
+                        <div class="badge badge-soft-danger py-2">{{translate('messages.restaurant_deleted')}}</div>
                     @endif
                     </div>
 
@@ -255,10 +255,11 @@
                     <table class="table table-borderless table-thead-bordered">
                         <thead class="thead-light">
                             <tr>
-                                <th class="px-4 w-140px"><h4 class="m-0">{{ translate('Short Description') }}</h4></th>
+                                <th class="px-4 w-140px"><h4 class="m-0">{{ translate('Short_Description') }}</h4></th>
                                 <th class="px-4 w-120px"><h4 class="m-0">{{translate('messages.price')}}</h4></th>
                                 <th class="px-4 w-100px"><h4 class="m-0">{{translate('messages.variations')}}</h4></th>
                                 <th class="px-4 w-100px"><h4 class="m-0">{{ translate('Addons') }}</h4></th>
+                                <th class="px-4 w-100px"><h4 class="m-0">{{ translate('Tags') }}</h4></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -277,31 +278,92 @@
                                         <strong>{{\App\CentralLogics\Helpers::format_currency(\App\CentralLogics\Helpers::discount_calculate($product,$product['price']))}}</strong>
                                     </span>
                                     <span class="d-block mb-1">
-                                        {{translate('messages.available')}} {{translate('messages.time')}} {{translate('messages.starts')}} : <strong>{{date(config('timeformat'),strtotime($product['available_time_starts']))}}</strong>
+                                        {{translate('messages.available_time_starts')}} : <strong>{{date(config('timeformat'),strtotime($product['available_time_starts']))}}</strong>
                                     </span>
                                     <span class="d-block">
-                                        {{translate('messages.available')}} {{translate('messages.time')}} {{translate('messages.ends')}} : <strong>{{date(config('timeformat'), strtotime($product['available_time_ends']))}}</strong>
+                                        {{translate('messages.available_time_ends')}} : <strong>{{date(config('timeformat'), strtotime($product['available_time_ends']))}}</strong>
                                     </span>
                                 </td>
                                 <td class="px-4">
-                                    @foreach(json_decode($product['variations'],true) as $variation)
-                                        <span class="d-block text-capitalize">
-                                        {{$variation['type']}} : <strong>{{\App\CentralLogics\Helpers::format_currency($variation['price'])}}</strong>
+                                    {{-- {{ dd(json_decode($product['variations'],true)) }} --}}
+                                    @foreach(json_decode($product->variations,true) as $variation)
+                                    @if(isset($variation["price"]))
+                                    <span class="d-block mb-1 text-capitalize">
+                                        <strong>
+                                            {{ translate('please_update_the_food_variations.') }}
+                                        </strong>
                                         </span>
+                                        @break
+                                        @else
+                                        <span class="d-block text-capitalize">
+                                                <strong>
+                                        {{$variation['name']}} -
+                                    </strong>
+                                    @if ($variation['type'] == 'multi')
+                                    {{ translate('messages.multiple_select') }}
+                                    @elseif($variation['type'] =='single')
+                                    {{ translate('messages.single_select') }}
+                                    @endif
+                                    @if ($variation['required'] == 'on')
+                                    - ({{ translate('messages.required') }})
+                                    @endif
+                                    </span>
+
+                                    @if ($variation['min'] != 0 && $variation['max'] != 0)
+                                   ({{ translate('messages.Min_select') }}: {{ $variation['min'] }} - {{ translate('messages.Max_select') }}: {{ $variation['max'] }})
+                                    @endif
+
+                                        @if (isset($variation['values']))
+                                        @foreach ($variation['values'] as $value)
+                                          <span class="d-block text-capitalize">
+                                            &nbsp;   &nbsp; {{ $value['label']}} :
+                                            <strong>{{\App\CentralLogics\Helpers::format_currency( $value['optionPrice'])}}</strong>
+                                            </span>
+                                        @endforeach
+                                        @endif
+                                        @endif
                                     @endforeach
                                 </td>
                                 <td class="px-4">
-                                    @foreach(\App\Models\AddOn::whereIn('id',json_decode($product['add_ons'],true))->get() as $addon)
+                                    @foreach(\App\Models\AddOn::withOutGlobalScope(App\Scopes\RestaurantScope::class)->whereIn('id',json_decode($product['add_ons'],true))->get() as $addon)
                                         <span class="d-block text-capitalize">
                                         {{$addon['name']}} : <strong>{{\App\CentralLogics\Helpers::format_currency($addon['price'])}}</strong>
                                         </span>
                                     @endforeach
+                                </td>
+                                <td class="px-4">
+                                    @forelse($product->tags as $c)
+                                        {{$c->tag.','}}
+                                        @empty
+                                        {{ translate('No_tags_found') }}
+                                    @endforelse
                                 </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
+            {{-- <div class="col-12">
+                @if(isset($product->variations))
+                    @foreach(json_decode($product->variations,true) as $variation)
+
+                            <div class="col-12 mr-2">
+                                <span class="ml-2"
+                                style="font-size: 12px;">{{$variation['name']}}:
+                                    @if ($variation['type']=='single')
+                                        <span>{{translate('input_filed')}}</span>
+                                    @elseif($variation['type']=='multi')
+                                        <span>{{translate('textarea_filed')}}</span>
+
+                                    @else
+
+                                    @endif
+                                </span>
+                            </div>
+
+                    @endforeach
+                @endif
+            </div> --}}
             <!-- End Body -->
         </div>
         <!-- End Card -->
@@ -309,7 +371,38 @@
         <!-- Card -->
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title">{{translate('messages.product')}} {{translate('messages.reviews')}}</h5>
+                <h5 class="card-title">{{translate('messages.product_reviews')}}</h5>
+
+
+                <div class="hs-unfold mr-2">
+                    <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                        data-hs-unfold-options='{
+                                "target": "#usersExportDropdown",
+                                "type": "css-animation"
+                            }'>
+                        <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                    </a>
+
+                    <div id="usersExportDropdown"
+                        class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+
+                        <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                        <a id="export-excel" class="dropdown-item" href="{{ route('admin.food.food_wise_reviews_export', ['type' => 'excel', 'restaurant'=> $product->restaurant?->name,'id' => $product['id'],request()->getQueryString()]) }}">
+                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                alt="Image Description">
+                            {{ translate('messages.excel') }}
+                        </a>
+                        <a id="export-csv" class="dropdown-item" href="{{ route('admin.food.food_wise_reviews_export', ['type' => 'csv', 'restaurant'=> $product->restaurant?->name, 'id' => $product['id'], request()->getQueryString()]) }}">
+                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                alt="Image Description">
+                            .{{ translate('messages.csv') }}
+                        </a>
+
+                    </div>
+                </div>
+
             </div>
             <!-- Table -->
             <div class="table-responsive datatable-custom">
@@ -380,7 +473,7 @@
                             </td>
                             <td>
                                 <label class="toggle-switch toggle-switch-sm" for="reviewCheckbox{{$review->id}}">
-                                    <input type="checkbox" onclick="status_form_alert('status-{{$review['id']}}','{{$review->status?translate('messages.you_want_to_hide_this_review_for_customer'):translate('messages.you_want_to_show_this_review_for_customer')}}', event)" class="toggle-switch-input" id="reviewCheckbox{{$review->id}}" {{$review->status?'checked':''}}>
+                                    <input type="checkbox" onclick="status_form_alert('status-{{$review['id']}}','{{$review->status?translate('messages.you_want_to_hide_this_review_for_customer_?'):translate('messages.you_want_to_show_this_review_for_customer_?')}}', event)" class="toggle-switch-input" id="reviewCheckbox{{$review->id}}" {{$review->status?'checked':''}}>
                                     <span class="toggle-switch-label">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
@@ -425,14 +518,14 @@
     function status_form_alert(id, message, e) {
         e.preventDefault();
         Swal.fire({
-            title: '{{translate('messages.are_you_sure')}}',
+            title: '{{translate('messages.Are_you_sure_?')}}',
             text: message,
             type: 'warning',
             showCancelButton: true,
             cancelButtonColor: 'default',
             confirmButtonColor: '#FC6A57',
-            cancelButtonText: 'No',
-            confirmButtonText: 'Yes',
+            cancelButtonText: '{{ translate('no') }}',
+            confirmButtonText: '{{ translate('yes') }}',
             reverseButtons: true
         }).then((result) => {
             if (result.value) {

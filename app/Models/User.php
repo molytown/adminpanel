@@ -25,6 +25,7 @@ class User extends Authenticatable
         'password',
         'login_medium',
         'ref_code',
+        'ref_by',
         'social_id'
     ];
 
@@ -52,6 +53,8 @@ class User extends Authenticatable
         'order_count' => 'integer',
         'wallet_balance' => 'float',
         'loyalty_point' => 'integer',
+        'ref_by' => 'integer',
+        'social_id' => 'integer',
     ];
 
     public function userinfo()
@@ -76,6 +79,15 @@ class User extends Authenticatable
     public function wallet_transaction()
     {
         return $this->hasMany(WalletTransaction::class);
+    }
+
+    public function category_visit_log()
+    {
+        return $this->morphedByMany(Category::class ,'visitor_log' );
+    }
+    public function restaurant_visit_log()
+    {
+        return $this->morphedByMany(Restaurant::class ,'visitor_log' );
     }
 
 }

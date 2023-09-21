@@ -98,7 +98,7 @@
     $company_mobile_logo = $logo;
     $company_links = json_decode(BusinessSetting::where('key','landing_page_links')->first()->value, true);
     $note_message = [
-      'add_fund_by_admin'=>translate('messages.Rewared by company admin',['company_name'=>ucwords($company_name)]),
+      'add_fund_by_admin'=>translate('messages.Rewared_by_company_admin',['company_name'=>ucwords($company_name)]),
       'loyalty_point' => translate('messages.loyalty_point_to_wallet'),
       'referrer'=> translate('messages.earned_from_referrer')
     ];
@@ -117,7 +117,7 @@
           <span style="font-weight: 400;font-size: 16px;line-height: 135.5%; color:#727272; margin-bottom:7px; display:block;">{{translate('messages.amount sucessfully credited to your wallet',['amount'=>$data->credit.' '.\App\CentralLogics\Helpers::currency_code()])}}</span>
           <span style="font-weight: 400;font-size: 14px;line-height: 135.5%;color: #182E4B;display:block; margin-bottom:10px;"><span style="font-weight: 700;font-size: 14px;line-height: 18.79px;color: #182E4B;color: #EF7822;">{{translate('messages.note')}}: </span>{{in_array($data->transaction_type,$note_message)?$note_message[$data->transaction_type]:translate('messages.add_fund_to_wallet')}} </span>
           <span style="font-weight: 700;font-size: 14px;line-height: 135.5%;color: #182E4B; display:block; margin-bottom: 5px;">{{translate('messages.dear')}} {{$data->user->f_name.' '.$data->user->l_name}}</span>
-          <span style="font-weight: 400;font-size: 12px;line-height: 135.5%;text-align: center;color: #182E4B;display:block; margin-bottom:34px;">{{translate('messages.Thank you for joinning with')}} <span style="color: #EF7822;">{{$company_name}}!</span></span>
+          <span style="font-weight: 400;font-size: 12px;line-height: 135.5%;text-align: center;color: #182E4B;display:block; margin-bottom:34px;">{{translate('messages.Thank_you_for_joinning_with')}} <span style="color: #EF7822;">{{$company_name}}!</span></span>
       </div>
 
       <div style="background-color: #F5F5F5; width: 90%;margin:auto;margin-top:30px;padding: 10px 20px 20px 5px;">
@@ -125,8 +125,8 @@
               <tbody>
                   <tr style="font-weight: 700;">
                       <th class="col" style="width:10%;">{{translate('messages.sl')}}</th>
-                      <th class="col" style="width:35%;">{{translate('messages.transaction')}} {{translate('messages.id')}}</th>
-                      <th class="col" style="width:20%">{{translate('messages.transaction')}} {{translate('messages.date')}}</th>
+                      <th class="col" style="width:35%;">{{translate('messages.transaction_id')}}</th>
+                      <th class="col" style="width:20%">{{translate('messages.transaction_date')}}</th>
                       <th class="col" style="width:15%">{{translate('messages.credit')}}</th>
                       <th class="col" style="width:15%">{{translate('messages.debit')}}</th>
                       <th class="col" style="width:15%;">{{translate('messages.balance')}}</th>
@@ -171,13 +171,13 @@
               </tr>
               <tr>
                   <th >
-                      <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;"><span style="margin-right:5px;"> <a href="tel:{{$company_phone}}" style="text-decoration: none; color: inherit;">{{translate('messages.phone')}}: {{$company_phone}}</a></span> <span><a href="mailto:{{$company_email}}" style="text-decoration: none; color: inherit;">{{translate('messages.email')}}: {{$company_email}}</a></span></div>
+                      <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;"><span style="margin-inline-end:5px;"> <a href="tel:{{$company_phone}}" style="text-decoration: none; color: inherit;">{{translate('messages.phone')}}: {{$company_phone}}</a></span> <span><a href="mailto:{{$company_email}}" style="text-decoration: none; color: inherit;">{{translate('messages.email')}}: {{$company_email}}</a></span></div>
                       @if ($company_links['web_app_url_status'])
                       <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;">
                           <a href="{{$company_links['web_app_url']}}" style="text-decoration: none; color: inherit;">{{$company_links['web_app_url']}}</a></div>
                       @endif
                       <div style="font-weight: 400;font-size: 11px;line-height: 22px;color: #242A30;">{{$company_address}}</div>
-                      <span style="font-weight: 400;font-size: 10px;line-height: 22px;color: #242A30;">{{translate('messages.All copy right reserved',['year'=>date('Y'),'title'=>$company_name])}}</span>
+                      <span style="font-weight: 400;font-size: 10px;line-height: 22px;color: #242A30;">{{translate('messages.All_copy_right_reserved',['year'=>date('Y'),'title'=>$company_name])}}</span>
                   </th>
               </tr>
 

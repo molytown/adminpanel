@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.customer_loyalty_point').' '.translate('messages.report'))
+@section('title',translate('messages.customer_loyalty_point_report'))
 
 @push('css_or_js')
 
@@ -15,7 +15,7 @@
                     <img src="{{asset('/public/assets/admin/img/payment.png')}}" alt="public">
                 </div>
                 <span>
-                    {{translate('messages.customer_loyalty_point')}} {{translate('messages.report')}}
+                    {{translate('messages.customer_loyalty_point_report')}}
                 </span>
             </h1>
         </div>
@@ -27,7 +27,7 @@
                     <span class="card-header-icon">
                         <i class="tio-filter-outlined"></i>
                     </span>
-                    <span>{{translate('messages.filter')}} {{translate('messages.options')}}</span>
+                    <span>{{translate('messages.filter_options')}}</span>
                 </h5>
             </div>
             <div class="card-body">
@@ -37,12 +37,12 @@
                             <div class="row">
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <input type="date" name="from" id="from_date" value="{{request()->get('from')}}" class="form-control h--45px" title="{{translate('messages.from')}} {{translate('messages.date')}}">
+                                        <input type="date" name="from" id="from_date" value="{{request()->get('from')}}" class="form-control h--45px" title="{{translate('messages.from_date')}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
                                     <div class="mb-3">
-                                        <input type="date" name="to" id="to_date" value="{{request()->get('to')}}" class="form-control h--45px" title="{{ucfirst(translate('messages.to'))}} {{translate('messages.date')}}">
+                                        <input type="date" name="to" id="to_date" value="{{request()->get('to')}}" class="form-control h--45px" title="{{translate('messages.to_date')}}">
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-12">
@@ -50,7 +50,7 @@
                                         @php
                                         $transaction_status=request()->get('transaction_type');
                                         @endphp
-                                        <select name="transaction_type" id="" class="form-control h--45px" title="{{translate('messages.select')}} {{translate('messages.transaction_type')}}">
+                                        <select name="transaction_type" id="" class="form-control h--45px" title="{{translate('messages.select_transaction_type')}}">
                                             <option value="">{{translate('messages.all')}}</option>
                                             <option value="point_to_wallet" {{isset($transaction_status) && $transaction_status=='point_to_wallet'?'selected':''}}>{{translate('messages.point_to_wallet')}}</option>
                                             <option value="order_place" {{isset($transaction_status) && $transaction_status=='order_place'?'selected':''}}>{{translate('messages.order_place')}}</option>
@@ -129,6 +129,40 @@
                     <span class="card-header-icon"><i class="tio-money"></i></span>
                     <span>{{translate('messages.transactions')}}</span>
                 </h4>
+                                <!-- Unfold -->
+                                <div class="hs-unfold mr-2">
+                                    <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                        data-hs-unfold-options='{
+                                                "target": "#usersExportDropdown",
+                                                "type": "css-animation"
+                                            }'>
+                                        <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                                    </a>
+
+                                    <div id="usersExportDropdown"
+                                        class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                                        <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                        <a id="export-excel" class="dropdown-item" href="{{route('admin.customer.loyalty-point.export', ['type'=>'excel',request()->getQueryString()])}}">
+                                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                                src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                                alt="Image Description">
+                                            {{ translate('messages.excel') }}
+                                        </a>
+                                        <a id="export-csv" class="dropdown-item" href="{{route('admin.customer.loyalty-point.export', ['type'=>'csv',request()->getQueryString()])}}">
+                                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                                src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                                alt="Image Description">
+                                            .{{ translate('messages.csv') }}
+                                        </a>
+                                        {{-- <a id="export-pdf" class="dropdown-item" href="javascript:;">
+                                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                                src="{{ asset('public/assets/admin') }}/svg/components/pdf.svg"
+                                                alt="Image Description">
+                                            {{ translate('messages.pdf') }}
+                                        </a> --}}
+                                    </div>
+                                </div>
+                                <!-- End Unfold -->
             </div>
             <!-- End Header -->
 
@@ -140,7 +174,7 @@
                         <thead class="thead-light">
                             <tr>
                                 <th>{{ translate('messages.sl') }}</th>
-                                <th>{{translate('messages.transaction')}} {{translate('messages.id')}}</th>
+                                <th>{{translate('messages.transaction_id')}}</th>
                                 <th>{{translate('messages.Customer')}}</th>
                                 <th>{{translate('messages.credit')}}</th>
                                 <th>{{translate('messages.debit')}}</th>

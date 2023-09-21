@@ -15,9 +15,8 @@
             $tax = isset($restaurant_data) ? $restaurant_data->tax : 0;
             $discount = 0;
             $discount_type = 'amount';
-            $zone_currency= $restaurant_data->zone->zone_currency ?? null;
-
             $discount_on_product = 0;
+            $variation_price  = 0;
             ?>
             @if (session()->has('cart') && count(session()->get('cart')) > 0)
                 <?php
@@ -33,7 +32,8 @@
                 @foreach (session()->get('cart') as $key => $cartItem)
                     @if (is_array($cartItem))
                         <?php
-                        $product_subtotal = $cartItem['price'] * $cartItem['quantity'];
+                        $variation_price += $cartItem['variation_price'];
+                        $product_subtotal = ($cartItem['price'] * $cartItem['quantity'] );
                         $discount_on_product += $cartItem['discount'] * $cartItem['quantity'];
                         $subtotal += $product_subtotal;
                         $addon_price += $cartItem['addon_price'];
@@ -53,11 +53,11 @@
                             <td class="align-items-center">
                                 <input type="number" data-key="{{ $key }}"
                                      value="{{ $cartItem['quantity'] }}"
-                                    min="1" onkeyup="updateQuantity(event)" class="rounded border border-secondary initial-48">
+                                    min="1"  max="{{$cartItem['maximum_cart_quantity']?? '9999999999'}}" onkeyup="updateQuantity(event)" class="rounded border border-secondary initial-48">
                             </td>
                             <td class="px-0 py-1 text-center">
                                 <div class="btn">
-                                    {{ \App\CentralLogics\Helpers::format_currency($product_subtotal,$zone_currency) }}
+                                    {{ \App\CentralLogics\Helpers::format_currency($product_subtotal) }}
                                 </div> <!-- price-wrap .// -->
                             </td>
                             <td class="align-items-center">
@@ -80,9 +80,10 @@ if(session()->get('address') && count(session()->get('address'))>0){
 }else{
     $delivery_fee = 0;
 }
-$total = $subtotal + $addon_price;
+$total = $subtotal + $addon_price ;
 
 $total = $total - $discount_on_product;
+$tax_included = \App\Models\BusinessSetting::where(['key'=>'tax_included'])->first() ?  \App\Models\BusinessSetting::where(['key'=>'tax_included'])->first()->value : 0;
 $total_tax_amount = $tax > 0 ? ($total * $tax) / 100 : 0;
 $total = $total + $delivery_fee;
 ?>
@@ -90,27 +91,35 @@ $total = $total + $delivery_fee;
     <dl class="row">
 
         <dt class="col-6">{{ translate('messages.addon') }}:</dt>
-        <dd class="col-6 text-right">{{ \App\CentralLogics\Helpers::format_currency($addon_price,$zone_currency) }}</dd>
+        <dd class="col-6 text-right">{{ \App\CentralLogics\Helpers::format_currency($addon_price) }}</dd>
 
-        <dt class="col-6">{{ translate('messages.subtotal') }}:</dt>
-        <dd class="col-6 text-right">{{ \App\CentralLogics\Helpers::format_currency($subtotal + $addon_price,$zone_currency) }}</dd>
+        <dt class="col-6">{{ translate('messages.subtotal') }}
+            @php($tax_a=$total_tax_amount)
+            @if ($tax_included ==  1)
+            ({{ translate('messages.TAX_Included') }})
+            @php($tax_a=0)
+            @endif
+            :</dt>
+        <dd class="col-6 text-right">{{ \App\CentralLogics\Helpers::format_currency($subtotal + $addon_price) }}</dd>
 
         <dt class="col-6">{{ translate('messages.discount') }} :</dt>
-        <dd class="col-6 text-right">-{{ \App\CentralLogics\Helpers::format_currency(round($discount_on_product, 2),$zone_currency) }}</dd>
+        <dd class="col-6 text-right">-{{ \App\CentralLogics\Helpers::format_currency(round($discount_on_product, 2)) }}</dd>
 
         <dt class="col-6">{{ translate('messages.delivery_fee') }} :</dt>
         <dd class="col-6 text-right" id="delivery_price">
-            {{ \App\CentralLogics\Helpers::format_currency(round($delivery_fee, 2),$zone_currency) }}</dd>
-
+            {{ \App\CentralLogics\Helpers::format_currency($delivery_fee, 2) }}</dd>
+        @if ($tax_included !=  1)
         <dt class="col-6">{{ translate('messages.tax') }} : </dt>
         <dd class="col-6 text-right">
-            {{ \App\CentralLogics\Helpers::format_currency(round($total_tax_amount, 2),$zone_currency) }}
+           + {{ \App\CentralLogics\Helpers::format_currency(round($total_tax_amount, 2)) }}
         </dd>
+
+    @endif
         <dt class="col-6 pr-0"><hr class="mt-0" /></dt>
         <dt class="col-6 pl-0"><hr class="mt-0" /></dt>
         <dt class="col-6">{{ translate('Total') }}: </dt>
         <dd class="col-6 text-right h4 b">
-            {{ \App\CentralLogics\Helpers::format_currency(round($total + $total_tax_amount, 2),$zone_currency) }} </dd>
+            {{ \App\CentralLogics\Helpers::format_currency(round($total + $tax_a, 2)) }} </dd>
     </dl>
     <!-- Static Data -->
     <form action="{{ route('admin.pos.order') }}?restaurant_id={{ isset($restaurant_data) ? $restaurant_data->id : '' }}"
@@ -118,23 +127,17 @@ $total = $total + $delivery_fee;
     @csrf
     <input type="hidden" name="user_id" id="customer_id">
     <div class="pos--payment-options mt-3 mb-3">
-        <h5 class="mb-3">{{ translate('Payment Method') }}</h5>
+        <h5 class="mb-3">{{ translate('Payment_Method') }}</h5>
         <ul>
             @php($cod=\App\CentralLogics\Helpers::get_business_settings('cash_on_delivery'))
             @if ($cod['status'])
             <li>
                 <label>
                     <input type="radio" name="type" value="cash" hidden checked>
-                    <span>{{ translate('Cash On Delivery') }}</span>
+                    <span>{{ translate('Cash_On_Delivery') }}</span>
                 </label>
             </li>
             @endif
-            {{-- <li>
-                <label>
-                    <input type="radio" name="type" value="card" hidden>
-                    <span>{{ translate('Card') }}</span>
-                </label>
-            </li> --}}
             @php($wallet=\App\CentralLogics\Helpers::get_business_settings('wallet_status'))
             @if ($wallet)
             <li>
@@ -146,28 +149,13 @@ $total = $total + $delivery_fee;
             @endif
         </ul>
     </div>
-    {{-- <div class="mt-4 d-flex justify-content-between pos--payable-amount">
-        <label class="m-0">{{ translate('Paid Amount') }} :</label>
-        <div>
-            <span  data-toggle="modal" data-target="#insertPayableAmount" class="text-body"><i class="tio-edit"></i></span>
-            <span>{{ \App\CentralLogics\Helpers::format_currency($paid) }}</span>
-            <input type="hidden" name="amount" value="{{ $paid }}">
-        </div>
-    </div>
-    <div class="mt-4 d-flex justify-content-between pos--payable-amount">
-        <label class="m-0">{{ translate('Change Amount') }} :</label>
-        <div>
-            <span>{{ \App\CentralLogics\Helpers::format_currency($change) }}</span>
-            <input type="hidden" name="amount" value="{{ $change }}">
-        </div>
-    </div> --}}
     <!-- Static Data -->
     <div class="row button--bottom-fixed g-1 bg-white">
         <div class="col-sm-6">
             <button type="submit" class="btn  btn--primary btn-sm btn-block">{{ translate('messages.place_order') }} </button>
         </div>
         <div class="col-sm-6">
-            <a href="#" class="btn btn--reset btn-sm btn-block" onclick="emptyCart()">{{  translate('Clear Cart') }}</a>
+            <a href="#" class="btn btn--reset btn-sm btn-block" onclick="emptyCart()">{{  translate('Clear_Cart') }}</a>
         </div>
     </div>
     </form>
@@ -214,7 +202,7 @@ $total = $total + $delivery_fee;
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header border-bottom py-3 bg-light">
-                <h5 class="modal-title">{{ translate('Update tax') }}</h5>
+                <h5 class="modal-title">{{ translate('Update_tax') }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -241,7 +229,7 @@ $total = $total + $delivery_fee;
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-light border-bottom py-3">
-                <h5 class="modal-title flex-grow-1 text-center">{{ translate('Delivery Information') }}</h5>
+                <h5 class="modal-title flex-grow-1 text-center">{{ translate('Delivery_Information') }}</h5>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -264,29 +252,29 @@ $total = $total + $delivery_fee;
                                 for="">{{ translate('messages.contact_person_name') }}<span
                                             class="input-label-secondary text-danger">*</span></label>
                             <input type="text" class="form-control" name="contact_person_name"
-                                value="{{ $old ? $old['contact_person_name'] : '' }}" placeholder="{{ translate('messages.Ex :') }} Jhone">
+                                value="{{ $old ? $old['contact_person_name'] : '' }}" placeholder="{{ translate('messages.Ex:_Jhon') }} ">
                         </div>
                         <div class="col-md-6">
                             <label class="input-label"
                                 for="">{{ translate('Contact Number') }}<span
                                             class="input-label-secondary text-danger">*</span></label>
                             <input type="tel" class="form-control" name="contact_person_number"
-                                value="{{ $old ? $old['contact_person_number'] : '' }}"  placeholder="{{ translate('messages.Ex :') }} +3264124565">
+                                value="{{ $old ? $old['contact_person_number'] : '' }}"  placeholder="{{ translate('messages.Ex:_+3264124565') }} ">
                         </div>
                         <div class="col-md-4">
                             <label class="input-label" for="">{{ translate('messages.Road') }}<span
                                             class="input-label-secondary text-danger">*</span></label>
-                            <input type="text" class="form-control" name="road" value="{{ $old ? $old['road'] : '' }}"  placeholder="{{ translate('messages.Ex :') }} 4th">
+                            <input type="text" class="form-control" name="road" value="{{ $old ? $old['road'] : '' }}"  placeholder="{{ translate('messages.Ex:_4th') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="input-label" for="">{{ translate('messages.House') }}<span
                                             class="input-label-secondary text-danger">*</span></label>
-                            <input type="text" class="form-control" name="house" value="{{ $old ? $old['house'] : '' }}" placeholder="{{ translate('messages.Ex :') }} 45/C">
+                            <input type="text" class="form-control" name="house" value="{{ $old ? $old['house'] : '' }}" placeholder="{{ translate('messages.Ex_:45/C') }}">
                         </div>
                         <div class="col-md-4">
                             <label class="input-label" for="">{{ translate('messages.Floor') }}<span
                                             class="input-label-secondary text-danger">*</span></label>
-                            <input type="text" class="form-control" name="floor" value="{{ $old ? $old['floor'] : '' }}"  placeholder="{{ translate('messages.Ex :') }} 1A">
+                            <input type="text" class="form-control" name="floor" value="{{ $old ? $old['floor'] : '' }}"  placeholder="{{ translate('messages.Ex:1A') }}">
                         </div>
                         <div class="col-md-6">
                             <label class="input-label" for="">{{ translate('messages.longitude') }}<span
@@ -302,15 +290,16 @@ $total = $total + $delivery_fee;
                         </div>
                         <div class="col-md-12">
                             <label class="input-label" for="">{{ translate('messages.address') }}</label>
-                            <textarea name="address" class="form-control" cols="30" rows="3" placeholder="{{ translate('messages.Ex :') }} address">{{ $old ? $old['address'] : '' }}</textarea>
+                            <textarea name="address" class="form-control" cols="30" rows="3" placeholder="{{ translate('messages.Ex:_address') }} ">{{ $old ? $old['address'] : '' }}</textarea>
                         </div>
                         <div class="col-12">
                             <div class="d-flex justify-content-between">
                                 <span class="text-primary">
-                                    {{ translate('* pin the address in the map to calculate delivery fee') }}
+                                    {{ translate('*_pin_the_address_in_the_map_to_calculate_delivery_fee') }}
                                 </span>
                                 <div>
-                                    <span>{{ translate('Delivery fee') }} :</span>
+                                    <input type="hidden" name="distance" id="distance">
+                                    <span>{{ translate('Delivery_fee') }} :</span>
                                     <input type="hidden" name="delivery_fee" id="delivery_fee" value="{{ $old ? $old['delivery_fee'] : '' }}">
                                     <strong>{{ $old ? $old['delivery_fee'] : 0 }} {{ \App\CentralLogics\Helpers::currency_symbol() }}</strong>
                                 </div>
@@ -324,7 +313,7 @@ $total = $total + $delivery_fee;
                     <div class="col-md-12">
                         <div class="btn--container justify-content-end">
                             <button class="btn btn-sm btn--primary w-100" type="button" onclick="deliveryAdressStore()">
-                                {{  translate('Update') }} {{ translate('messages.Delivery address') }}
+                                {{  translate('Update_Delivery_Address') }}
                             </button>
                         </div>
                     </div>
@@ -334,44 +323,6 @@ $total = $total + $delivery_fee;
     </div>
 </div>
 
-{{-- <div class="modal fade" id="insertPayableAmount" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-light border-bottom py-3">
-                <h5 class="modal-title">{{ translate('messages.payment') }}</h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id='payable_store_amount'>
-                    @csrf
-                    <div class="row">
-                        <div class="form-group col-12">
-                            <label class="input-label"
-                                for="">{{ translate('messages.amount') }}({{ \App\CentralLogics\Helpers::currency_symbol() }})</label>
-                            <input type="number" class="form-control" name="paid" min="0" step="0.01" value="{{ $paid }}">
-                        </div>
-                    </div>
-                    <div class="form-group col-12 mb-0">
-                        <div class="btn--container justify-content-end">
-                            <button class="btn btn-sm btn--primary" type="button" onclick="payableAmount()">
-                                {{ translate('messages.submit') }}
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div> --}}
-
-{{-- <script>
-    $('#delivery_address').on('shown.bs.collapse', function() {
-        console.log('delivery_address clicked');
-        initMap();
-    });
-</script> --}}
 <script>
     var form = document.getElementById('order_place');
     form.addEventListener('submit', (event) => {
@@ -384,13 +335,4 @@ $total = $total + $delivery_fee;
         }
         form.submit();
     })
-            // $('#order_place').submit(function(event) {
-            // event.preventDefault();
-            //     if($('#customer').val())
-            //     {
-            //         console.log($('#customer').val());
-            //         $(this).append('<input type="hidden" name="user_id" value="'+$('#customer').val()+'" /> ');
-            //     }
-            //     return true;
-            // });
 </script>

@@ -22,46 +22,11 @@
         </h1>
         <!-- End Page Header -->
         <!-- Nav Scroller -->
-        <div class="js-nav-scroller hs-nav-scroller-horizontal">
-            <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'index') }}">{{ translate('messages.text') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'links') }}"
-                        aria-disabled="true">{{ translate('messages.button_links') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'speciality') }}"
-                        aria-disabled="true">{{ translate('messages.speciality') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'testimonial') }}"
-                        aria-disabled="true">{{ translate('messages.testimonial') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'feature') }}"
-                        aria-disabled="true">{{ translate('messages.feature') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'image') }}"
-                        aria-disabled="true">{{ translate('messages.image') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'backgroundChange') }}"
-                        aria-disabled="true">{{ translate('messages.header_footer_bg') }}</a>
-                </li>
-            </ul>
-            <!-- End Nav -->
-        </div>
+         <div class="js-nav-scroller hs-nav-scroller-horizontal">
+                <!-- Nav -->
+                @include('admin-views.business-settings.landing-page-settings.top-menu-links.top-menu-links')
+                <!-- End Nav -->
+            </div>
         <!-- End Nav Scroller -->
     </div>
         <!-- End Page Header -->
@@ -101,7 +66,7 @@
                             <div class="custom-file mt-2">
                                 <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                             </div>
                         </div>
                     </div>

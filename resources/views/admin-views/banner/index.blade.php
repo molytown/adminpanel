@@ -9,7 +9,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title"><i class="tio-add-circle-outlined"></i> {{translate('messages.add')}} {{translate('messages.new')}} {{translate('messages.banner')}}</h1>
+                    <h1 class="page-header-title"><i class="tio-add-circle-outlined"></i> {{translate('messages.add_new_banner')}}</h1>
                 </div>
             </div>
         </div>
@@ -19,18 +19,78 @@
                 <div class="card">
                     <div class="card-body">
                         <form action="{{route('admin.banner.store')}}" method="post" id="banner_form">
+                            @php($language=\App\Models\BusinessSetting::where('key','language')->first())
+                            @php($language = $language->value ?? null)
+                            @php($default_lang = str_replace('_', '-', app()->getLocale()))
                             @csrf
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.title')}}</label>
-                                        <input type="text" name="title" class="form-control" placeholder="{{translate('messages.new_banner')}}" required>
+                                    @if ($language)
+                                    <ul class="nav nav-tabs mb-3 border-0">
+                                        <li class="nav-item">
+                                            <a class="nav-link lang_link active"
+                                            href="#"
+                                            id="default-link">{{translate('messages.default')}}</a>
+                                        </li>
+                                        @foreach (json_decode($language) as $lang)
+                                            <li class="nav-item">
+                                                <a class="nav-link lang_link"
+                                                    href="#"
+                                                    id="{{ $lang }}-link">{{ \App\CentralLogics\Helpers::get_language_name($lang) . '(' . strtoupper($lang) . ')' }}</a>
+                                            </li>
+                                        @endforeach
+                                    </ul>
+                                    <div class="lang_form" id="default-form">
+                                        <div class="form-group">
+                                            <label class="input-label"
+                                                for="default_title">{{ translate('messages.title') }}
+                                                (Default)
+                                            </label>
+                                            <input type="text" name="title[]" id="default_title"
+                                                class="form-control" placeholder="{{ translate('messages.new_banner') }}"
+
+                                                oninvalid="document.getElementById('en-link').click()">
+                                        </div>
+                                        <input type="hidden" name="lang[]" value="default">
                                     </div>
+                                    @foreach (json_decode($language) as $lang)
+                                    <div class="d-none lang_form"
+                                        id="{{ $lang }}-form">
+                                        <div class="form-group">
+                                            <label class="input-label"
+                                                for="{{ $lang }}_title">{{ translate('messages.title') }}
+                                                ({{ strtoupper($lang) }})
+                                            </label>
+                                            <input type="text" name="title[]" id="{{ $lang }}_title"
+                                                class="form-control" placeholder="{{ translate('messages.new_banner') }}"
+                                                oninvalid="document.getElementById('en-link').click()">
+                                        </div>
+                                        <input type="hidden" name="lang[]" value="{{ $lang }}">
+                                    </div>
+                                @endforeach
+                            @else
+                            <div id="default-form">
+                                <div class="form-group">
+                                    <label class="input-label"
+                                        for="exampleFormControlInput1">{{ translate('messages.title') }} ({{ translate('messages.default') }})</label>
+                                    <input type="text" name="title[]" class="form-control"
+                                        placeholder="{{ translate('messages.new_banner') }}" >
+                                </div>
+                                <input type="hidden" name="lang[]" value="default">
+                            </div>
+                        @endif
+
+
+
+
+
+
+
                                     <div class="form-group">
                                         <label class="input-label" for="title">{{translate('messages.zone')}}</label>
                                         <select name="zone_id" id="zone" class="form-control js-select2-custom" onchange="getRequest('{{url('/')}}/admin/food/get-foods?zone_id='+this.value,'choice_item')">
                                             <option disabled selected value="">---{{translate('messages.select')}}---</option>
-                                            @php($zones=\App\Models\Zone::active()->get())
+                                            @php($zones=\App\Models\Zone::active()->get(['id','name']))
                                             @foreach($zones as $zone)
                                                 @if(isset(auth('admin')->user()->zone_id))
                                                     @if(auth('admin')->user()->zone_id == $zone->id)
@@ -43,30 +103,30 @@
                                         </select>
                                     </div>
                                     <div class="form-group">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.banner')}} {{translate('messages.type')}}</label>
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.banner_type')}}</label>
                                         <select name="banner_type" id="banner_type" class="form-control" onchange="banner_type_change(this.value)">
-                                            <option value="restaurant_wise">{{translate('messages.restaurant')}} {{translate('messages.wise')}}</option>
-                                            <option value="item_wise">{{translate('messages.food')}} {{translate('messages.wise')}}</option>
+                                            <option value="restaurant_wise">{{translate('messages.restaurant_wise')}}</option>
+                                            <option value="item_wise">{{translate('messages.food_wise')}}</option>
                                         </select>
                                     </div>
                                     <div class="form-group" id="restaurant_wise">
                                         <label class="input-label" for="exampleFormControlSelect1">{{translate('messages.restaurant')}}<span
                                                 class="input-label-secondary"></span></label>
                                         <select name="restaurant_id" class="js-data-example-ajax form-control"  title="Select Restaurant">
-                                            <option selected disabled>{{ translate('Select') }}</option>
+                                            <option selected disabled>{{ translate('messages.Select') }}</option>
                                         </select>
                                     </div>
                                     <div class="form-group" id="item_wise">
-                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.select')}} {{translate('messages.food')}}</label>
+                                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.select_food')}}</label>
                                         <select name="item_id" id="choice_item" class="form-control js-select2-custom" placeholder="{{translate('messages.select_food')}}">
-                                            <option selected disabled>{{ translate('Select Restaurant') }}</option>
+                                            <option selected disabled>{{ translate('Select_Restaurant') }}</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="h-100 d-flex flex-column justify-content-center">
                                         <div class="form-group mt-auto">
-                                            <label class="d-block text-center">{{translate('messages.campaign')}} {{translate('messages.image')}} <small class="text-danger">* ( {{translate('messages.ratio')}} 1000x300 )</small></label>
+                                            <label class="d-block text-center">{{translate('messages.campaign_image')}} <small class="text-danger">* ( {{translate('messages.ratio_1000x300')}}  )</small></label>
                                         </div>
                                         <div class="form-group mt-auto">
                                             <center>
@@ -78,7 +138,7 @@
                                             <div class="custom-file">
                                                 <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                                     accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                                <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                             </div>
                                         </div>
                                     </div>
@@ -97,12 +157,12 @@
             <div class="col-sm-12 col-lg-12 mb-3 mb-lg-2">
                 <div class="card">
                     <div class="card-header">
-                        <h5 class="card-title">{{translate('messages.banner')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$banners->count()}}</span></h5>
+                        <h5 class="card-title">{{translate('messages.banner_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$banners->count()}}</span></h5>
                         <form id="search-form">
                             @csrf
                             <!-- Search -->
                             <div class="input--group input-group input-group-merge input-group-flush">
-                                <input id="datatableSearch" type="search" name="search" class="form-control" placeholder="{{ translate('Ex : Search by title ...') }}" aria-label="{{translate('messages.search_here')}}">
+                                <input id="datatableSearch" type="search" name="search" class="form-control" placeholder="{{ translate('Ex_:_Search_by_title_...') }}" aria-label="{{translate('messages.search_here')}}">
                                 <button type="submit" class="btn btn--secondary">
                                     <i class="tio-search"></i>
                                 </button>
@@ -160,9 +220,9 @@
                                     </td>
                                     <td>
                                         <div class="btn--container justify-content-center">
-                                            <a class="btn btn-sm btn--primary btn-outline-primary action-btn" href="{{route('admin.banner.edit',[$banner['id']])}}"title="{{translate('messages.edit')}} {{translate('messages.banner')}}"><i class="tio-edit"></i>
+                                            <a class="btn btn-sm btn--primary btn-outline-primary action-btn" href="{{route('admin.banner.edit',[$banner['id']])}}"title="{{translate('messages.edit_banner')}}"><i class="tio-edit"></i>
                                             </a>
-                                            <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:" onclick="form_alert('banner-{{$banner['id']}}','{{translate('Want to delete this banner')}}')" title="{{translate('messages.delete')}} {{translate('messages.banner')}}"><i class="tio-delete-outlined"></i>
+                                            <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:" onclick="form_alert('banner-{{$banner['id']}}','{{translate('messages.Want_to_delete_this_banner')}}')" title="{{translate('messages.delete_banner')}}"><i class="tio-delete-outlined"></i>
                                             </a>
                                             <form action="{{route('admin.banner.delete',[$banner['id']])}}"
                                                         method="post" id="banner-{{$banner['id']}}">
@@ -178,7 +238,7 @@
                         <div class="empty--data">
                             <img src="{{asset('/public/assets/admin/img/empty.png')}}" alt="public">
                             <h5>
-                                {{translate('no_data_found')}}
+                                {{translate('messages.no_data_found')}}
                             </h5>
                         </div>
                         @endif
@@ -254,7 +314,7 @@
 
         $('.js-data-example-ajax').select2({
             ajax: {
-                url: '{{url('/')}}/admin/vendor/get-restaurants',
+                url: '{{url('/')}}/admin/restaurant/get-restaurants',
                 data: function (params) {
                     return {
                         q: params.term, // search term
@@ -291,7 +351,7 @@
                 language: {
                     zeroRecords: '<div class="text-center p-4">' +
                     '<img class="w-7rem mb-3" src="{{asset('public/assets/admin/svg/illustrations/sorry.svg')}}" alt="Image Description">' +
-                    '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                    '<p class="mb-0">{{ translate('messages.No_data_to_show') }}</p>' +
                     '</div>'
                 }
             });
@@ -359,7 +419,7 @@
                             });
                         }
                     } else {
-                        toastr.success('{{ translate('Banner uploaded successfully!') }}', {
+                        toastr.success('{{ translate('messages.Banner_uploaded_successfully!') }}', {
                             CloseButton: true,
                             ProgressBar: true
                         });
@@ -407,4 +467,25 @@
             $('#viewer').attr('src','{{asset('public/assets/admin/img/900x400/img1.jpg')}}');
         })
     </script>
+                <script>
+                    $(".lang_link").click(function(e){
+                        e.preventDefault();
+                        $(".lang_link").removeClass('active');
+                        $(".lang_form").addClass('d-none');
+                        $(this).addClass('active');
+
+                        let form_id = this.id;
+                        let lang = form_id.substring(0, form_id.length - 5);
+                        console.log(lang);
+                        $("#"+lang+"-form").removeClass('d-none');
+                        if(lang == '{{$default_lang}}')
+                        {
+                            $("#from_part_2").removeClass('d-none');
+                        }
+                        else
+                        {
+                            $("#from_part_2").addClass('d-none');
+                        }
+                    })
+                </script>
 @endpush

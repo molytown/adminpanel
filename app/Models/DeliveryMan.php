@@ -13,6 +13,7 @@ class DeliveryMan extends Authenticatable
     use Notifiable;
 
     protected $casts = [
+        'vehicle_id' => 'integer',
         'zone_id' => 'integer',
         'status'=>'boolean',
         'active'=>'integer',
@@ -20,6 +21,8 @@ class DeliveryMan extends Authenticatable
         'earning'=>'float',
         'restaurant_id'=>'integer',
         'current_orders'=>'integer',
+        'vehicle_id'=>'integer',
+        'shift_id' => 'integer',
     ];
 
     protected $hidden = [
@@ -31,10 +34,22 @@ class DeliveryMan extends Authenticatable
     {
         return $this->hasOne(DeliveryManWallet::class);
     }
+    public function vehicle()
+    {
+        return $this->belongsTo(Vehicle::class);
+    }
+    public function restaurant()
+    {
+        return $this->belongsTo(Restaurant::class,'restaurant_id');
+    }
 
     public function userinfo()
     {
         return $this->hasOne(UserInfo::class,'deliveryman_id', 'id');
+    }
+    public function dm_shift()
+    {
+        return $this->belongsTo(Shift::class,'shift_id', 'id');
     }
 
     public function orders()
@@ -44,7 +59,7 @@ class DeliveryMan extends Authenticatable
 
     public function time_logs()
     {
-        return $this->hasMany(TimeLog::class, 'user_id', 'id');
+        return $this->hasMany(TimeLog::class, 'user_id', 'id')->with('shift');
     }
 
     public function order_transaction()
@@ -127,5 +142,14 @@ class DeliveryMan extends Authenticatable
     protected static function booted()
     {
         static::addGlobalScope(new ZoneScope);
+    }
+    public function incentives()
+    {
+        return $this->hasMany(IncentiveLog::class);
+    }
+
+    public function incentive()
+    {
+        return $this->hasOne(IncentiveLog::class)->whereDate('date', now()->format('Y-m-d'));
     }
 }

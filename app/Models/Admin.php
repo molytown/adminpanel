@@ -9,6 +9,8 @@ class Admin extends Authenticatable
 {
     use Notifiable;
 
+    protected $fillable = ['remember_token'];
+
     public function role(){
         return $this->belongsTo(AdminRole::class,'role_id');
     }

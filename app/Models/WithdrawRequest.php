@@ -11,11 +11,23 @@ class WithdrawRequest extends Model
     use HasFactory;
 
     protected $casts = [
-        'amount'=>'float'
+        'amount'=>'float',
+        'delivery_man_id'=>'integer',
+        'withdrawal_method_id'=>'integer',
+        'approved'=>'integer',
+        'admin_id'=>'integer',
+        'vendor_id'=>'integer',
     ];
 
     public function vendor(){
         return $this->belongsTo(Vendor::class);
+    }
+    public function method(){
+        return $this->belongsTo(WithdrawalMethod::class,'withdrawal_method_id');
+    }
+
+    public function deliveryman(){
+        return $this->belongsTo(DeliveryMan::class);
     }
 
     protected static function booted()

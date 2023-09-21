@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('update'))
+@section('title',translate('addon_update'))
 
 @push('css_or_js')
 
@@ -17,7 +17,7 @@
                             <img src="{{asset('/public/assets/admin/img/addon.png')}}" alt="public">
                         </div>
                         <span>
-                            {{translate('messages.addon')}} {{translate('messages.update')}}
+                            {{translate('messages.addon_update')}}
                         </span>
                     </h2>
                 </div>
@@ -30,14 +30,16 @@
                     @csrf
                     @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                     @php($language = $language->value ?? null)
-                    @php($default_lang = 'en')
+                    @php($default_lang = str_replace('_', '-', app()->getLocale()))
 
                     @if($language)
-                        @php($default_lang = json_decode($language)[0])
                         <ul class="nav nav-tabs mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link lang_link active " href="#" id="default-link">{{ translate('Default')}}</a>
+                            </li>
                             @foreach(json_decode($language) as $lang)
                                 <li class="nav-item">
-                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                    <a class="nav-link lang_link " href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                                 </li>
                             @endforeach
                         </ul>
@@ -45,6 +47,11 @@
                     <div class="row">
                         <div class="col-sm-6 col-md-4">
                         @if ($language)
+                        <div class="form-group lang_form" id="default-form">
+                            <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
+                            <input type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_addon')}}" value="{{ $addon?->getRawOriginal('name') }}"  maxlength="191">
+                        </div>
+                        <input type="hidden" name="lang[]" value="default">
                             @foreach(json_decode($language) as $lang)
                                 <?php
                                     if(count($addon['translations'])){
@@ -57,25 +64,25 @@
                                         }
                                     }
                                 ?>
-                                <div class="form-group {{$lang != $default_lang ? 'd-none':'fadeIn'}} lang_form" id="{{$lang}}-form">
+                                <div class="form-group d-none lang_form" id="{{$lang}}-form">
                                     <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{strtoupper($lang)}})</label>
-                                    <input type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_addon')}}" maxlength="191" value="{{$lang==$default_lang?$addon['name']:($translate[$lang]['name']??'')}}" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
+                                    <input type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_addon')}}" maxlength="191" value="{{$translate[$lang]['name'] ??''}}" oninvalid="document.getElementById('en-link').click()">
                                 </div>
                                 <input type="hidden" name="lang[]" value="{{$lang}}">
                             @endforeach
                         @else
-                            <div class="form-group">
+                            <div class="form-group lang_form" id="default-form">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                                <input type="text" name="name" class="form-control" placeholder="{{translate('messages.new_addon')}}" value="{{ $attribute['name'] }}" required maxlength="191">
+                                <input type="text" name="name[]" class="form-control" placeholder="{{translate('messages.new_addon')}}" value="{{ $addon['name'] }}"  maxlength="191">
                             </div>
-                            <input type="hidden" name="lang[]" value="{{$lang}}">
+                            <input type="hidden" name="lang[]" value="default">
                         @endif
                         </div>
                         <div class="col-sm-6 col-md-4">
                             <div class="form-group">
                                 <label class="input-label" for="exampleFormControlSelect1">{{translate('messages.restaurant')}}<span
                                         class="input-label-secondary"></span></label>
-                                <select name="restaurant_id" id="restaurant_id" class="form-control  js-data-example-ajax"  data-placeholder="{{translate('messages.select')}} {{translate('messages.restaurant')}}" required oninvalid="this.setCustomValidity('{{translate('messages.please_select_restaurant')}}')">
+                                <select name="restaurant_id" id="restaurant_id" class="form-control  js-data-example-ajax"  data-placeholder="{{translate('messages.select_restaurant')}}" required oninvalid="this.setCustomValidity('{{translate('messages.please_select_restaurant')}}')">
                                 @if($addon->restaurant)
                                 <option value="{{$addon->restaurant_id}}" selected="selected">{{$addon->restaurant->name}}</option>
                                 @endif
@@ -126,7 +133,7 @@
 <script>
     $('.js-data-example-ajax').select2({
         ajax: {
-            url: '{{url('/')}}/admin/vendor/get-restaurants',
+            url: '{{url('/')}}/admin/restaurant/get-restaurants',
             data: function (params) {
                 return {
                     q: params.term, // search term

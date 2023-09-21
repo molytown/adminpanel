@@ -11,7 +11,7 @@
                 <!-- List Dot -->
                 <ul class="list-inline list-separator d-flex flex-wrap justify-content-evenly justify-content-md-end flex-grow-1">
                     <li class="list-inline-item py-1">
-                        <a class="list-separator-link" href="{{route('admin.business-settings.business-setup')}}">{{translate('messages.business')}} {{translate('messages.setup')}} <i class="tio-settings-outlined ml-xl-2"></i></a>
+                        <a class="list-separator-link" href="{{route('admin.business-settings.business-setup')}}">{{translate('messages.business_setup')}} <i class="tio-settings-outlined ml-xl-2"></i></a>
                     </li>
 
                     <li class="list-inline-item py-1">
@@ -24,14 +24,14 @@
 
                     <li class="list-inline-item py-1">
                         <a class="list-separator-link" href="{{route('admin.dashboard')}}">
-                               {{translate('messages.home')}}
+                            {{translate('messages.home')}}
                             <i class="tio-home ml-xl-2"></i>
                         </a>
                     </li>
 
 
                     <li class="list-inline-item py-1">
-                        <span class="badge app--version">App Version {{env('SOFTWARE_VERSION')}}</span>
+                        <span class="badge app--version">{{ translate('software_version')  }} {{env('SOFTWARE_VERSION')}}</span>
                     </li>
 
                 </ul>

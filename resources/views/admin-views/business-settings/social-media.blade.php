@@ -3,7 +3,17 @@
 @section('title', translate('messages.Social Media'))
 
 @push('css_or_js')
-
+<style>
+    p:first-letter{
+  text-transform: uppercase;
+}
+.uppercase{
+  text-transform: capitalize;
+}
+strong{
+  text-transform: capitalize;
+}
+</style>
 @endpush
 
 @section('content')
@@ -46,9 +56,13 @@
                                 <div class="col-md-6">
                                     <div class="form-group">
                                         <input type="hidden" id="id">
-                                        <label for="link" class="{{Session::get('direction') === "rtl" ? 'mr-1' : ''}}">{{ translate('messages.social_media_link')}}</label>
+                                        <label for="link" class="ml-1">{{ translate('messages.social_media_link')}}
+                                            <span class="input-label-secondary text--title" data-toggle="tooltip" data-placement="right" data-original-title='{{translate("Make_sure_to_include_'https://'_to_ensure_correct_functionality.")}}'>
+                                                <i class="tio-info-outined"></i>
+                                            </span>
+                                        </label>
                                         <input type="text" name="link" class="form-control" id="link"
-                                            placeholder="{{ translate('messages.Ex :') }} facebook.com/your-page-name" required>
+                                            placeholder="{{ translate('messages.Ex :facebook.com/your-page-name') }} " required>
                                     </div>
                                     <input type="hidden" id="id">
                                 </div>
@@ -70,7 +84,7 @@
             <div class="col-md-12">
                 <div class="card">
                     <div class="table-responsive">
-                        <table class="table {{Session::get('direction') === 'rtl' ? 'text-right' : 'text-left'}}" id="dataTable" width="100%" cellspacing="0">
+                        <table class="table" id="dataTable" width="100%" cellspacing="0">
                             <thead class="thead-light">
                             <tr>
                                 <th class="border-0" scope="col">
@@ -115,17 +129,25 @@
                         for (var count = 0; count < data.length; count++) {
                             html += '<tr>';
                             html += '<td class="column_name" data-column_name="sl" data-id="' + data[count].id + '">' + '<div class="pl-4">'+ (count + 1) +'</div>' + '</td>';
-                            html += '<td class="column_name" data-column_name="name" data-id="' + data[count].id + '">' + data[count].name + '</td>';
+                            html += '<td class="column_name uppercase" data-column_name="name" data-id="' + data[count].id + '">' + data[count].name + '</td>';
                             html += '<td class="column_name" data-column_name="slug" data-id="' + data[count].id + '">' + data[count].link + '</td>';
                             html += `<td class="column_name" data-column_name="status" data-id="${data[count].id}">
                                 <label class="toggle-switch toggle-switch-sm" for="${data[count].id}">
-                                    <input type="checkbox" class="toggle-switch-input status" id="${data[count].id}" ${data[count].status == 1 ? "checked" : ""}>
+                                    <input type="checkbox" class="toggle-switch-input status" id='${data[count].id}' ${data[count].status == 1 ? "checked" : ""}
+                                    onclick="toogleStatusModal(event,'${data[count].id}','${data[count].name}-on.png','${data[count].name}-off.png',
+                                    '<strong>${data[count].name} {{translate('is_Enabled!')}}',
+                                        '<strong> ${data[count].name} {{translate('is_Disabled!')}}',
+                                        '<p> ${data[count].name} {{translate('is_enabled_now_everybody_can_use_or_see_this_Social_Medial')}}</p>',
+                                    ' <p>${data[count].name} {{translate('is_disabled_now_no_one_can_use_or_see_this_Social_Medial')}}</p>')"
+                                        >
                                     <span class="toggle-switch-label">
                                         <span class="toggle-switch-indicator"></span>
                                     </span>
                                 </label>
+                                <form action="{{route('admin.business-settings.social-media.status-update')}}" method="get" id="${data[count].id}_form">
+                                    <input type="hidden" name="id" value="${data[count].id}">
+                                            </form>
                             </td>`;
-                            // html += '<td><a type="button" class="btn btn-primary btn-xs edit" id="' + data[count].id + '"><i class="fa fa-edit text-white"></i></a> <a type="button" class="btn btn-danger btn-xs delete" id="' + data[count].id + '"><i class="fa fa-trash text-white"></i></a></td></tr>';
                             html += '<td> <div class="btn--container justify-content-center"><a type="button" class="btn btn-outline-primary btn--primary action-btn edit" id="' + data[count].id + '"><i class="tio-edit"></i></a></div> </td></tr>';
                         }
                         $('tbody').html(html);
@@ -135,7 +157,6 @@
         }
 
         $('#add').on('click', function () {
-            // $('#add').attr("disabled", true);
             var name = $('#name').val();
             var link = $('#link').val();
             if (name == "") {
@@ -242,30 +263,31 @@
                 }
             });
         });
-        $(document).on('change', '.status', function () {
-            var id = $(this).attr("id");
-            if ($(this).prop("checked") == true) {
-                var status = 1;
-            } else if ($(this).prop("checked") == false) {
-                var status = 0;
-            }
 
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.ajax({
-                url: "{{route('admin.business-settings.social-media.status-update')}}",
-                method: 'get',
-                data: {
-                    id: id,
-                    status: status
-                },
-                success: function () {
-                    toastr.success('{{translate('messages.status_updated')}}');
-                }
-            });
-        });
+        // $(document).on('change', '.status', function () {
+        //     var id = $(this).attr("id");
+        //     if ($(this).prop("checked") == true) {
+        //         var status = 1;
+        //     } else if ($(this).prop("checked") == false) {
+        //         var status = 0;
+        //     }
+
+        //     $.ajaxSetup({
+        //         headers: {
+        //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        //         }
+        //     });
+        //     $.ajax({
+        //         url: "{{route('admin.business-settings.social-media.status-update')}}",
+        //         method: 'get',
+        //         data: {
+        //             id: id,
+        //             status: status
+        //         },
+        //         success: function () {
+        //             toastr.success('{{translate('messages.status_updated')}}');
+        //         }
+        //     });
+        // });
     </script>
 @endpush

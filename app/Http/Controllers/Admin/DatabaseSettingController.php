@@ -49,6 +49,7 @@ class DatabaseSettingController extends Controller
                 }
             });
         } catch (\Exception $exception) {
+            info($exception->getMessage());
             Toastr::error(translate('Failed to update!'));
             return back();
         }

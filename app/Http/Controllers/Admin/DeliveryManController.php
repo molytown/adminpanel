@@ -2,19 +2,30 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\DeliveryMan;
-use App\Models\DMReview;
 use App\Models\Zone;
-use App\Models\Conversation;
 use App\Models\Message;
+use App\Models\DMReview;
 use App\Models\UserInfo;
-use Brian2694\Toastr\Facades\Toastr;
+use App\Models\DeliveryMan;
+use App\Models\Conversation;
+use App\Models\IncentiveLog;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use App\CentralLogics\Helpers;
+use App\Models\OrderTransaction;
+use App\Models\WalletTransaction;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\DeliveryManListExport;
+use Illuminate\Support\Facades\Storage;
+use App\Exports\DeliveryManReviewExport;
+use App\Exports\DeliveryManEarningExport;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
+use App\Exports\SingleDeliveryManReviewExport;
+
 
 class DeliveryManController extends Controller
 {
@@ -26,35 +37,60 @@ class DeliveryManController extends Controller
 
     public function list(Request $request)
     {
+        $key = explode(' ', $request['search']);
         $zone_id = $request->query('zone_id', 'all');
-        $delivery_men = DeliveryMan::when(is_numeric($zone_id), function($query) use($zone_id){
+        $delivery_men = DeliveryMan::with(['orders','rating','zone'])->
+        when(is_numeric($zone_id), function($query) use($zone_id){
             return $query->where('zone_id', $zone_id);
-        })->with('zone')->where('type','zone_wise')->latest()->paginate(config('default_pagination'));
+        })->where('type','zone_wise')->latest()->where('application_status','approved')
+
+        ->when(isset($key), function ($q) use($key){
+            $q->where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhere('f_name', 'like', "%{$value}%")
+                        ->orWhere('l_name', 'like', "%{$value}%")
+                        ->orWhere('email', 'like', "%{$value}%")
+                        ->orWhere('phone', 'like', "%{$value}%")
+                        ->orWhere('identity_number', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->paginate(config('default_pagination'));
         $zone = is_numeric($zone_id)?Zone::findOrFail($zone_id):null;
         return view('admin-views.delivery-man.list', compact('delivery_men', 'zone'));
     }
 
-    public function search(Request $request){
-        $key = explode(' ', $request['search']);
-        $delivery_men=DeliveryMan::where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('f_name', 'like', "%{$value}%")
-                    ->orWhere('l_name', 'like', "%{$value}%")
-                    ->orWhere('email', 'like', "%{$value}%")
-                    ->orWhere('phone', 'like', "%{$value}%")
-                    ->orWhere('identity_number', 'like', "%{$value}%");
-            }
-        })->where('type','zone_wise')->get();
-        return response()->json([
-            'view'=>view('admin-views.delivery-man.partials._table',compact('delivery_men'))->render(),
-            'count'=>$delivery_men->count()
-        ]);
-    }
+    // public function search(Request $request){
+    //     $key = explode(' ', $request['search']);
+    //     $delivery_men=DeliveryMan::
+    //     where(function ($q) use ($key) {
+    //         foreach ($key as $value) {
+    //             $q->orWhere('f_name', 'like', "%{$value}%")
+    //                 ->orWhere('l_name', 'like', "%{$value}%")
+    //                 ->orWhere('email', 'like', "%{$value}%")
+    //                 ->orWhere('phone', 'like', "%{$value}%")
+    //                 ->orWhere('identity_number', 'like', "%{$value}%");
+    //         }
+    //     })
+    //     ->where('type','zone_wise')->where('application_status','approved')->get();
+    //     return response()->json([
+    //         'view'=>view('admin-views.delivery-man.partials._table',compact('delivery_men'))->render(),
+    //         'count'=>$delivery_men->count()
+    //     ]);
+    // }
 
-    public function reviews_list(){
-        $reviews=DMReview::with(['delivery_man','customer'])->whereHas('delivery_man',function($query){
-            $query->where('type','zone_wise');
-        })->latest()->paginate(config('default_pagination'));
+    public function reviews_list(Request $request){
+
+        $key = explode(' ', $request['search']);
+        $reviews=DMReview::with(['delivery_man','customer'])->whereHas('delivery_man',function($query) use ($key){
+
+            $query->where('type','zone_wise')->where(function($q) use($key) {
+                    foreach ($key as $value) {
+                    $q->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
+                    }
+                });
+        })
+        ->latest()->paginate(config('default_pagination'));
         return view('admin-views.delivery-man.reviews-list',compact('reviews'));
     }
 
@@ -75,7 +111,7 @@ class DeliveryManController extends Controller
         {
             $from = $request->query('from', null);
             $to = $request->query('to', null);
-            $timelogs = $dm->time_logs()->when($from && $to, function($query)use($from, $to){
+            $timelogs = $dm?->time_logs()->when($from && $to, function($query)use($from, $to){
                 $query->whereBetween('date', [$from, $to]);
             })->paginate(config('default_pagination'));
             return view('admin-views.delivery-man.view.timelog', compact('dm', 'timelogs'));
@@ -100,18 +136,22 @@ class DeliveryManController extends Controller
             'l_name' => 'nullable|max:100',
             'identity_number' => 'required|max:30',
             'email' => 'required|unique:delivery_men',
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:20|unique:delivery_men',
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|max:20|unique:delivery_men',
             'zone_id' => 'required',
             'earning' => 'required',
-            'password'=>'required|min:6',
+            'vehicle_id' => 'required',
+            'image' => 'nullable|max:2048',
+            'identity_image.*' => 'nullable|max:2048',
+            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
             'zone_id.required' => translate('messages.select_a_zone'),
+            'vehicle_id.required' => translate('messages.select_a_vehicle'),
             'earning.required' => translate('messages.select_dm_type')
         ]);
 
         if ($request->has('image')) {
-            $image_name = Helpers::upload('delivery-man/', 'png', $request->file('image'));
+            $image_name = Helpers::upload(dir:'delivery-man/', format:'png',  image:$request->file('image'));
         } else {
             $image_name = 'def.png';
         }
@@ -119,7 +159,7 @@ class DeliveryManController extends Controller
         $id_img_names = [];
         if (!empty($request->file('identity_image'))) {
             foreach ($request->identity_image as $img) {
-                $identity_image = Helpers::upload('delivery-man/', 'png', $img);
+                $identity_image = Helpers::upload(dir:'delivery-man/',format: 'png', image:$img);
                 array_push($id_img_names, $identity_image);
             }
             $identity_image = json_encode($id_img_names);
@@ -135,6 +175,7 @@ class DeliveryManController extends Controller
         $dm->identity_number = $request->identity_number;
         $dm->identity_type = $request->identity_type;
         $dm->zone_id = $request->zone_id;
+        $dm->vehicle_id = $request->vehicle_id;
         $dm->identity_image = $identity_image;
         $dm->image = $image_name;
         $dm->active = 0;
@@ -179,7 +220,20 @@ class DeliveryManController extends Controller
                         'updated_at'=>now()
                     ]);
                 }
-
+                info('1234');
+                $mail_status = Helpers::get_mail_status('suspend_mail_status_dm');
+                info(config('mail.status') );
+                info($mail_status );
+                if (config('mail.status') && $mail_status == '1') {
+                    info('222222222');
+                    try {
+                        //code...
+                        Mail::to($delivery_man['email'])->send(new \App\Mail\DmSuspendMail($delivery_man['f_name']));
+                    } catch (\Throwable $th) {
+                        dd($th);
+                    }
+                }
+                info('done');
             }
 
         }
@@ -219,17 +273,22 @@ class DeliveryManController extends Controller
         $delivery_man->application_status = $request->status;
         if($request->status == 'approved') $delivery_man->status = 1;
         $delivery_man->save();
-
         try{
-            if( config('mail.status')) {
-                Mail::to($request['email'])->send(new \App\Mail\SelfRegistration($request->status, $delivery_man->f_name.' '.$delivery_man->l_name));
+            if($request->status== 'approved'){
+                $mail_status = Helpers::get_mail_status('approve_mail_status_dm');
+                if(config('mail.status') && $mail_status == '1'){
+                    Mail::to($delivery_man->email)->send(new \App\Mail\DmSelfRegistration('approved',$delivery_man->f_name.' '.$delivery_man->l_name));
+                }
+            }else{
+
+                $mail_status = Helpers::get_mail_status('deny_mail_status_dm');
+                if(config('mail.status') && $mail_status == '1'){
+                    Mail::to($delivery_man->email)->send(new \App\Mail\DmSelfRegistration('denied', $delivery_man->f_name.' '.$delivery_man->l_name));
+                }
             }
-
         }catch(\Exception $ex){
-            info($ex);
+            info($ex->getMessage());
         }
-
-
         Toastr::success(translate('messages.application_status_updated_successfully'));
         return back();
     }
@@ -241,17 +300,24 @@ class DeliveryManController extends Controller
             'l_name' => 'nullable|max:100',
             'identity_number' => 'required|max:30',
             'email' => 'required|unique:delivery_men,email,'.$id,
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men,phone,'.$id,
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|unique:delivery_men,phone,'.$id,
+            'vehicle_id' => 'required',
             'earning' => 'required',
+            'image' => 'nullable|max:2048',
+            'identity_image.*' => 'nullable|max:2048',
+            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
-            'earning.required' => translate('messages.select_dm_type')
+            'earning.required' => translate('messages.select_dm_type'),
+            'vehicle_id.required' => translate('messages.select_a_vehicle'),
+
         ]);
 
         $delivery_man = DeliveryMan::find($id);
 
         if ($request->has('image')) {
-            $image_name = Helpers::update('delivery-man/', $delivery_man->image, 'png', $request->file('image'));
+            $image_name = Helpers::update(dir:'delivery-man/',old_image: $delivery_man->image, format:'png', image: $request->file('image'));
         } else {
             $image_name = $delivery_man['image'];
         }
@@ -264,13 +330,15 @@ class DeliveryManController extends Controller
             }
             $img_keeper = [];
             foreach ($request->identity_image as $img) {
-                $identity_image = Helpers::upload('delivery-man/', 'png', $img);
+                $identity_image = Helpers::upload(dir:'delivery-man/', format:'png', image:$img);
                 array_push($img_keeper, $identity_image);
             }
             $identity_image = json_encode($img_keeper);
         } else {
             $identity_image = $delivery_man['identity_image'];
         }
+
+        $delivery_man->vehicle_id = $request->vehicle_id;
 
         $delivery_man->f_name = $request->f_name;
         $delivery_man->l_name = $request->l_name;
@@ -390,4 +458,292 @@ class DeliveryManController extends Controller
             'view' => view('admin-views.delivery-man.partials._conversations', compact('convs', 'user', 'receiver'))->render()
         ]);
     }
+    public function dm_list_export(Request $request){
+        try{
+            $key = explode(' ', $request['search']);
+            $zone_id = $request->query('zone_id', 'all');
+            $delivery_men = DeliveryMan::with(['orders','rating','zone'])
+            ->when(is_numeric($zone_id), function($query) use($zone_id){
+                return $query->where('zone_id', $zone_id);
+            })
+            ->where('type','zone_wise')->latest()->where('application_status','approved')
+            ->when(isset($key), function ($q) use($key){
+                $q->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('f_name', 'like', "%{$value}%")
+                            ->orWhere('l_name', 'like', "%{$value}%")
+                            ->orWhere('email', 'like', "%{$value}%")
+                            ->orWhere('phone', 'like', "%{$value}%")
+                            ->orWhere('identity_number', 'like', "%{$value}%");
+                    }
+                });
+            })
+            ->orderBy('id','desc')->get();
+
+            $data = [
+                'delivery_men'=>$delivery_men,
+                'search'=>$request->search??null,
+                'zone'=>is_numeric($zone_id)?Helpers::get_zones_name($zone_id):null,
+            ];
+
+            if ($request->type == 'excel') {
+                return Excel::download(new DeliveryManListExport($data), 'DeliveryMans.xlsx');
+            } else if ($request->type == 'csv') {
+                return Excel::download(new DeliveryManListExport($data), 'DeliveryMans.csv');
+            }
+
+        }  catch(\Exception $e){
+            Toastr::error("line___{$e->getLine()}",$e->getMessage());
+            info(["line___{$e->getLine()}",$e->getMessage()]);
+            return back();
+        }
+    }
+
+
+    public function pending(Request $request)
+    {
+        $key = explode(' ', $request['search']);
+        $zone_id = $request->query('zone_id', 'all');
+        $delivery_men = DeliveryMan::when(is_numeric($zone_id), function($query) use($zone_id){
+            return $query->where('zone_id', $zone_id);
+        })
+        ->when(isset($key),function($query)use($key){
+            $query->where(function($q)use($key){
+                foreach ($key as $value) {
+                    $q->orWhere('f_name', 'like', "%{$value}%")
+                ->orWhere('l_name', 'like', "%{$value}%")
+                ->orWhere('email', 'like', "%{$value}%")
+                ->orWhere('phone', 'like', "%{$value}%")
+                ->orWhere('identity_number', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->with('zone')->where('type','zone_wise')->where('application_status', 'pending')->latest()->paginate(config('default_pagination'));
+        $zone = is_numeric($zone_id)?Zone::findOrFail($zone_id):null;
+        return view('admin-views.delivery-man.pending_list', compact('delivery_men', 'zone'));
+
+
+    }
+    public function denied(Request $request)
+    {
+        $key = explode(' ', $request['search']);
+        $zone_id = $request->query('zone_id', 'all');
+        $delivery_men = DeliveryMan::when(is_numeric($zone_id), function($query) use($zone_id){
+            return $query->where('zone_id', $zone_id);
+        })
+        ->when(isset($key),function($query)use($key){
+            $query->where(function($q)use($key){
+                foreach ($key as $value) {
+                    $q->orWhere('f_name', 'like', "%{$value}%")
+                ->orWhere('l_name', 'like', "%{$value}%")
+                ->orWhere('email', 'like', "%{$value}%")
+                ->orWhere('phone', 'like', "%{$value}%")
+                ->orWhere('identity_number', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->with('zone')->where('type','zone_wise')->where('application_status', 'denied')->latest()->paginate(config('default_pagination'));
+        $zone = is_numeric($zone_id)?Zone::findOrFail($zone_id):null;
+        return view('admin-views.delivery-man.denied', compact('delivery_men', 'zone'));
+    }
+
+    public function get_incentives(Request $request)
+    {
+        $incentives = IncentiveLog::when($request->search, function ($query) use ($request) {
+            $key = explode(' ', $request->search);
+            $query->whereHas('deliveryman', function ($query) use ($key) {
+                $query->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('f_name', 'like', "%{$value}%");
+                        $q->orWhere('l_name', 'like', "%{$value}%");
+                        $q->orWhere('phone', 'like', "%{$value}%");
+                        $q->orWhere('email', 'like', "%{$value}%");
+                    }
+                });
+            });
+        })
+            ->where('status', '!=', 'pending')
+            ->latest()->paginate(config('default_pagination'));
+        return view('admin-views.delivery-man.incentive', compact('incentives'));
+    }
+    public function pending_incentives(Request $request)
+    {
+        $incentives = IncentiveLog::
+        when($request->search, function ($query) use ($request) {
+            $key = explode(' ', $request->search);
+            $query->whereHas('deliveryman', function ($query) use ($key) {
+                $query->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('f_name', 'like', "%{$value}%");
+                        $q->orWhere('l_name', 'like', "%{$value}%");
+                        $q->orWhere('phone', 'like', "%{$value}%");
+                        $q->orWhere('email', 'like', "%{$value}%");
+                    }
+                });
+            });
+        })
+            ->whereStatus('pending')
+            ->latest()->paginate(config('default_pagination'));
+        return view('admin-views.delivery-man.incentive', compact('incentives'));
+    }
+
+    public function update_incentive_status(Request $request)
+    {
+        $request->validate([
+            'status' => 'required|in:denied',
+            'id' => 'required'
+        ]);
+
+        $incentive = IncentiveLog::findOrFail($request->id);
+
+        if ($incentive->status == "pending") {
+            $incentive->status = $request->status;
+            $incentive->save();
+            Toastr::success(translate('messages.incentive_denied'));
+            return back();
+        }
+
+    }
+
+    public function update_all_incentive_status(Request $request)
+    {
+        $request->validate([
+            'incentive_id' => 'required'
+        ]);
+        $incentives = IncentiveLog::whereIn('id', $request->incentive_id)->get();
+        foreach ($incentives as $incentive) {
+            Helpers::dm_wallet_transaction(delivery_man_id:$incentive->delivery_man_id, amount:$incentive->incentive,referance: null, type:'incentive');
+            $incentive->status = "approved";
+            $incentive->save();
+        }
+        Toastr::success(translate('messages.succesfully_approved_incentive'));
+        return back();
+    }
+
+    public function get_bonus(Request $request)
+    {
+        $data = WalletTransaction::where('transaction_type', 'dm_admin_bonus')
+        ->when($request->search, function ($query) use ($request) {
+                $query->where(function($query) use ($request) {
+                    $key = explode(' ', $request->search);
+                    $query->where(function ($q) use ($key) {
+                        foreach ($key as $value) {
+                            $q->Where('transaction_id', 'like', "%{$value}%");
+                        }
+                    })
+                    ->orWhereHas('delivery_man', function ($query) use ($key) {
+                        $query->where(function ($q) use ($key) {
+                            foreach ($key as $value) {
+                                $q->orWhere('f_name', 'like', "%{$value}%");
+                                $q->orWhere('l_name', 'like', "%{$value}%");
+                                $q->orWhere('phone', 'like', "%{$value}%");
+                                $q->orWhere('email', 'like', "%{$value}%");
+                            }
+                        });
+                    });
+                });
+        })
+
+        ->paginate(config('default_pagination'));
+        return view('admin-views.delivery-man.bonus', compact('data'));
+    }
+
+    public function add_bonus(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'delivery_man_id'=>'exists:delivery_men,id',
+            'amount'=>'numeric|min:.01',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => Helpers::error_processor($validator)]);
+        }
+
+        if(Helpers::dm_wallet_transaction(delivery_man_id:$request->delivery_man_id, amount:$request->amount, referance: $request->referance)){
+            return response()->json(['message'=>trans('messages.bonus_added_successfully')], 200);
+        }
+        return response()->json(['errors' => [['code'=>'transaction-failed', 'message'=>translate('messages.faield_to_create_transaction')]]]);
+    }
+
+    public function earning_export(Request $request){
+        try{
+            $date = $request->date;
+            $dm = DeliveryMan::with(['reviews'])->where('type','zone_wise')->where(['id' => $request->id])->first();
+            $earnings=OrderTransaction::where('delivery_man_id', $request->id)
+            ->when($date, function($query)use($date){
+                return $query->whereDate('created_at', $date);
+            })
+            ->get();
+
+            $data = [
+                'dm'=>$dm,
+                'earnings'=>$earnings,
+                'date'=>$request->date??null,
+            ];
+
+            if ($request->type == 'excel') {
+                return Excel::download(new DeliveryManEarningExport($data), 'DeliveryManEarnings.xlsx');
+            } else if ($request->type == 'csv') {
+                return Excel::download(new DeliveryManEarningExport($data), 'DeliveryManEarnings.csv');
+            }
+        }  catch(\Exception $e){
+            Toastr::error("line___{$e->getLine()}",$e->getMessage());
+            info(["line___{$e->getLine()}",$e->getMessage()]);
+            return back();
+        }
+    }
+
+    public function reviews_export(Request $request){
+        try{
+                $key = explode(' ', $request['search']);
+            $reviews=DMReview::with(['delivery_man','customer'])->whereHas('delivery_man',function($query) use ($key){
+                $query->where('type','zone_wise')->where(function($q) use($key) {
+                        foreach ($key as $value) {
+                        $q->where('f_name', 'like', "%{$value}%")->orWhere('l_name', 'like', "%{$value}%");
+                        }
+                    });
+            })
+            ->latest()
+            ->get();
+
+            $data = [
+                'reviews'=>$reviews,
+                'search'=>$request->search??null,
+            ];
+
+            if ($request->type == 'excel') {
+                return Excel::download(new DeliveryManReviewExport($data), 'DeliveryManReviews.xlsx');
+            } else if ($request->type == 'csv') {
+                return Excel::download(new DeliveryManReviewExport($data), 'DeliveryManReviews.csv');
+            }
+        }  catch(\Exception $e){
+            Toastr::error("line___{$e->getLine()}",$e->getMessage());
+            info(["line___{$e->getLine()}",$e->getMessage()]);
+            return back();
+        }
+    }
+
+    public function review_export(Request $request){
+        try{
+            $dm = DeliveryMan::with(['reviews'])->where('type','zone_wise')->where(['id' => $request->id])->first();
+            $reviews=DMReview::where(['delivery_man_id'=>$request->id])->latest()->get();
+
+            $data = [
+                'dm'=>$dm,
+                'reviews'=>$reviews,
+                'search'=>$request->search??null,
+            ];
+
+            if ($request->type == 'excel') {
+                return Excel::download(new SingleDeliveryManReviewExport($data), 'DeliveryManReviews.xlsx');
+            } else if ($request->type == 'csv') {
+                return Excel::download(new SingleDeliveryManReviewExport($data), 'DeliveryManReviews.csv');
+            }
+        }  catch(\Exception $e){
+            Toastr::error("line___{$e->getLine()}",$e->getMessage());
+            info(["line___{$e->getLine()}",$e->getMessage()]);
+            return back();
+        }
+    }
+
 }

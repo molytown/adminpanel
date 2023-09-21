@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
 use App\Scopes\ZoneScope;
+use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ItemCampaign extends Model
 {
     use HasFactory;
-
-    protected $dates = ['created_at', 'updated_at', 'start_date', 'end_date', 'start_time', 'end_time'];
 
     protected $casts = [
         'tax' => 'float',
@@ -21,13 +20,46 @@ class ItemCampaign extends Model
         'restaurant_id' => 'integer',
         'category_id' => 'integer',
         'veg' => 'integer',
+        'created_at'=>'datetime',
+        'start_date'=>'datetime',
+        'updated_at'=>'datetime',
+        'end_date'=>'datetime',
+        'start_time'=>'datetime',
+        'end_time'=>'datetime',
+        'maximum_cart_quantity' => 'integer',
+
     ];
+
+
+    public function getTitleAttribute($value){
+        if (count($this->translations) > 0) {
+            foreach ($this->translations as $translation) {
+                if ($translation['key'] == 'title') {
+                    return $translation['value'];
+                }
+            }
+        }
+
+        return $value;
+    }
+
+    public function getDescriptionAttribute($value){
+        if (count($this->translations) > 0) {
+            foreach ($this->translations as $translation) {
+                if ($translation['key'] == 'description') {
+                    return $translation['value'];
+                }
+            }
+        }
+
+        return $value;
+    }
 
     public function translations()
     {
         return $this->morphMany(Translation::class, 'translationable');
     }
-    
+
     public function restaurant()
     {
         return $this->belongsTo(Restaurant::class);
@@ -42,7 +74,7 @@ class ItemCampaign extends Model
     {
         return $query->where('status', '=', 1);
     }
-    
+
     public function scopeRunning($query)
     {
         return $query->whereDate('end_date', '>=', date('Y-m-d'));
@@ -57,4 +89,30 @@ class ItemCampaign extends Model
             }]);
         });
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+        static::created(function ($itemcampaign) {
+            $itemcampaign->slug = $itemcampaign->generateSlug($itemcampaign->title);
+            $itemcampaign->save();
+        });
+    }
+    private function generateSlug($name)
+    {
+        $slug = Str::slug($name);
+        if ($max_slug = static::where('slug', 'like',"{$slug}%")->latest('id')->value('slug')) {
+
+            if($max_slug == $slug) return "{$slug}-2";
+
+            $max_slug = explode('-',$max_slug);
+            $count = array_pop($max_slug);
+            if (isset($count) && is_numeric($count)) {
+                $max_slug[]= ++$count;
+                return implode('-', $max_slug);
+            }
+        }
+        return $slug;
+    }
+
 }

@@ -7,7 +7,7 @@
 @endpush
 
 @section('content')
-@php($zone_currency = $zone->zone_currency ?? null)
+
         <!-- Content -->
 <div class="initial-51">
     <!-- ========================= SECTION CONTENT ========================= -->
@@ -33,8 +33,8 @@
                                         <select name="zone_id" class="form-control js-select2-custom h--45x"
                                             onchange="set_zone_filter('{{ url()->full() }}',this.value,'zone_id')"
                                             id="zone_id">
-                                            <option value="" selected disabled>{{ translate('Select Zone') }} <span>*</span></option>
-                                            @foreach (\App\Models\Zone::active()->orderBy('name')->get() as $z)
+                                            <option value="" selected disabled>{{ translate('Select_Zone') }} <span>*</span></option>
+                                            @foreach (\App\Models\Zone::active()->orderBy('name')->get(['id','name']) as $z)
                                                 <option value="{{ $z['id'] }}"
                                                     {{ isset($zone) && $zone->id == $z['id'] ? 'selected' : '' }}>
                                                     {{ $z['name'] }}
@@ -44,10 +44,10 @@
                                         </select>
                                     </div>
                                     <div class="col-sm-6">
-                                        <select name="restaurant_id" onchange="set_restaurant_filter('{{ url()->full() }}',this.value,'restaurant_id')" data-placeholder="{{ translate('messages.select') }} {{ translate('messages.restaurant') }}" class="form-control js-select2-custom h--45x" id="restaurant_id" disabled>
+                                        <select name="restaurant_id" onchange="set_restaurant_filter('{{ url()->full() }}',this.value,'restaurant_id')" data-placeholder="{{ translate('messages.select_restaurant') }}" class="form-control js-select2-custom h--45x" id="restaurant_id" disabled>
 
-                                            <option value="">{{ translate('Select a restaurant') }}</option>
-                                            @foreach (\App\Models\Restaurant::active()->orderBy('name')->where('zone_id',request('zone_id'))->get() as $restaurant)
+                                            <option value="">{{ translate('Select_a_restaurant') }}</option>
+                                            @foreach (\App\Models\Restaurant::active()->orderBy('name')->where('zone_id',request('zone_id'))->get(['id','name']) as $restaurant)
                                                 <option value="{{ $restaurant['id'] }}" {{ request('restaurant_id') && request('restaurant_id')==$restaurant->id? 'selected':''}}>
                                                     {{ $restaurant->name }}
                                                 </option>
@@ -56,10 +56,10 @@
                                     </div>
                                     <div class="col-sm-6">
                                         <select name="category" id="category" class="form-control js-select2-custom mx-1 h--45x"
-                                            title="{{ translate('Select') }} {{ translate('Category') }}"
-                                            onchange="set_category_filter(this.value)" disabled>
-                                            <option value="" selected>{{ translate('Select Categories') }}</option>
-                                            <option value="">{{ translate('All Categories') }}</option>
+                                            title="{{ translate('Select_Category') }}"
+                                            onchange="set_category_filter( '{{ url()->full() }}' , this.value)" disabled>
+                                            <option value="" selected>{{ translate('Select_Categories') }}</option>
+                                            <option value="">{{ translate('All_Categories') }}</option>
                                             @foreach ($categories as $item)
                                                 <option value="{{ $item->id }}"
                                                     {{ $category == $item->id ? 'selected' : '' }}>
@@ -79,7 +79,7 @@
                                                 <input id="datatableSearch" type="search"
                                                     value="{{ $keyword ? $keyword : '' }}" name="search"
                                                     class="form-control flex-grow-1 pl-5 border rounded h--45x"
-                                                    placeholder="{{ translate('Ex : Search Food Name') }}"
+                                                    placeholder="{{ translate('Ex:_Search_Food_Name') }}"
                                                     aria-label="{{ translate('messages.search_here') }}" disabled>
                                             </div>
                                             <!-- End Search -->
@@ -97,7 +97,6 @@
                                         @include('admin-views.pos._single_product', [
                                             'product' => $product,
                                             'restaurant_data ' => $restaurant_data,
-                                            'zone_currency ' => $zone_currency,
                                         ])
                                     </div>
                                 @endforeach
@@ -141,7 +140,7 @@
                                 <button class="btn btn--primary rounded font-regular" id="add_new_customer"
                                     type="button" data-toggle="modal" data-target="#add-customer"
                                     title="Add Customer">
-                                    {{ translate('Add new customer') }}
+                                    {{ translate('Add_new_customer') }}
                                 </button>
                             </div>
                         </div>
@@ -151,7 +150,7 @@
                                     <span class="card-title-icon">
                                         <i class="tio-user"></i>
                                     </span>
-                                    <span>{{ translate('Delivery Infomation') }} <small>({{ translate('Home Delivery') }})</small></span>
+                                    <span>{{ translate('Delivery_Infomation') }} <small>({{ translate('Home_Delivery') }})</small></span>
                                 </h5>
                                 <span class="delivery--edit-icon text-primary" id="delivery_address" data-toggle="modal" data-target="#paymentModal"><i class="tio-edit"></i></span>
                             </div>
@@ -160,9 +159,7 @@
                                 </div>
                         </div>
                         <div class='w-100' id="cart">
-                            @include('admin-views.pos._cart', ['restaurant_data ' => $restaurant_data,
-                                    'zone_currency ' => $zone_currency,
-                            ])
+                            @include('admin-views.pos._cart', ['restaurant_data ' => $restaurant_data])
                         </div>
                     </div>
                 </div>
@@ -191,7 +188,7 @@
             <div class="modal-dialog">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title">{{ translate('messages.print') }} {{ translate('messages.invoice') }}
+                        <h5 class="modal-title">{{ translate('messages.print_invoice') }}
                         </h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
@@ -202,12 +199,12 @@
                             <center>
                                 <input type="button" class="btn text-white btn--primary non-printable"
                                     onclick="printDiv('printableArea')"
-                                    value="{{ translate('Proceed, If thermal printer is ready.') }}" />
+                                    value="{{ translate('Proceed,_If_thermal_printer_is_ready.') }}" />
                                 <a href="{{ url()->previous() }}" class="btn btn-danger non-printable">{{ translate('messages.back') }}</a>
                             </center>
                             <hr class="non-printable">
                         </div>
-                        <div class="row m-auto" id="printableArea">
+                        <div id="printableArea" class="col-12">
                             @include('admin-views.pos.order.invoice')
                         </div>
 
@@ -255,7 +252,7 @@
                                             class="input-label-secondary text-danger">*</span></label>
                                     <input type="email" name="email" class="form-control"
                                         value="{{ old('email') }}"
-                                        placeholder="{{ translate('Ex_:_ex@example.com') }}" required>
+                                        placeholder="{{ translate('Ex:_ex@example.com') }}" required>
                                 </div>
                             </div>
                             <div class="col-12 col-lg-6">
@@ -270,51 +267,7 @@
                             </div>
                         </div>
 
-                        <!-- Static -->
-                        {{-- <div class="row g-2">
-                            <div class="col-md-6">
-                                <label class="input-label"
-                                    for="">{{ translate('person_name') }}</label>
-                                <input type="text" class="form-control" name="contact_person_name"  placeholder="{{ translate('messages.Ex :') }} Jhone">
-                            </div>
-                            <div class="col-md-6">
-                                <label class="input-label"
-                                    for="">{{ translate('Contact Number') }}</label>
-                                <input type="text" class="form-control" name="contact_person_number" placeholder="{{ translate('messages.Ex :') }} +3264124565">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label" for="">{{ translate('messages.Road') }}</label>
-                                <input type="text" class="form-control" placeholder="{{ translate('messages.Ex :') }} 4th">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label" for="">{{ translate('messages.House') }}</label>
-                                <input type="text" class="form-control" placeholder="{{ translate('messages.Ex :') }} 45/C">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="input-label" for="">{{ translate('messages.Floor') }}</label>
-                                <input type="text" class="form-control"   placeholder="{{ translate('messages.Ex :') }} 1A">
-                            </div>
-                            <div class="col-md-12">
-                                <label class="input-label" for="">{{ translate('messages.address') }}</label>
-                                <textarea name="address" class="form-control" cols="30" rows="3" placeholder="{{ translate('messages.Ex :') }} address"></textarea>
-                            </div>
-                            <div class="col-12">
-                                <div class="d-flex justify-content-between">
-                                    <span class="text-primary">
-                                        {{ translate('* pin the address in the map to calculate delivery fee') }}
-                                    </span>
-                                    <div>
-                                        <span>{{ translate('Delivery fee') }} :</span>
-                                        <strong>$6.60</strong>
-                                    </div>
-                                </div>
-                                <input id="pac-input" class="controls rounded initial-8"
-                                title="{{ translate('messages.search_your_location_here') }}" type="text"
-                                placeholder="{{ translate('messages.search_here') }}" />
-                            <div class="mb-2 h-200px" id="map"></div>
-                            </div>
-                        </div> --}}
-                        <!-- Static -->
+
 
                         <div class="btn--container justify-content-end">
                             <button type="reset" class="btn btn--reset">{{ translate('reset') }}</button>
@@ -332,6 +285,7 @@
     <script src="https://maps.googleapis.com/maps/api/js?key={{ \App\Models\BusinessSetting::where('key', 'map_api_key')->first()->value }}&libraries=places&callback=initMap&v=3.49">
     </script>
     <script>
+        var extra_charge =0;
         function initMap() {
             let map = new google.maps.Map(document.getElementById("map"), {
                 zoom: 13,
@@ -498,19 +452,57 @@
                                             var distanceMile = distancMeter/1000;
                                             var distancMileResult = Math.round((distanceMile + Number.EPSILON) * 100) / 100;
                                             console.log(distancMileResult);
+                                            document.getElementById('distance').value = distancMileResult;
                                             <?php
-                                            $per_km_shipping_charge = (float)\App\Models\BusinessSetting::where(['key' => 'per_km_shipping_charge'])->first()->value;
-                                            $minimum_shipping_charge = (float)\App\Models\BusinessSetting::where(['key' => 'minimum_shipping_charge'])->first()->value;
-                                            // $original_delivery_charge = ($request->distance * $per_km_shipping_charge > $minimum_shipping_charge) ? $request->distance * $per_km_shipping_charge : $minimum_shipping_charge;
+                                            $rest_sub=$restaurant_data->restaurant_sub;
+                                                if(($restaurant_data->restaurant_model == 'commission' && $restaurant_data->self_delivery_system == 1)
+                                                    || ($restaurant_data->restaurant_model == 'subscription' && isset($rest_sub) && $rest_sub->self_delivery == 1) ){
+                                                    $per_km_shipping_charge = (float) $restaurant_data->per_km_shipping_charge;
+                                                    $minimum_shipping_charge =(float) $restaurant_data->minimum_shipping_charge;
+                                                    $maximum_shipping_charge = (float) $restaurant_data->maximum_shipping_charge;
+                                                    $increased = 0;
+                                                    $self_delivery_status =1;
+                                                }else{
+                                                    $per_km_shipping_charge = $restaurant_data->zone->per_km_shipping_charge ?? 0;
+                                                    $minimum_shipping_charge = $restaurant_data->zone->minimum_shipping_charge ?? 0;
+                                                    $maximum_shipping_charge = $restaurant_data->zone->maximum_shipping_charge ?? 0;
+                                                    $increased = 0;
+                                                    if($restaurant_data->zone->increased_delivery_fee_status == 1){
+                                                            $increased=$restaurant_data->zone->increased_delivery_fee ?? 0;
+                                                        }
+                                                        $self_delivery_status= 0;
 
+                                                }
                                             ?>
 
-                                            var original_delivery_charge = (distancMileResult * {{$per_km_shipping_charge}} > {{$minimum_shipping_charge}}) ? distancMileResult * {{$per_km_shipping_charge}} : {{$minimum_shipping_charge}};
-                                            var delivery_charge =Math.round((original_delivery_charge + Number.EPSILON) * 100) / 100;
-                                            document.getElementById('delivery_fee').value = delivery_charge;
-                                            $('#delivery_fee').siblings('strong').html(delivery_charge + '{{ \App\CentralLogics\Helpers::currency_symbol() }}');
+                                            $.get({
+                                                url: '{{ route('admin.pos.extra_charge') }}',
+                                                dataType: 'json',
+                                                data: {
+                                                    distancMileResult: distancMileResult,
+                                                    self_delivery_status: {{ $self_delivery_status }},
+                                                },
+                                                success: function(data) {
+                                                    extra_charge = data;
+                                                    var original_delivery_charge =  (distancMileResult * {{$per_km_shipping_charge}} > {{$minimum_shipping_charge}}) ? distancMileResult * {{$per_km_shipping_charge}} : {{$minimum_shipping_charge}};
+                                                    var delivery_amount = ({{ $maximum_shipping_charge }} > {{ $minimum_shipping_charge }} && original_delivery_charge + extra_charge > {{ $maximum_shipping_charge }} ? {{ $maximum_shipping_charge }} : original_delivery_charge + extra_charge);
+                                                    var with_increased_fee  = (delivery_amount * {{ $increased }}) /100 ;
+                                                    var delivery_charge =Math.round(( delivery_amount + with_increased_fee + Number.EPSILON) * 100) / 100;
+                                                document.getElementById('delivery_fee').value = delivery_charge;
+                                                $('#delivery_fee').siblings('strong').html(delivery_charge + '{{ \App\CentralLogics\Helpers::currency_symbol() }}');
 
-                                            console.log(Math.round((original_delivery_charge + Number.EPSILON) * 100) / 100);
+                                                },
+                                                error:function(){
+                                                    var original_delivery_charge =  (distancMileResult * {{$per_km_shipping_charge}} > {{$minimum_shipping_charge}}) ? distancMileResult * {{$per_km_shipping_charge}} : {{$minimum_shipping_charge}};
+
+                                                    var delivery_charge =Math.round((
+                                                ({{ $maximum_shipping_charge }} > {{ $minimum_shipping_charge }} && original_delivery_charge  > {{ $maximum_shipping_charge }} ? {{ $maximum_shipping_charge }} : original_delivery_charge)
+                                                + Number.EPSILON) * 100) / 100;
+                                                document.getElementById('delivery_fee').value = delivery_charge;
+                                                $('#delivery_fee').siblings('strong').html(delivery_charge + '{{ \App\CentralLogics\Helpers::currency_symbol() }}');
+                                                }
+                                            });
+
                                         });
 
                                     }
@@ -527,8 +519,8 @@
             infoWindow.setPosition(pos);
             infoWindow.setContent(
                 browserHasGeolocation ?
-                "Error: {{ translate('The Geolocation service failed') }}." :
-                "Error: {{ translate("Your browser doesn't support geolocation") }}."
+                "Error: {{ translate('The_Geolocation_service_failed') }}." :
+                "Error: {{ translate('Your_browser_does_not_support_geolocation') }}."
             );
             infoWindow.open(map);
         }
@@ -560,19 +552,29 @@
         }
 
         function printDiv(divName) {
-            var printContents = document.getElementById(divName).innerHTML;
-            var originalContents = document.body.innerHTML;
-            document.body.innerHTML = printContents;
-            window.print();
-            document.body.innerHTML = originalContents;
-            location.reload();
+
+            if($('html').attr('dir') === 'rtl') {
+                $('html').attr('dir', 'ltr')
+                var printContents = document.getElementById(divName).innerHTML;
+                var originalContents = document.body.innerHTML;
+                document.body.innerHTML = printContents;
+                $('.initial-38-1').attr('dir', 'rtl')
+                window.print();
+                document.body.innerHTML = originalContents;
+                $('html').attr('dir', 'rtl')
+                location.reload();
+            }else{
+                var printContents = document.getElementById(divName).innerHTML;
+                var originalContents = document.body.innerHTML;
+                document.body.innerHTML = printContents;
+                window.print();
+                document.body.innerHTML = originalContents;
+                location.reload();
+            }
+
         }
 
-        function set_category_filter(id) {
-            var nurl = new URL('{!! url()->full() !!}');
-            nurl.searchParams.set('category_id', id);
-            location.href = nurl;
-        }
+
         function getUrlParameter(sParam) {
             var sPageURL = window.location.search.substring(1);
             var sURLVariables = sPageURL.split('&');
@@ -673,16 +675,23 @@
         }
 
         function checkAddToCartValidity() {
-            var names = {};
-            $('#add-to-cart-form input:radio').each(function() { // find unique names
-                names[$(this).attr('name')] = true;
-            });
-            var count = 0;
-            $.each(names, function() { // then count them
-                count++;
-            });
+            // var names = {};
+            // $('#add-to-cart-form input:radio').each(function() { // find unique names
+            //     names[$(this).attr('name')] = true;
+            // });
 
-            if ($('#add-to-cart-form input:radio:checked').length == count) {
+            // var count = 0;
+            // $.each(names, function() { // then count them
+            //     count++;
+            // });
+
+            // if ($('#add-to-cart-form input:radio:checked').length == count || $('#add-to-cart-form input:checkbox:checked').length == count ) {
+            //     return true;
+            // }
+            var numberNotChecked = $('#add-to-cart-form input:checkbox:checked').length;
+            var numberNotChecked2 = $('#add-to-cart-form input:radio:checked').length;
+
+            if( numberNotChecked> 0 || numberNotChecked2 > 0){
                 return true;
             }
             return false;
@@ -782,71 +791,74 @@
                     url: '{{ route('admin.pos.variant_price') }}',
                     data: $('#add-to-cart-form').serializeArray(),
                     success: function(data) {
+                        if(data.error == 'quantity_error'){
+                            toastr.error(data.message);
+                        }
+                            else{
                         $('#add-to-cart-form #chosen_price_div').removeClass('d-none');
                         $('#add-to-cart-form #chosen_price_div #chosen_price').html(data.price);
+                    }
                     }
                 });
             }
         }
 
         function addToCart(form_id = 'add-to-cart-form') {
-            if (checkAddToCartValidity()) {
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
-                    }
-                });
-                $.post({
-                    url: '{{ route('admin.pos.add-to-cart') }}',
-                    data: $('#' + form_id).serializeArray(),
-                    beforeSend: function() {
-                        $('#loading').show();
-                    },
-                    success: function(data) {
-                        if (data.data == 1) {
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'Cart',
-                                text: "{{ translate('messages.product_already_added_in_cart') }}"
-                            });
-                            return false;
-                        } else if (data.data == 2) {
-                            updateCart();
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'Cart',
-                                text: "{{ translate('messages.product_has_been_updated_in_cart') }}"
-                            });
-
-                            return false;
-                        } else if (data.data == 0) {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Cart',
-                                text: 'Sorry, product out of stock.'
-                            });
-                            return false;
-                        }
-                        $('.call-when-done').click();
-
-                        toastr.success('{{ translate('messages.product_has_been_added_in_cart') }}', {
-                            CloseButton: true,
-                            ProgressBar: true
+            $.ajaxSetup({
+                headers: {
+                    'X-CSRF-TOKEN': $('meta[name="_token"]').attr('content')
+                }
+            });
+            $.post({
+                url: '{{ route('admin.pos.add-to-cart') }}',
+                data: $('#' + form_id).serializeArray(),
+                beforeSend: function() {
+                    $('#loading').show();
+                },
+                success: function(data) {
+                    if (data.data == 1) {
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Cart',
+                            text: "{{ translate('messages.product_already_added_in_cart') }}"
                         });
-
+                        return false;
+                    } else if (data.data == 2) {
                         updateCart();
-                    },
-                    complete: function() {
-                        $('#loading').hide();
+                        Swal.fire({
+                            icon: 'info',
+                            title: 'Cart',
+                            text: "{{ translate('messages.product_has_been_updated_in_cart') }}"
+                        });
+                        return false;
+                    } else if (data.data == 0) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Cart',
+                            text: 'Sorry, product out of stock.'
+                        });
+                        return false;
                     }
-                });
-            } else {
-                Swal.fire({
-                    type: 'info',
-                    title: 'Cart',
-                    text: 'Please choose all the options'
-                });
-            }
+                    else if (data.data == 'variation_error') {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Cart',
+                            text: data.message
+                        });
+                        return false;
+                    }
+                    $('.call-when-done').click();
+                    toastr.success('{{ translate('messages.product_has_been_added_in_cart') }}', {
+                        CloseButton: true,
+                        ProgressBar: true
+                    });
+
+                    updateCart();
+                },
+                complete: function() {
+                    $('#loading').hide();
+                }
+            });
         }
         function deliveryAdressStore(form_id = 'delivery_address_store') {
             $.ajaxSetup({
@@ -960,11 +972,11 @@
         function updateQuantity(e) {
             var element = $(e.target);
             var minValue = parseInt(element.attr('min'));
-            // maxValue = parseInt(element.attr('max'));
+            var maxValue = parseInt(element.attr('max'));
             var valueCurrent = parseInt(element.val());
 
             var key = element.data('key');
-            if (valueCurrent >= minValue) {
+            if (valueCurrent >= minValue && maxValue >= valueCurrent) {
                 $.post('{{ route('admin.pos.updateQuantity') }}', {
                     _token: '{{ csrf_token() }}',
                     key: key,
@@ -975,8 +987,8 @@
             } else {
                 Swal.fire({
                     icon: 'error',
-                    title: 'Cart',
-                    text: 'Sorry, the minimum value was reached'
+                    title: "{{ translate('Cart') }}",
+                    text: "{{ translate('quantity_unavailable') }}"
                 });
                 element.val(element.data('oldValue'));
             }

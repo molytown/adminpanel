@@ -11,7 +11,7 @@
                 <!-- List Dot -->
                 <ul class="list-inline list-separator">
                     <li class="list-inline-item">
-                        <a class="list-separator-link" href="{{route('vendor.business-settings.restaurant-setup')}}">{{translate('messages.restaurant')}} {{translate('messages.settings')}}</a>
+                        <a class="list-separator-link" href="{{route('vendor.business-settings.restaurant-setup')}}">{{translate('messages.restaurant_settings')}}</a>
                     </li>
 
                     <li class="list-inline-item">

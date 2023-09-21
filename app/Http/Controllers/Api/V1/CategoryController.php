@@ -2,32 +2,74 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\CentralLogics\CategoryLogic;
-use App\CentralLogics\Helpers;
-use App\Http\Controllers\Controller;
+use App\Models\Food;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use App\CentralLogics\Helpers;
+use App\CentralLogics\CategoryLogic;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 
 class CategoryController extends Controller
 {
-    public function get_categories()
+    public function get_categories(Request $request)
     {
         try {
-            $categories = Category::where(['position'=>0,'status'=>1])->orderBy('priority','desc')->get();
+            $zone_id=  $request->header('zoneId') ? json_decode($request->header('zoneId'), true) : [];
+            $name= $request->query('name');
+            $categories = Category::withCount(['products','childes'])->with(['childes' => function($query)  {
+                $query->withCount(['products','childes']);
+            }])
+            ->where(['position'=>0,'status'=>1])
+
+            ->when($name, function($q)use($name){
+                $key = explode(' ', $name);
+                $q->where(function($q)use($key){
+                    foreach ($key as $value){
+                        $q->orWhere('name', 'like', '%'.$value.'%')->orWhere('slug', 'like', '%'.$value.'%');
+                    }
+                    return $q;
+                });
+            })
+            ->orderBy('priority','desc')->get();
+
+
+
+            if(count($zone_id) > 0){
+                foreach ($categories as $category) {
+                        $productCount = Food::active()
+                        ->whereHas('restaurant', function ($query) use ($zone_id) {
+                            $query->whereIn('zone_id', $zone_id);
+                        })
+                        ->whereHas('category',function($q)use($category){
+                            return $q->whereId($category->id)->orWhere('parent_id', $category->id);
+                        })
+                        ->count();
+                        $category['products_count'] = $productCount;
+                    unset($category['childes']);
+                }
+                return response()->json($categories, 200);
+            }
+
             return response()->json(Helpers::category_data_formatting($categories, true), 200);
         } catch (\Exception $e) {
-            return response()->json([], 200);
+            return response()->json([$e->getMessage()]);
         }
     }
 
     public function get_childes($id)
     {
         try {
-            $categories = Category::where(['parent_id' => $id,'status'=>1])->orderBy('priority','desc')->get();
+            $categories = Category::when(is_numeric($id),function ($qurey) use($id){
+                $qurey->where(['parent_id' => $id,'status'=>1]);
+                })
+                ->when(!is_numeric($id),function ($qurey) use($id){
+                    $qurey->where(['slug' => $id,'status'=>1]);
+                })
+            ->orderBy('priority','desc')->get();
             return response()->json(Helpers::category_data_formatting($categories, true), 200);
         } catch (\Exception $e) {
-            return response()->json([], 200);
+            return response()->json([$e->getMessage()], 200);
         }
     }
 
@@ -53,8 +95,14 @@ class CategoryController extends Controller
 
         $type = $request->query('type', 'all');
 
-        $data = CategoryLogic::products($id, $zone_id, $request['limit'], $request['offset'], $type);
+        $data = CategoryLogic::products(category_id:$id,zone_id: $zone_id, limit:$request['limit'], offset:$request['offset'], type:$type);
         $data['products'] = Helpers::product_data_formatting($data['products'] , true, false, app()->getLocale());
+
+        if(auth('api')->user() !== null){
+            $customer_id =auth('api')->user()->id;
+            Helpers::visitor_log('category',$customer_id,$id,false);
+        }
+
         return response()->json($data, 200);
     }
 
@@ -81,8 +129,14 @@ class CategoryController extends Controller
 
         $type = $request->query('type', 'all');
 
-        $data = CategoryLogic::restaurants($id, $zone_id, $request['limit'], $request['offset'], $type);
+        $data = CategoryLogic::restaurants(category_id:$id,zone_id: $zone_id,limit: $request['limit'], offset:$request['offset'], type:$type);
         $data['restaurants'] = Helpers::restaurant_data_formatting($data['restaurants'] , true);
+
+        // if(auth('api')->user() !== null){
+        //     $customer_id =auth('api')->user()->id;
+        //     Helpers::visitor_log('category',$customer_id,$id,false);
+        // }
+
         return response()->json($data, 200);
     }
 

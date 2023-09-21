@@ -1,9 +1,17 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Delivery Man Preview'))
+@section('title',translate('Delivery_Man_Preview'))
 
 @push('css_or_js')
+<style>
 
+    .padding{
+    padding: 5px !important;
+    }
+    .font{
+        font-weight: bold;
+    }
+</style>
 @endpush
 
 @section('content')
@@ -15,7 +23,7 @@
                     <span class="page-header-icon">
                         <i class="tio-account-square-outlined"></i>
                     </span>
-                    <span>{{translate('messages.deliveryman')}} {{translate('messages.details')}}</span>
+                    <span>{{translate('messages.deliveryman_details')}}</span>
                 </h1>
             </div>
         <!-- End Page Header -->
@@ -43,12 +51,12 @@
                         </div>
                         @else
                         <div class="btn--container justify-content-end">
-                            <a class="btn btn-primary text-capitalize font-weight-bold"
-                            onclick="request_alert('{{route('admin.delivery-man.application',[$dm['id'],'approved'])}}','{{translate('messages.you_want_to_approve_this_application')}}')"
+                            <a class="btn btn--primary text-capitalize my-2"
+                            onclick="request_alert('{{route('admin.delivery-man.application',[$dm['id'],'approved'])}}','{{translate('messages.you_want_to_approve_this_application_?')}}')"
                                 href="javascript:">{{translate('messages.approve')}}</a>
                             @if($dm->application_status !='denied')
-                            <a class="btn btn-danger text-capitalize font-weight-bold"
-                            onclick="request_alert('{{route('admin.delivery-man.application',[$dm['id'],'denied'])}}','{{translate('messages.you_want_to_deny_this_application')}}')"
+                            <a class="btn btn--danger text-capitalize my-2"
+                            onclick="request_alert('{{route('admin.delivery-man.application',[$dm['id'],'denied'])}}','{{translate('messages.you_want_to_deny_this_application_?')}}')"
                                 href="javascript:">{{translate('messages.deny')}}</a>
                             @endif
                         </div>
@@ -62,7 +70,7 @@
                                     {{$dm->orders->count()}}
                                 </h2>
                                 <h5 class="subtitle">
-                                    {{translate('messages.total')}} {{translate('messages.delivered')}} {{translate('messages.orders')}}
+                                    {{translate('messages.total_delivered_orders')}}
                                 </h5>
                                 <img class="resturant-icon" src="{{asset('/public/assets/admin/img/tick.png')}}" alt="img">
                             </div>
@@ -106,7 +114,7 @@
 
                         (@if($dm->zone)
                             {{$dm->zone->name}}
-                        @else {{translate('messages.zone').' '.translate('messages.deleted')}}
+                        @else {{translate('messages.zone_deleted')}}
                         @endif )
                         @if($dm->application_status=='approved')
                             @if($dm['status'])
@@ -120,12 +128,15 @@
                             @endif
 
                         @else
-                        <label class="m-0 badge badge-soft-{{$dm->application_status=='pending'?'info':'danger'}}">{{translate('messages.'.$dm->application_status)}}</label>
+                        <label class="m-0 badge badge-soft-{{$dm->application_status=='pending'?'info':'danger'}}">
+
+                            {{   $dm->application_status=='pending'? translate('messages.not_approved'): translate('messages.'.$dm->application_status) }}
+                        </label>
                         @endif
                     </h5>
                     @if($dm->application_status=='approved')
                     <div class="hs-unfold">
-                        <a  href="javascript:"  onclick="request_alert('{{route('admin.delivery-man.status',[$dm['id'],$dm->status?0:1])}}','{{$dm->status?translate('messages.you_want_to_suspend_this_deliveryman'):translate('messages.you_want_to_unsuspend_this_deliveryman')}}')" class="btn {{$dm->status?'btn--danger':'btn--primary'}} mr-2">
+                        <a  href="javascript:"  onclick="request_alert('{{route('admin.delivery-man.status',[$dm['id'],$dm->status?0:1])}}','{{$dm->status?translate('messages.you_want_to_suspend_this_deliveryman_?'):translate('messages.you_want_to_unsuspend_this_deliveryman_?')}}')" class="btn {{$dm->status?'btn--danger':'btn--primary'}} mr-2">
                                 {{$dm->status?translate('messages.suspend_this_delivery_man'):translate('messages.unsuspend_this_delivery_man')}}
                         </a>
                     </div>
@@ -139,10 +150,10 @@
                             </button>
                             <div class="dropdown-menu text-capitalize" aria-labelledby="dropdownMenuButton">
                                 <a class="dropdown-item {{$dm->earning?'active':''}}"
-                                onclick="request_alert('{{route('admin.delivery-man.earning',[$dm['id'],1])}}','{{translate('messages.want_to_enable_earnings')}}')"
+                                onclick="request_alert('{{route('admin.delivery-man.earning',[$dm['id'],1])}}','{{translate('messages.want_to_enable_earnings_?')}}')"
                                     href="javascript:">{{translate('messages.freelancer')}}</a>
                                 <a class="dropdown-item {{$dm->earning?'':'active'}}"
-                                onclick="request_alert('{{route('admin.delivery-man.earning',[$dm['id'],0])}}','{{translate('messages.want_to_disable_earnings')}}')"
+                                onclick="request_alert('{{route('admin.delivery-man.earning',[$dm['id'],0])}}','{{translate('messages.want_to_disable_earnings_?')}}')"
                                     href="javascript:">{{translate('messages.salary_based')}}</a>
                             </div>
                         </div>
@@ -152,7 +163,20 @@
             <!-- Body -->
             <div class="card-body">
                 <div class="row gy-3 align-items-center">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
+
+                        <h2 class="title">{{ translate('Vehicle_Information') }}</h2>
+                            @if (isset($dm->vehicle))
+                            <div>{{ translate('Vehicle_Type') }} : {{ $dm->vehicle->type}}</div>
+                            <div>{{ translate('Vehicle_Extra_Charges') }} : {{ $dm->vehicle->extra_charges}}</div>
+                            <div>{{ translate('Vehicle_minimum_coverage_area') }} : {{ $dm->vehicle->starting_coverage_area}}</div>
+                            <div>{{ translate('Vehicle_maximum_coverage_area') }} : {{ $dm->vehicle->maximum_coverage_area}}</div>
+                            @else
+                            <div>{{ translate('No_vehicle_data_found') }}</div>
+                            @endif
+
+                    </div>
+                    <div class="col-md-4">
                         <div class="d-flex align-items-center justify-content-center">
                             <img class="avatar avatar-xxl avatar-4by3 mr-4 mw-120px initial-22"
                                  onerror="this.src='{{asset('public/assets/admin/img/160x160/img1.jpg')}}'"
@@ -237,7 +261,6 @@
                                     @endif
                                     @endif
                                     <div class="info">
-                                        {{-- <span class="mr-3">{{$dm->rating->count()}} {{translate('messages.rating')}}</span> --}}
                                         <span>{{$dm->reviews->count()}} {{translate('messages.reviews')}}</span>
                                     </div>
                                 </div>
@@ -245,7 +268,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <ul class="list-unstyled list-unstyled-py-2 mb-0 rating--review-right py-3">
 
                         @php($total=$dm->reviews->count())
@@ -325,9 +348,105 @@
             <!-- End Body -->
         </div>
         <!-- End Card -->
+        <!-- Card -->
+        <div class="card mb-3">
+            <div class="card-header">
+                <h5 class="card-header-title">{{ translate('Identity_Information') }}</h5>
+            </div>
+            <!-- Body -->
+            <div class="card-body">
+                <div class="row gy-3 align-items-center">
+                    <div class="col-md-4">
+                        <h5>{{ translate('identity_type') }} :
+                                <span class="font-light"> {{ translate($dm->identity_type) }} </span>
+                        </h5>
+                        <h5>{{ translate('identity_number') }} :
+                                <span class="font-light"> {{ $dm->identity_number }} </span>
+                        </h5>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="d-flex flex-wrap justify-content-center ">
+                        @foreach (json_decode($dm->identity_image) as $key => $img)
+                                    <button class="btn padding p-1" data-toggle="modal"
+                                        data-target="#image-{{ $key }}">
+                                        <div class="gallary-card">
+                                            <img onerror="this.src='{{ asset('/public/assets/admin/img/900x400/img1.jpg') }}'"
+                                            src="{{ asset('storage/app/public/delivery-man') }}/{{ $img }}" class="avatar avatar-xxl avatar-4by3 mw-120px initial-22">
+                                        </div>
+                                    </button>
+                                    <div class="modal fade" id="image-{{ $key }}" tabindex="-1" role="dialog"
+                                    aria-labelledby="myModlabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h4 class="modal-title" id="myModlabel">
+                                                    {{ translate('messages.Identity_Image') }}</h4>
+                                                <button type="button" class="close" data-dismiss="modal"><span
+                                                        aria-hidden="true">&times;</span><span
+                                                        class="sr-only">{{ translate('messages.Close') }}</span></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <img onerror="this.src='{{ asset('/public/assets/admin/img/900x400/img1.jpg') }}'"
+                                                    src="{{ asset('storage/app/public/delivery-man/' . $img) }}"
+                                                    class="w-100">
+                                            </div>
+                                            <div class="modal-footer">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                @endforeach
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- End Body -->
+        </div>
+        <!-- End Card -->
+
 
         <!-- Card -->
         <div class="card">
+
+                     <!-- Header -->
+                     <div class="card-header py-2 border-0">
+                        <h5 class="card-header-title">
+                                {{translate('messages.review_list')}}
+                        </h5>
+                        <div class="search--button-wrapper justify-content-end">
+                            <!-- Unfold -->
+                            <div class="hs-unfold mr-2">
+                                <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle min-height-40" href="javascript:;"
+                                    data-hs-unfold-options='{
+                                            "target": "#usersExportDropdown",
+                                            "type": "css-animation"
+                                        }'>
+                                    <i class="tio-download-to mr-1"></i> {{ translate('messages.export') }}
+                                </a>
+
+                                <div id="usersExportDropdown"
+                                    class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
+                                    <span class="dropdown-header">{{ translate('messages.download_options') }}</span>
+                                    <a id="export-excel" class="dropdown-item" href="{{route('admin.delivery-man.review-export', ['type'=>'excel','id'=>$dm->id,request()->getQueryString()])}}">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                            alt="Image Description">
+                                        {{ translate('messages.excel') }}
+                                    </a>
+                                    <a id="export-csv" class="dropdown-item" href="{{route('admin.delivery-man.review-export', ['type'=>'csv','id'=>$dm->id,request()->getQueryString()])}}">
+                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                            src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                            alt="Image Description">
+                                        .{{ translate('messages.csv') }}
+                                    </a>
+                                </div>
+                            </div>
+                            <!-- End Unfold -->
+                        </div>
+                    </div>
+                    <!-- End Header -->
             <!-- Table -->
             <div class="table-responsive datatable-custom">
                 <table id="datatable" class="table table-borderless table-thead-bordered table-nowrap card-table"
@@ -350,7 +469,7 @@
                     <thead class="thead-light">
                     <tr>
                         <th>{{translate('messages.reviewer')}}</th>
-                        <th>{{ translate('messages.Order ID') }}</th>
+                        <th>{{ translate('messages.Order_ID') }}</th>
                         <th>{{translate('messages.review')}}</th>
                         <th>{{translate('messages.date')}}</th>
                     </tr>
@@ -401,7 +520,9 @@
                                 @endforeach
                             </td>--}}
                             <td>
-                                {{date('d M Y',strtotime($review->created_at))}}
+                                {{-- {{  Carbon\Carbon::parse($review->created_at)->locale(app()->getLocale())->translatedFormat('d M Y'.config('timeformat')) }} --}}
+
+                                {{date('d M Y '. config('timeformat'),strtotime($review['created_at']))}}
                             </td>
                         </tr>
                     @endforeach
@@ -439,7 +560,7 @@
 <script>
     function request_alert(url, message) {
         Swal.fire({
-            title: '{{translate('messages.are_you_sure')}}',
+            title: '{{translate('messages.are_you_sure_?')}}',
             text: message,
             type: 'warning',
             showCancelButton: true,

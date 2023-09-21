@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Database\Eloquent\Builder;
+use App\Traits\ReportFilter;
 class OrderDetail extends Model
 {
-    use HasFactory;
+    use HasFactory,ReportFilter;
 
     protected $casts = [
         'price' => 'float',
@@ -17,7 +18,7 @@ class OrderDetail extends Model
         'food_id'=> 'integer',
         'order_id'=> 'integer',
         'quantity'=>'integer',
-        'item_campaign_id'=>'integer'
+        'item_campaign_id'=>'integer',
     ];
 
     protected $primaryKey   = 'id';
@@ -37,5 +38,11 @@ class OrderDetail extends Model
     public function campaign()
     {
         return $this->belongsTo(ItemCampaign::class, 'item_campaign_id');
+    }
+    protected static function boot(){
+        parent::boot();
+        static::addGlobalScope('order', function (Builder $builder) {
+            $builder->Has('order');
+                });
     }
 }

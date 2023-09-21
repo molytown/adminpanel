@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
 use App\Models\AdminRole;
-use Brian2694\Toastr\Facades\Toastr;
+use App\Models\Translation;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
 use Rap2hpoutre\FastExcel\FastExcel;
 
 class CustomRoleController extends Controller
@@ -26,13 +26,44 @@ class CustomRoleController extends Controller
             'name.required'=>translate('messages.Role name is required!'),
             'modules.required'=>translate('messages.Please select atleast one module')
         ]);
-        DB::table('admin_roles')->insert([
-            'name'=>$request->name,
-            'modules'=>json_encode($request['modules']),
-            'status'=>1,
-            'created_at'=>now(),
-            'updated_at'=>now()
-        ]);
+
+        if($request->name[array_search('default', $request->lang)] == '' ){
+            Toastr::error(translate('default_name_is_required'));
+            return back();
+            }
+
+        $role = new AdminRole();
+        $role->name = $request->name[array_search('default', $request->lang)];
+        $role->modules = json_encode($request['modules']);
+        $role->status = 1;
+        $role->save();
+        $data = [];
+        $default_lang = str_replace('_', '-', app()->getLocale());
+        foreach ($request->lang as $index => $key) {
+            if($default_lang == $key && !($request->name[$index])){
+                if ($key != 'default') {
+                    array_push($data, array(
+                        'translationable_type' => 'App\Models\AdminRole',
+                        'translationable_id' => $role->id,
+                        'locale' => $key,
+                        'key' => 'name',
+                        'value' => $role->name,
+                    ));
+                }
+            }else{
+                if ($request->name[$index] && $key != 'default') {
+                    array_push($data, array(
+                        'translationable_type' => 'App\Models\AdminRole',
+                        'translationable_id' => $role->id,
+                        'locale' => $key,
+                        'key' => 'name',
+                        'value' => $request->name[$index],
+                    ));
+                }
+            }
+        }
+
+        Translation::insert($data);
 
         Toastr::success(translate('messages.role_added_successfully'));
         return back();
@@ -44,7 +75,7 @@ class CustomRoleController extends Controller
         {
             return view('errors.404');
         }
-        $role=AdminRole::where(['id'=>$id])->first(['id','name','modules']);
+        $role=AdminRole::withoutGlobalScope('translate')->with('translations')->where(['id'=>$id])->first(['id','name','modules']);
         return view('admin-views.custom-role.edit',compact('role'));
     }
 
@@ -61,14 +92,46 @@ class CustomRoleController extends Controller
             'name.required'=>translate('messages.Role name is required!'),
             'modules.required'=>translate('messages.Please select atleast one module')
         ]);
+        if($request->name[array_search('default', $request->lang)] == '' ){
+            Toastr::error(translate('default_name_is_required'));
+            return back();
+            }
 
-        DB::table('admin_roles')->where(['id'=>$id])->update([
-            'name'=>$request->name,
-            'modules'=>json_encode($request['modules']),
-            'status'=>1,
-            'updated_at'=>now()
-        ]);
+        $role = AdminRole::find($id);
+        $role->name = $request->name[array_search('default', $request->lang)];
+        $role->modules = json_encode($request['modules']);
+        $role->status = 1;
+        $role->save();
 
+        $default_lang = str_replace('_', '-', app()->getLocale());
+        foreach ($request->lang as $index => $key) {
+            if($default_lang == $key && !($request->name[$index])){
+                if ($key != 'default') {
+                    Translation::updateOrInsert(
+                        [
+                            'translationable_type' => 'App\Models\AdminRole',
+                            'translationable_id' => $role->id,
+                            'locale' => $key,
+                            'key' => 'name'
+                        ],
+                        ['value' => $role->name]
+                    );
+                }
+            }else{
+
+                if ($request->name[$index] && $key != 'default') {
+                    Translation::updateOrInsert(
+                        [
+                            'translationable_type' => 'App\Models\AdminRole',
+                            'translationable_id' => $role->id,
+                            'locale' => $key,
+                            'key' => 'name'
+                        ],
+                        ['value' => $request->name[$index]]
+                    );
+                }
+            }
+        }
         Toastr::success(translate('messages.role_updated_successfully'));
         return redirect()->route('admin.custom-role.create');
     }
@@ -78,7 +141,9 @@ class CustomRoleController extends Controller
         {
             return view('errors.404');
         }
-        $role=AdminRole::where(['id'=>$id])->delete();
+        $role=AdminRole::find($id);
+        $role?->translations()?->delete();
+        $role->delete();
         Toastr::success(translate('messages.role_deleted_successfully'));
         return back();
     }
@@ -99,10 +164,9 @@ class CustomRoleController extends Controller
 
     public function employee_role_export(Request $request){
         $withdraw_request = AdminRole::whereNotIn('id',[1])->get();
-        if($request->type == 'excel'){
-            return (new FastExcel($withdraw_request))->download('CustomRole.xlsx');
-        }elseif($request->type == 'csv'){
+        if($request->type == 'csv'){
             return (new FastExcel($withdraw_request))->download('CustomRole.csv');
         }
+        return (new FastExcel($withdraw_request))->download('CustomRole.xlsx');
     }
 }

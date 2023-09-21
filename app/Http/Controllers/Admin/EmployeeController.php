@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\CentralLogics\Helpers;
-use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminRole;
-use Brian2694\Toastr\Facades\Toastr;
 use Illuminate\Http\Request;
+use App\CentralLogics\Helpers;
 use Illuminate\Support\Facades\DB;
+use App\Exports\EmployeeListExport;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
+use Maatwebsite\Excel\Facades\Excel;
 use Rap2hpoutre\FastExcel\FastExcel;
+use Illuminate\Validation\Rules\Password;
 
 class EmployeeController extends Controller
 {
@@ -26,10 +29,10 @@ class EmployeeController extends Controller
             'f_name' => 'required',
             'l_name' => 'nullable|max:100',
             'role_id' => 'required',
-            'image' => 'required',
+            'image' => 'required|max:2048',
             'email' => 'required|unique:admins',
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:20|unique:admins',
-            'password' =>'required|min:6'
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|max:20|unique:admins',
+            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
 
         ]);
 
@@ -38,7 +41,7 @@ class EmployeeController extends Controller
             return back();
         }
 
-        DB::table('admins')->insert([
+        Admin::insert([
             'f_name' => $request->f_name,
             'l_name' => $request->l_name,
             'phone' => $request->phone,
@@ -46,7 +49,7 @@ class EmployeeController extends Controller
             'email' => $request->email,
             'role_id' => $request->role_id,
             'password' => bcrypt($request->password),
-            'image' => Helpers::upload('admin/', 'png', $request->file('image')),
+            'image' => Helpers::upload(dir:'admin/', format:'png', image: $request->file('image')),
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -55,15 +58,31 @@ class EmployeeController extends Controller
         return redirect()->route('admin.employee.list');
     }
 
-    function list()
+    function list(Request $request)
     {
-        $em = Admin::zone()->with(['role'])->where('role_id', '!=','1')->latest()->paginate(config('default_pagination'));
+        $key = explode(' ', $request['search']);
+        $em = Admin::zone()->with(['role'])->where('role_id', '!=','1')
+        ->when(isset($key) , function($q) use($key){
+            $q->where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhere('f_name', 'like', "%{$value}%");
+                    $q->orWhere('l_name', 'like', "%{$value}%");
+                    $q->orWhere('phone', 'like', "%{$value}%");
+                    $q->orWhere('email', 'like', "%{$value}%");
+                }
+            });
+        })
+        ->latest()->paginate(config('default_pagination'));
         return view('admin-views.employee.list', compact('em'));
     }
 
     public function edit($id)
     {
         $e = Admin::zone()->where('role_id', '!=','1')->where(['id' => $id])->first();
+        if (auth('admin')->id()  == $e['id']){
+            Toastr::error(translate('messages.You_can_not_edit_your_own_info'));
+            return redirect()->route('admin.employee.list');
+        }
         $rls = AdminRole::whereNotIn('id', [1])->get();
         return view('admin-views.employee.edit', compact('rls', 'e'));
     }
@@ -75,10 +94,13 @@ class EmployeeController extends Controller
             'l_name' => 'nullable|max:100',
             'role_id' => 'required',
             'email' => 'required|unique:admins,email,'.$id,
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|max:20|unique:admins,phone,'.$id,
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|max:20|unique:admins,phone,'.$id,
+            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+            'image' => 'nullable|max:2048',
         ], [
             'f_name.required' => translate('messages.first_name_is_required'),
         ]);
+
 
         if ($request->role_id == 1) {
             Toastr::warning(translate('messages.access_denied'));
@@ -86,21 +108,23 @@ class EmployeeController extends Controller
         }
 
         $e = Admin::where('role_id','!=',1)->findOrFail($id);
+        if (auth('admin')->id()  == $e['id']){
+            Toastr::error(translate('messages.You_can_not_edit_your_own_info'));
+            return redirect()->route('admin.employee.list');
+        }
+
         if ($request['password'] == null) {
             $pass = $e['password'];
         } else {
-            if (strlen($request['password']) < 6) {
-                Toastr::warning(translate('messages.password_length_warning',['length'=>'6']));
-                return back();
-            }
+
             $pass = bcrypt($request['password']);
         }
 
         if ($request->has('image')) {
-            $e['image'] = Helpers::update('admin/', $e->image, 'png', $request->file('image'));
+            $e['image'] = Helpers::update(dir:'admin/', old_image: $e->image, format: 'png', image:$request->file('image'));
         }
 
-        DB::table('admins')->where(['id' => $id])->update([
+       Admin::where(['id' => $id])->update([
             'f_name' => $request->f_name,
             'l_name' => $request->l_name,
             'phone' => $request->phone,
@@ -118,34 +142,72 @@ class EmployeeController extends Controller
 
     public function distroy($id)
     {
-        $role=Admin::zone()->where('role_id', '!=','1')->where(['id'=>$id])->delete();
+        $role=Admin::zone()->where('role_id', '!=','1')->where(['id'=>$id])->first();
+        if (auth('admin')->id()  == $role['id']){
+            Toastr::error(translate('messages.You_can_not_edit_your_own_info'));
+            return redirect()->route('admin.employee.list');
+        }
+        $role->delete();
         Toastr::info(translate('messages.employee_deleted_successfully'));
         return back();
     }
 
-    public function search(Request $request){
-        $key = explode(' ', $request['search']);
-        $employees=Admin::zone()->where('role_id', '!=','1')
-        ->where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('f_name', 'like', "%{$value}%");
-                $q->orWhere('l_name', 'like', "%{$value}%");
-                $q->orWhere('phone', 'like', "%{$value}%");
-                $q->orWhere('email', 'like', "%{$value}%");
-            }
-        })->limit(50)->get();
-        return response()->json([
-            'view'=>view('admin-views.employee.partials._table',compact('employees'))->render(),
-            'count'=>$employees->count()
-        ]);
-    }
+    // public function search(Request $request){
+    //     $key = explode(' ', $request['search']);
+    //     $employees=Admin::zone()->where('role_id', '!=','1')
+    //     ->where(function ($q) use ($key) {
+    //         foreach ($key as $value) {
+    //             $q->orWhere('f_name', 'like', "%{$value}%");
+    //             $q->orWhere('l_name', 'like', "%{$value}%");
+    //             $q->orWhere('phone', 'like', "%{$value}%");
+    //             $q->orWhere('email', 'like', "%{$value}%");
+    //         }
+    //     })->limit(50)->get();
+    //     return response()->json([
+    //         'view'=>view('admin-views.employee.partials._table',compact('employees'))->render(),
+    //         'count'=>$employees->count()
+    //     ]);
+    // }
 
-    public function employee_list_export(Request $request){
-        $withdraw_request = Admin::zone()->with(['role'])->where('role_id', '!=','1')->get();
-        if($request->type == 'excel'){
-            return (new FastExcel($withdraw_request))->download('Employee.xlsx');
-        }elseif($request->type == 'csv'){
-            return (new FastExcel($withdraw_request))->download('Employee.csv');
-        }
+    // public function (Request $request){
+    //     $withdraw_request = Admin::zone()->with(['role'])->where('role_id', '!=','1')->get();
+    //     if($request->type == 'csv'){
+    //         return (new FastExcel($withdraw_request))->download('Employee.csv');
+    //     }
+    //     return (new FastExcel($withdraw_request))->download('Employee.xlsx');
+    // }
+
+    function employee_list_export(Request $request)
+    {
+        try{
+            $key = explode(' ', $request['search']);
+            $em=Admin::zone()->with(['role'])->where('role_id', '!=','1')
+            ->when(isset($key) , function($q) use($key){
+                $q->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('f_name', 'like', "%{$value}%");
+                        $q->orWhere('l_name', 'like', "%{$value}%");
+                        $q->orWhere('phone', 'like', "%{$value}%");
+                        $q->orWhere('email', 'like', "%{$value}%");
+                    }
+                });
+            })
+            ->latest()->get();
+            $data = [
+                'employees'=>$em,
+                'search'=>$request->search??null,
+            ];
+
+            if ($request->type == 'excel') {
+                return Excel::download(new EmployeeListExport($data), 'Employees.xlsx');
+            } else if ($request->type == 'csv') {
+                return Excel::download(new EmployeeListExport($data), 'Employees.csv');
+            }
+
+        } catch(\Exception $e) {
+                Toastr::error("line___{$e->getLine()}",$e->getMessage());
+                info(["line___{$e->getLine()}",$e->getMessage()]);
+                return back();
+            }
     }
 }

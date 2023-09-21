@@ -32,6 +32,54 @@
             <div class="navbar-nav-wrap-content-right flex-grow-1">
                 <!-- Navbar -->
                 <ul class="navbar-nav align-items-center flex-row justify-content-end">
+
+
+
+                    <li class="nav-item max-sm-m-0">
+                        <div class="hs-unfold">
+                            <div>
+                                @php($local = session()->has('vendor_local')?session('vendor_local'):'en')
+                                @php($lang = \App\Models\BusinessSetting::where('key', 'system_language')->first())
+                                @if ($lang)
+                                <div
+                                    class="topbar-text dropdown disable-autohide text-capitalize d-flex">
+                                    <a class="text-dark dropdown-toggle d-flex align-items-center nav-link"
+                                    href="#" data-toggle="dropdown">
+                                    @foreach(json_decode($lang['value'],true) as $data)
+                                    @if($data['code']==$local)
+
+                                    <img class="rounded mr-1"  width="20" src="{{ asset('/public/assets/admin/img/lang.png') }}" alt="">
+                                                {{-- <img
+                                                     width="20"
+                                                     src="{{asset('public/assets/admin')}}/img/flags/{{$data['code']}}.png"
+                                                     alt="Eng"> --}}
+                                                {{$data['code']}}
+                                            @endif
+                                        @endforeach
+                                    </a>
+                                    <ul class="dropdown-menu">
+                                        @foreach(json_decode($lang['value'],true) as $key =>$data)
+                                            @if($data['status']==1)
+                                                <li>
+                                                    <a class="dropdown-item py-1"
+                                                       href="{{route('vendor.lang',[$data['code']])}}">
+                                                        {{-- <img
+
+                                                            width="20"
+                                                            src="{{asset('public/assets/admin')}}/img/flags/{{$data['code']}}.png"
+                                                            alt="{{$data['code']}}"/> --}}
+                                                        <span class="text-capitalize">{{$data['code']}}</span>
+                                                    </a>
+                                                </li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </li>
+
                     <li class="nav-item d-none d-sm-inline-block mr-4">
                         <!-- Notification -->
                         <div class="hs-unfold">
@@ -119,11 +167,7 @@
                                     cancelButtonText: '{{ translate('messages.cancel') }}',
                                     }).then((result) => {
                                     if (result.value) {
-                                        @if(auth('vendor')->check())
-                                        location.href='{{route('vendor.auth.logout')}}';
-                                        @elseif (auth('vendor_employee')->check())
-                                        location.href='{{route('vendor.auth.employee.logout')}}';
-                                        @endif
+                                        location.href='{{route('logout')}}';
                                     } else{
                                     Swal.fire('{{ translate('messages.canceled') }}', '', 'info')
                                     }

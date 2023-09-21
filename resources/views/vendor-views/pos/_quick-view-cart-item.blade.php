@@ -13,7 +13,7 @@
             @endif
             <!-- Product gallery-->
             <div class="d-flex align-items-center justify-content-center active h-9rem">
-                <img class="img-responsive  h-100 w-auto overflow-hidden rounded" src="{{asset('storage/app/public/product')}}/{{$product['image']}}"
+                <img class="img-responsive mr-3 img--100" src="{{asset('storage/app/public/product')}}/{{$product['image']}}"
                     onerror="this.src='{{asset('public/assets/admin/img/160x160/img2.jpg')}}'"
                         data-zoom="{{asset('storage/app/public/product')}}/{{$product['image']}}"
                         alt="Product image" width="">
@@ -54,25 +54,55 @@
                     @csrf
                     <input type="hidden" name="id" value="{{ $product->id }}">
                     <input type="hidden" name="cart_item_key" value="{{ $item_key }}">
-                    @foreach (json_decode($product->choice_options) as $key => $choice)
 
-                            <div class="h3 p-0 pt-2">{{ $choice->title }}
-                            </div>
-
-                            <div class="d-flex justify-content-left flex-wrap">
-                                @foreach ($choice->options as $key => $option)
-                                    <input class="btn-check" type="radio"
-                                            id="{{ $choice->name }}-{{ $option }}"
-                                            name="{{ $choice->name }}" value="{{ $option }}"
-                                            {{ trim($option) == $cart_item[$choice->name]?'checked':'' }} autocomplete="off" >
-                                    <label class="btn btn-sm check-label mx-1 choice-input  text-break"
-                                        for="{{ $choice->name }}-{{ $option }}">{{ Str::limit($option, 20, '...') }}</label>
+                    @php($values = [])
+                        @php($selected_variations = $cart_item['variations'] )
+                        @php($names = [])
+                        @php($values = [])
+                        @foreach ($selected_variations as $key => $var)
+                            @if (isset($var['values']))
+                                @php($names[$key] = $var['name'])
+                                @foreach ($var['values'] as $k => $item)
+                                @php($values[$key] = $item)
                                 @endforeach
-                            </div>
+                            @endif
+                        @endforeach
+
+
+                    @foreach (json_decode($product->variations) as $key => $choice)
+                    @if (isset($choice->name) && isset($choice->values) )
+                        <div class="h3 p-0 pt-2">{{ $choice->name }} <small style="font-size: 12px" class="text-muted">  ({{ ($choice->required == 'on')  ?  translate('messages.Required') : translate('messages.optional') }}) </small>
+                        </div>
+                        @if ($choice->min != 0 && $choice->max != 0)
+                        <small class="d-block mb-3">
+                        {{ translate('You_need_to_select_minimum_ ') }} {{ $choice->min }} {{ translate('to_maximum_ ') }} {{ $choice->max }} {{ translate('options') }}
+                        </small>
+                        @endif
+                        <div>
+                            <input type="hidden"  name="variations[{{ $key }}][min]" value="{{ $choice->min }}" >
+                            <input type="hidden"  name="variations[{{ $key }}][max]" value="{{ $choice->max }}" >
+                            <input type="hidden"  name="variations[{{ $key }}][required]" value="{{ $choice->required }}" >
+                            <input type="hidden" name="variations[{{ $key }}][name]" value="{{ $choice->name }}">
+
+                        @foreach ($choice->values as $k => $option)
+                        <div class="form-check form--check d-flex pr-5 mr-5" >
+                            <input class="form-check-input" type="{{ ($choice->type == "multi") ? "checkbox" : "radio"}}" id="choice-option-{{ $key }}-{{ $k }}"
+                            name="variations[{{ $key }}][values][label][]" value="{{ $option->label }}"
+                            @if (isset($values[$key]))
+                            {{ in_array($option->label, $values[$key]) ? 'checked' : '' }}
+                            @endif
+                            autocomplete="off">
+                            <label class="form-check-label"
+                            for="choice-option-{{ $key }}-{{ $k }}">{{ Str::limit($option->label, 20, '...') }}</label>
+                                        <span class="ml-auto">{{ \App\CentralLogics\Helpers::format_currency($option->optionPrice) }}</span>
+                                    </div>
+                                    @endforeach
+                                </div>
+                        @endif
                     @endforeach
 
                     <!-- Quantity + Add to cart -->
-                    <div class="d-flex justify-content-between">
+                    <div class="d-flex justify-content-between mt-4">
                         <div class="product-description-label mt-2 text-dark h3">{{translate('messages.quantity')}}:</div>
                         <div class="product-quantity d-flex align-items-center">
                             <div class="input-group input-group--style-2 pr-3 w-160px">
@@ -85,7 +115,7 @@
                                 </span>
                                 <input type="text" name="quantity"
                                         class="form-control input-number text-center cart-qty-field"
-                                        placeholder="1" value="{{$cart_item['quantity']}}" min="1" max="100">
+                                        placeholder="1" value="{{$cart_item['quantity']}}" min="1" max="{{ $product->maximum_cart_quantity ?? '9999999999' }}">
                                 <span class="input-group-btn">
                                     <button class="btn btn-number text-dark p--10px" type="button" data-type="plus"
                                             data-field="quantity">
@@ -96,7 +126,7 @@
                         </div>
                     </div>
                     @php($add_ons = json_decode($product->add_ons))
-                    @if(count($add_ons)>0)
+                    @if(count($add_ons)>0 && !in_array('', $add_ons))
                     <div class="h3 p-0 pt-2">{{ translate('messages.addon') }}
                     </div>
 
@@ -114,7 +144,7 @@
                                 <button class="btn btn-sm h-100 text-dark px-0" type="button" onclick="this.parentNode.querySelector('input[type=number]').stepDown(), getVariantPrice()"><i class="tio-remove  font-weight-bold"></i></button>
                                 <input type="number" name="addon-quantity{{ $add_on->id }}"
                                             class="form-control text-center border-0 h-100"
-                                            placeholder="1" value="{{array_search($add_on->id, $cart_item['add_ons'])?$cart_item['add_on_qtys'][array_search($add_on->id, $cart_item['add_ons'])]:1}}" min="1" max="100" readonly>
+                                            placeholder="1" value="{{array_search($add_on->id, $cart_item['add_ons'])?$cart_item['add_on_qtys'][array_search($add_on->id, $cart_item['add_ons'])]:1}}" min="1"   readonly>
                                 <button class="btn btn-sm h-100 text-dark px-0" type="button" onclick="this.parentNode.querySelector('input[type=number]').stepUp(), getVariantPrice()"><i class="tio-add  font-weight-bold"></i></button>
                             </label>
                         </div>
@@ -123,7 +153,7 @@
                     @endif
                     <div class="row no-gutters d-none mt-2 text-dark" id="chosen_price_div" >
                         <div class="col-2">
-                            <div class="product-description-label">{{translate('messages.Total Price')}}:</div>
+                            <div class="product-description-label">{{translate('messages.Total_Price')}}:</div>
                         </div>
                         <div class="col-10">
                             <div class="product-price">

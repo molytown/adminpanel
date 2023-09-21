@@ -11,7 +11,8 @@
             </a>
         </td>
         <td>
-        {{Str::limit($food->category,20,'...')}}
+            {{ Str::limit(($food?->category?->parent ? $food?->category?->parent?->name : $food?->category?->name )  ?? translate('messages.uncategorize')
+            , 20, '...') }}
         </td>
         <td>
             <div class="text-right mx-auto mw-36px">
@@ -24,8 +25,20 @@
         <td>
             <div class="d-flex">
                 <div class="mx-auto">
-                    <label class="toggle-switch toggle-switch-sm mr-2" for="stocksCheckbox{{$food->id}}">
-                        <input type="checkbox" onclick="location.href='{{route('vendor.food.status',[$food['id'],$food->status?0:1])}}'"class="toggle-switch-input" id="stocksCheckbox{{$food->id}}" {{$food->status?'checked':''}}>
+                    <label class="toggle-switch toggle-switch-sm mr-2"  data-toggle="tooltip" data-placement="top" title="{{ translate('messages.Recommend_to_customers') }}" for="stocksCheckbox{{$food->id}}">
+                        <input type="checkbox" onclick="location.href='{{route('vendor.food.recommended',[$food['id'],$food->recommended?0:1])}}'"class="toggle-switch-input" id="stocksCheckbox{{$food->id}}" {{$food->recommended?'checked':''}}>
+                        <span class="toggle-switch-label">
+                            <span class="toggle-switch-indicator"></span>
+                        </span>
+                    </label>
+                </div>
+            </div>
+        </td>
+        <td>
+            <div class="d-flex">
+                <div class="mx-auto">
+                    <label class="toggle-switch toggle-switch-sm mr-2" data-toggle="tooltip" data-placement="top" title="{{ translate('messages.Change_food_visibility_to_customers') }}" for="statusCheckbox{{$food->id}}">
+                        <input type="checkbox" onclick="location.href='{{route('vendor.food.status',[$food['id'],$food->status?0:1])}}'"class="toggle-switch-input" id="statusCheckbox{{$food->id}}" {{$food->status?'checked':''}}>
                         <span class="toggle-switch-label">
                             <span class="toggle-switch-indicator"></span>
                         </span>
@@ -36,10 +49,10 @@
         <td>
             <div class="btn--container justify-content-center">
                 <a class="btn action-btn btn--primary btn-outline-primary"
-                    href="{{route('vendor.food.edit',[$food['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.food')}}"><i class="tio-edit"></i>
+                    href="{{route('vendor.food.edit',[$food['id']])}}" title="{{translate('messages.edit_food')}}"><i class="tio-edit"></i>
                 </a>
                 <a class="btn action-btn btn--danger btn-outline-danger" href="javascript:"
-                    onclick="form_alert('food-{{$food['id']}}','{{ translate('messages.Want to delete this item ?') }}')" title="{{translate('messages.delete')}} {{translate('messages.food')}}"><i class="tio-delete-outlined"></i>
+                    onclick="form_alert('food-{{$food['id']}}','{{ translate('messages.Want to delete this item ?') }}')" title="{{translate('messages.delete_food')}}"><i class="tio-delete-outlined"></i>
                 </a>
                 <form action="{{route('vendor.food.delete',[$food['id']])}}"
                         method="post" id="food-{{$food['id']}}">

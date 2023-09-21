@@ -32,12 +32,26 @@ class AddOn extends Model
         return $this->belongsTo(Restaurant::class);
     }
 
+
+
+    public function getNameAttribute($value){
+        if (count($this->translations) > 0) {
+            foreach ($this->translations as $translation) {
+                if ($translation['key'] == 'name') {
+                    return $translation['value'];
+                }
+            }
+        }
+
+        return $value;
+    }
+
     protected static function booted()
     {
         if(auth('vendor')->check() || auth('vendor_employee')->check())
         {
             static::addGlobalScope(new RestaurantScope);
-        } 
+        }
         static::addGlobalScope(new ZoneScope);
 
         static::addGlobalScope('translate', function (Builder $builder) {

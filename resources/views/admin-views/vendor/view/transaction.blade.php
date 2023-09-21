@@ -31,32 +31,8 @@
             </span>
 
             <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', $restaurant->id)}}">{{translate('messages.overview')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'order'])}}"  aria-disabled="true">{{translate('messages.orders')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'product'])}}"  aria-disabled="true">{{translate('messages.foods')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'reviews'])}}"  aria-disabled="true">{{translate('messages.reviews')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'discount'])}}"  aria-disabled="true">{{translate('discounts')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction'])}}"  aria-disabled="true">{{translate('messages.transactions')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'settings'])}}"  aria-disabled="true">{{translate('messages.settings')}}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'conversations'])}}"  aria-disabled="true">{{translate('messages.conversations')}}</a>
-                </li>
-            </ul>
+            @include('admin-views.vendor.view.partials._header',['restaurant'=>$restaurant])
+
             <!-- End Nav -->
         </div>
         <!-- End Nav Scroller -->
@@ -70,21 +46,21 @@
                     <li class="nav-item">
                         @php($account_transaction = \App\Models\AccountTransaction::where('from_type', 'restaurant')->where('from_id', $restaurant->id)->count())
                         @php($account_transaction = isset($account_transaction) ? $account_transaction : 0)
-                        <a class="nav-link text-capitalize {{$sub_tab=='cash'?'active':''}}" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction', 'sub_tab'=>'cash'])}}"  aria-disabled="true">
+                        <a class="nav-link text-capitalize {{$sub_tab=='cash'?'active':''}}" href="{{route('admin.restaurant.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction', 'sub_tab'=>'cash'])}}"  aria-disabled="true">
                             {{translate('messages.cash_collected_by_admin')}} ({{$account_transaction}})
                         </a>
                     </li>
                     <li class="nav-item">
-                        @php($digital_transaction = \App\Models\OrderTransaction::where('vendor_id', $restaurant->id)->count())
+                        @php($digital_transaction = \App\Models\OrderTransaction::where('vendor_id', $restaurant->vendor->id)->count())
                         @php($digital_transaction = isset($digital_transaction) ? $digital_transaction : 0)
-                        <a class="nav-link text-capitalize {{$sub_tab=='digital'?'active':''}}" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction', 'sub_tab'=>'digital'])}}"  aria-disabled="true">
+                        <a class="nav-link text-capitalize {{$sub_tab=='digital'?'active':''}}" href="{{route('admin.restaurant.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction', 'sub_tab'=>'digital'])}}"  aria-disabled="true">
                             {{translate('messages.order_collected_by_admin')}} ({{$digital_transaction}})
                         </a>
                     </li>
                     <li class="nav-item">
-                        @php($withdraw_transaction = \App\Models\WithdrawRequest::where('vendor_id',$restaurant->id)->count())
+                        @php($withdraw_transaction = \App\Models\WithdrawRequest::where('vendor_id',$restaurant->vendor->id)->count())
                         @php($withdraw_transaction = isset($withdraw_transaction) ? $withdraw_transaction : 0)
-                        <a class="nav-link text-capitalize {{$sub_tab=='withdraw'?'active':''}}" href="{{route('admin.vendor.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction', 'sub_tab'=>'withdraw'])}}"  aria-disabled="true">
+                        <a class="nav-link text-capitalize {{$sub_tab=='withdraw'?'active':''}}" href="{{route('admin.restaurant.view', ['restaurant'=>$restaurant->id, 'tab'=> 'transaction', 'sub_tab'=>'withdraw'])}}"  aria-disabled="true">
                             {{translate('messages.withdraws')}} ({{$withdraw_transaction}})
                         </a>
                     </li>
@@ -100,50 +76,50 @@
                 </a>
                     @if($sub_tab=='cash')
                     <div id="usersExportDropdown" class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                        <a id="export-excel" class="dropdown-item" href="{{route('admin.vendor.cash-transaction-export', ['restaurant'=>$restaurant->id,'type'=>'excel'])}}">
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                        <a id="export-excel" class="dropdown-item" href="{{route('admin.restaurant.cash-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'excel'])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                     alt="Image Description">
                             {{translate('messages.excel')}}
                         </a>
-                        <a id="export-csv" class="dropdown-item" href="{{route('admin.vendor.cash-transaction-export', ['restaurant'=>$restaurant->id,'type'=>'csv'])}}">
+                        <a id="export-csv" class="dropdown-item" href="{{route('admin.restaurant.cash-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'csv'])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
                     </div>
                     @elseif ($sub_tab=='digital')
                     <div id="usersExportDropdown" class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                        <a id="export-excel" class="dropdown-item" href="{{route('admin.vendor.digital-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'excel'])}}">
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                        <a id="export-excel" class="dropdown-item" href="{{route('admin.restaurant.digital-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'excel'])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                     alt="Image Description">
                             {{translate('messages.excel')}}
                         </a>
-                        <a id="export-csv" class="dropdown-item" href="{{route('admin.vendor.digital-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'csv'])}}">
+                        <a id="export-csv" class="dropdown-item" href="{{route('admin.restaurant.digital-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'csv'])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
                     </div>
                     @elseif ($sub_tab=='withdraw')
                     <div id="usersExportDropdown" class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                        <a id="export-excel" class="dropdown-item" href="{{route('admin.vendor.withdraw-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'excel'])}}">
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                        <a id="export-excel" class="dropdown-item" href="{{route('admin.restaurant.withdraw-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'excel'])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                     alt="Image Description">
                             {{translate('messages.excel')}}
                         </a>
-                        <a id="export-csv" class="dropdown-item" href="{{route('admin.vendor.withdraw-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'csv'])}}">
+                        <a id="export-csv" class="dropdown-item" href="{{route('admin.restaurant.withdraw-transaction-export', ['restaurant'=>$restaurant->vendor->id,'type'=>'csv'])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
                     </div>
                     @endif

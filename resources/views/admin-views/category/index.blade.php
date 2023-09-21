@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.Add new category'))
+@section('title',translate('messages.Add_New_Category'))
 
 @push('css_or_js')
 
@@ -22,7 +22,7 @@
                     </h2>
                 </div>
                 @if(isset($category))
-                <a href="{{route('admin.category.add')}}" class="btn btn--primary pull-right"><i class="tio-add-circle"></i> {{translate('messages.add')}} {{translate('messages.new')}} {{translate('messages.category')}}</a>
+                <a href="{{route('admin.category.add')}}" class="btn btn--primary pull-right"><i class="tio-add-circle"></i> {{translate('messages.Add_New_Category')}}</a>
                 @endif
             </div>
         </div>
@@ -34,36 +34,40 @@
                     @csrf
                     @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                     @php($language = $language->value ?? null)
-                    @php($default_lang = 'en')
+                    @php($default_lang = str_replace('_', '-', app()->getLocale()))
                     @if($language)
-                        @php($default_lang = json_decode($language)[0])
                         <ul class="nav nav-tabs mb-4">
+                            <li class="nav-item">
+                                <a class="nav-link lang_link  active" href="#" id="default-link">{{ translate('Default')}}</a>
+                            </li>
                             @foreach(json_decode($language) as $lang)
                                 <li class="nav-item">
-                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
+                                    <a class="nav-link lang_link " href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
                                 </li>
                             @endforeach
                         </ul>
                     @endif
                     @if ($language)
+                    <div class="form-group lang_form" id="default-form">
+                            <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
+                            <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Category_Name') }}"   maxlength="191">
+                        <input type="hidden" name="lang[]" value="default">
+                    </div>
                         @foreach(json_decode($language) as $lang)
-                            <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
+                            <div class="form-group d-none lang_form" id="{{$lang}}-form">
                                 <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}} ({{strtoupper($lang)}})</label>
-                                <input id="name" type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex: Category Name') }}" maxlength="191" {{$lang == $default_lang? 'required':''}} oninvalid="document.getElementById('en-link').click()">
+                                <input id="name" type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Category_Name') }}" maxlength="191" oninvalid="document.getElementById('en-link').click()">
+                                <input type="hidden" name="lang[]" value="{{$lang}}">
                             </div>
-                            <input type="hidden" name="lang[]" value="{{$lang}}">
                         @endforeach
                     @else
                         <div class="form-group">
                             <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                            <input type="text" name="name" class="form-control" placeholder="{{ translate('Ex: Category Name') }}" value="{{old('name')}}" required maxlength="191">
+                            <input type="text" name="name[]" class="form-control" placeholder="{{ translate('Ex:_Category_Name') }}"   maxlength="191">
                         </div>
-                        <input type="hidden" name="lang[]" value="{{$lang}}">
+                        <input type="hidden" name="lang[]" value="default">
                     @endif
-                    <!-- <div class="form-group">
-                        <label class="input-label" for="exampleFormControlInput1">{{translate('messages.name')}}</label>
-                        <input type="text" name="name" value="{{isset($category)?$category['name']:''}}" class="form-control" placeholder="New Category" required>
-                    </div> -->
+
                     <input name="position" value="0" type="hidden">
                     <div class="row">
                         <div class="col-md-6 col-lg-4">
@@ -79,11 +83,11 @@
                                 </center>
                             </div>
                             <div class="form-group mt-2">
-                                <label>{{translate('messages.image')}}</label><small class="text-danger">* ( {{translate('messages.ratio')}} 1:1)</small>
+                                <label>{{translate('messages.image')}}</label><small class="text-danger">* ( {{translate('messages.ratio_1:1')}})</small>
                                 <div class="custom-file">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input"
                                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                    <label class="custom-file-label" for="customFileEg1">{{translate('messages.choose_file')}}</label>
                                 </div>
                             </div>
                         </div>
@@ -107,12 +111,12 @@
                 <div class="search--button-wrapper">
                     <h5 class="card-title"><span class="card-header-icon">
                         <i class="tio-category-outlined"></i>
-                    </span> {{translate('messages.category')}} {{translate('messages.list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$categories->total()}}</span></h5>
-                    <form id="dataSearch">
-                        @csrf
+                    </span> {{translate('messages.category_list')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$categories->total()}}</span></h5>
+                    <form>
+
                         <!-- Search -->
                         <div class="input--group input-group input-group-merge input-group-flush">
-                            <input type="search" name="search" class="form-control" placeholder="{{ translate('Ex : Categories') }}" aria-label="{{translate('messages.search_categories')}}">
+                            <input type="search" name="search" value="{{ request()?->search ?? null }}"  class="form-control" placeholder="{{ translate('Ex_:_Categories') }}" aria-label="{{translate('messages.search_categories')}}">
                             <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                         </div>
                         <!-- End Search -->
@@ -129,39 +133,19 @@
 
                         <div id="usersExportDropdown"
                                 class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                            {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                            <a id="export-copy" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                        alt="Image Description">
-                                {{translate('messages.copy')}}
-                            </a>
-                            <a id="export-print" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                        alt="Image Description">
-                                {{translate('messages.print')}}
-                            </a>
-                            <div class="dropdown-divider"></div>--}}
-                            <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                            <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.category.export-categories', ['type'=>'excel'])}}">
+                            <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                            <a target="__blank" id="export-excel" class="dropdown-item" href="{{route('admin.category.export-categories', ['type'=>'excel', request()->getQueryString()])}}">
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                         src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                         alt="Image Description">
                                 {{translate('messages.excel')}}
                             </a>
-                            <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.category.export-categories', ['type'=>'csv'])}}">
+                            <a target="__blank" id="export-csv" class="dropdown-item" href="{{route('admin.category.export-categories', ['type'=>'csv', request()->getQueryString()])}}">
                                 <img class="avatar avatar-xss avatar-4by3 mr-2"
                                         src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                         alt="Image Description">
-                                .{{translate('messages.csv')}}
+                                {{translate('messages.csv')}}
                             </a>
-                            {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                        alt="Image Description">
-                                {{translate('messages.pdf')}}
-                            </a>--}}
                         </div>
                     </div>
                 </div>
@@ -227,10 +211,10 @@
                             <td>
                                 <div class="btn--container">
                                     <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                        href="{{route('admin.category.edit',[$category['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.category')}}"><i class="tio-edit"></i>
+                                        href="{{route('admin.category.edit',[$category['id']])}}" title="{{translate('messages.edit_category')}}"><i class="tio-edit"></i>
                                     </a>
                                     <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:"
-                                    onclick="form_alert('category-{{$category['id']}}','{{ translate('Want to delete this category') }}')" title="{{translate('messages.delete')}} {{translate('messages.category')}}"><i class="tio-delete-outlined"></i>
+                                    onclick="form_alert('category-{{$category['id']}}','{{ translate('Want_to_delete_this_category_?') }}')" title="{{translate('messages.delete_category')}}"><i class="tio-delete-outlined"></i>
                                     </a>
                                 </div>
 
@@ -270,35 +254,6 @@
         $(document).on('ready', function () {
             // INITIALIZATION OF DATATABLES
             // =======================================================
-
-
-            $('#dataSearch').on('submit', function (e) {
-                e.preventDefault();
-                var formData = new FormData(this);
-                $.ajaxSetup({
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    }
-                });
-                $.post({
-                    url: '{{route('admin.category.search')}}',
-                    data: formData,
-                    cache: false,
-                    contentType: false,
-                    processData: false,
-                    beforeSend: function () {
-                        $('#loading').show();
-                    },
-                    success: function (data) {
-                        $('#table-div').html(data.view);
-                        $('#itemCount').html(data.count);
-                        $('.page-area').hide();
-                    },
-                    complete: function () {
-                        $('#loading').hide();
-                    },
-                });
-            });
 
 
             // INITIALIZATION OF SELECT2

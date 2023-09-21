@@ -2,17 +2,16 @@
 
 namespace App\Http\Controllers\Vendor;
 
-use App\Http\Controllers\Controller;
-use App\Models\DeliveryMan;
 use App\Models\DMReview;
-use App\Models\Zone;
-use Brian2694\Toastr\Facades\Toastr;
+use App\Models\DeliveryMan;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Storage;
 use App\CentralLogics\Helpers;
 use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rules\Password;
 
 class DeliveryManController extends Controller
 {
@@ -70,8 +69,11 @@ class DeliveryManController extends Controller
             'l_name' => 'nullable|max:100',
             'identity_number' => 'required|max:30',
             'email' => 'required|unique:delivery_men',
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men',
-            'password'=>'required|min:6',
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|unique:delivery_men',
+            'password' => ['required', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+
+            'image' => 'nullable|max:2048',
+            'identity_image.*' => 'nullable|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -79,7 +81,7 @@ class DeliveryManController extends Controller
         }
 
         if ($request->has('image')) {
-            $image_name = Helpers::upload('delivery-man/', 'png', $request->file('image'));
+            $image_name = Helpers::upload(dir:'delivery-man/', format:'png',image: $request->file('image'));
         } else {
             $image_name = 'def.png';
         }
@@ -87,7 +89,7 @@ class DeliveryManController extends Controller
         $id_img_names = [];
         if (!empty($request->file('identity_image'))) {
             foreach ($request->identity_image as $img) {
-                $identity_image = Helpers::upload('delivery-man/', 'png', $img);
+                $identity_image = Helpers::upload(dir:'delivery-man/',format: 'png',image: $img);
                 array_push($id_img_names, $identity_image);
             }
             $identity_image = json_encode($id_img_names);
@@ -113,7 +115,7 @@ class DeliveryManController extends Controller
 
         return response()->json(['message' => translate('messages.deliveryman_added_successfully')], 200);
 
-        return redirect('vendor-panel/delivery-man/list');
+        return redirect('restaurant-panel/delivery-man/list');
     }
 
     public function edit($id)
@@ -154,6 +156,7 @@ class DeliveryManController extends Controller
 
         }
         catch (\Exception $e) {
+            info($e->getMessage());
             Toastr::warning(translate('messages.push_notification_faild'));
         }
 
@@ -181,8 +184,11 @@ class DeliveryManController extends Controller
             'l_name' => 'nullable|max:100',
             'identity_number' => 'required|max:30',
             'email' => 'required|unique:delivery_men,email,'.$id,
-            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:10|unique:delivery_men,phone,'.$id,
-            'password'=>'nullable|min:6',
+            'phone' => 'required|regex:/^([0-9\s\-\+\(\)]*)$/|min:9|unique:delivery_men,phone,'.$id,
+            'password' => ['nullable', Password::min(8)->mixedCase()->letters()->numbers()->symbols()->uncompromised()],
+
+            'image' => 'nullable|max:2048',
+            'identity_image.*' => 'nullable|max:2048',
         ]);
 
         if ($validator->fails()) {
@@ -192,7 +198,7 @@ class DeliveryManController extends Controller
         $delivery_man = DeliveryMan::find($id);
 
         if ($request->has('image')) {
-            $image_name = Helpers::update('delivery-man/', $delivery_man->image, 'png', $request->file('image'));
+            $image_name = Helpers::update(dir:'delivery-man/',old_image: $delivery_man->image, format:'png',image: $request->file('image'));
         } else {
             $image_name = $delivery_man['image'];
         }
@@ -205,7 +211,7 @@ class DeliveryManController extends Controller
             }
             $img_keeper = [];
             foreach ($request->identity_image as $img) {
-                $identity_image = Helpers::upload('delivery-man/', 'png', $img);
+                $identity_image = Helpers::upload(dir:'delivery-man/', format:'png', image:$img);
                 array_push($img_keeper, $identity_image);
             }
             $identity_image = json_encode($img_keeper);
@@ -227,7 +233,7 @@ class DeliveryManController extends Controller
 
         return response()->json(['message' => translate('messages.deliveryman_updated_successfully')], 200);
 
-        return redirect('vendor-panel/delivery-man/list');
+        return redirect('restaurant-panel/delivery-man/list');
     }
 
     public function delete(Request $request)
@@ -242,7 +248,7 @@ class DeliveryManController extends Controller
                 Storage::disk('public')->delete('delivery-man/' . $img);
             }
         }
-        
+
         if($delivery_man->userinfo){
 
             $delivery_man->userinfo->delete();
@@ -276,7 +282,7 @@ class DeliveryManController extends Controller
 
     public function get_account_data(DeliveryMan $deliveryman)
     {
-        $wallet = $deliveryman->wallet;
+        $wallet = $deliveryman?->wallet;
         $cash_in_hand = 0;
         $balance = 0;
 

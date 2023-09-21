@@ -1,593 +1,413 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('messages.day_wise_report'))
+@section('title', translate('messages.transaction_report'))
 
 @push('css_or_js')
-
 @endpush
 
 @section('content')
-    <div class="content container-fluid">
+<div class="content container-fluid">
+    <!-- Page Header -->
+    <div class="page-header">
+        <h1 class="page-header-title">
+            <span class="page-header-icon">
+                <img src="{{ asset('public/assets/admin/img/report.png') }}" class="w--22" alt="">
+            </span>
+            <span>
+                {{ translate('messages.transection_report') }}
+                @if ($from && $to)
+                <span class="h6 mb-0 badge badge-soft-success ml-2">
+                ( {{$from}} - {{ $to}} )</span>
+                @endif
+            </span>
+        </h1>
+    </div>
+    <!-- End Page Header -->
+    <div class="card mb-20">
+        <div class="card-body">
+            <h4 class="">{{ translate('Search_Data') }}</h4>
+            <form  method="get">
 
-        <!-- Page Header -->
-        <div class="page-header">
-            <h1 class="page-header-title">
-                <i class="tio-filter-list"></i> {{translate('messages.day_wise_report')}}
-            </h1>
-        </div>
-        <!-- End Page Header -->
-
-        <div class="card">
-            <div class="card-body">
                 <div class="row g-3">
-                    <div class="col-lg-12 pt-sm-3">
-                        <div class="report-card-inner mb-4 pt-3 mw-100">
-                            <form action="{{route('admin.report.set-date')}}" method="post">
-                                @csrf
-                                <div class="d-flex flex-wrap justify-content-between align-items-center mb-md-0 mb-3">
-                                    <div class="mx-1">
-                                        <h5 class="form-label mb-0">
-                                            {{translate('messages.show_data_by_date_range')}}
-                                        </h5>
-                                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <select name="zone_id" class="form-control js-select2-custom"
+                            onchange="set_zone_filter('{{ url()->full() }}',this.value)" id="zone">
+                            <option value="all">{{ translate('messages.All_Zones') }}</option>
+                            @foreach (\App\Models\Zone::orderBy('name')->get(['id','name']) as $z)
+                                <option value="{{ $z['id'] }}"
+                                    {{ isset($zone) && $zone->id == $z['id'] ? 'selected' : '' }}>
+                                    {{ $z['name'] }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-sm-6 col-md-3">
+                        <select name="restaurant_id" onchange="set_restaurant_filter('{{ url()->full() }}',this.value)"
+                            data-placeholder="{{ translate('messages.select_restaurant') }}"
+                            class="js-data-example-ajax form-control">
+                            @if (isset($restaurant))
+                                <option value="{{ $restaurant->id }}" selected>{{ $restaurant->name }}</option>
+                            @else
+                                <option value="all" selected>{{ translate('messages.all_restaurants') }}</option>
+                            @endif
+                        </select>
+                    </div>
+
+                    <div class="col-sm-6 col-md-3">
+                        <select class="form-control" name="filter"
+                            onchange="set_time_filter('{{ url()->full() }}',this.value)">
+                            <option value="all_time" {{ isset($filter) && $filter == 'all_time' ? 'selected' : '' }}>
+                                {{ translate('messages.All_Time') }}</option>
+                            <option value="this_year" {{ isset($filter) && $filter == 'this_year' ? 'selected' : '' }}>
+                                {{ translate('messages.This_Year') }}</option>
+                            <option value="previous_year"
+                                {{ isset($filter) && $filter == 'previous_year' ? 'selected' : '' }}>
+                                {{ translate('messages.Previous_Year') }}</option>
+                            <option value="this_month"
+                                {{ isset($filter) && $filter == 'this_month' ? 'selected' : '' }}>
+                                {{ translate('messages.This_Month') }}</option>
+                            <option value="this_week" {{ isset($filter) && $filter == 'this_week' ? 'selected' : '' }}>
+                                {{ translate('messages.This_Week') }}</option>
+                            <option value="custom" {{ isset($filter) && $filter == 'custom' ? 'selected' : '' }}>
+                                {{ translate('messages.Custom') }}</option>
+                        </select>
+                    </div>
+                    @if (isset($filter) && $filter == 'custom')
+                        <div class="col-sm-6 col-md-3">
+                            <input type="date" name="from" id="from_date" class="form-control"
+                                placeholder="{{ translate('Start_Date') }}"
+                                value={{ $from ? $from  : '' }} required>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+
+                            <input type="date" name="to" id="to_date" class="form-control"
+                                placeholder="{{ translate('End_Date') }}"
+                                value={{ $to ? $to  : '' }} required>
+
+                        </div>
+                    @endif
+                    <div class="col-sm-6 col-md-3 ml-auto">
+                        <button type="submit"
+                            class="btn btn-primary btn-block">{{ translate('Filter') }}</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="mb-20">
+        <div class="row g-3">
+            <div class="col-lg-8">
+                <div class="row g-2">
+                    <div class="col-sm-6">
+
+                        <a class="__card-3 h-100" href="#">
+                            <img src="{{ asset('/public/assets/admin/img/report/new/trx1.png') }}" class="icon"
+                                alt="report/new">
+                            <h3 class="title text-008958">{{ \App\CentralLogics\Helpers::number_format_short($delivered) }}
+                            </h3>
+                            <h6 class="subtitle">{{ translate('Completed_Transaction') }}</h6>
+                            <div class="info-icon" data-toggle="tooltip" data-placement="top"
+                                data-original-title="{{ translate('When_the_order_is_successfully_delivered_full_order_amount_goes_to_this_section.') }}">
+                                <img src="{{ asset('/public/assets/admin/img/report/new/info1.png') }}"
+                                    alt="report/new">
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-sm-6">
+                        <a class="__card-3 h-100" href="#">
+                            <img src="{{ asset('/public/assets/admin/img/report/new/trx3.png') }}" class="icon"
+                                alt="report/new">
+                            <h3 class="title text-FF5A54">{{ \App\CentralLogics\Helpers::number_format_short($canceled) }}
+                            </h3>
+                            <h6 class="subtitle">{{ translate('Refunded_Transaction') }}</h6>
+                            <div class="info-icon" data-toggle="tooltip" data-placement="top"
+                                data-original-title="{{ translate('If_the_order_is_successfully_refunded,_the_full_order_amount_goes_to_this_section_without_the_delivery_fee_and_delivery_tips.') }}">
+                                <img src="{{ asset('/public/assets/admin/img/report/new/info3.png') }}"
+                                    alt="report/new">
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="row g-2">
+                    <div class="col-md-12">
+                        <div class="__card-vertical">
+                            <div class="__card-vertical-img">
+                                <img class="img"
+                                    src="{{ asset('/public/assets/admin/img/report/new/admin-earning.png') }}"
+                                    alt="">
+                                <h4 class="name">{{ translate('Admin_Earning') }}</h4>
+                                <div class="info-icon" data-toggle="tooltip" data-placement="right"
+                                    data-original-title="{{ translate('messages.Deducting_admin_commission_and_commission_on_delivery_charge_from_admin_discount_amount_goes_to_this_section.') }}">
+                                    <img src="{{ asset('/public/assets/admin/img/report/new/info1.png') }}"
+                                        alt="report/new">
                                 </div>
-                                <div class="row g-2 align-items-end">
-                                    <div class="col-md-3">
-                                        <select name="zone_id" class="form-control js-select2-custom h--45px"
-                                            onchange="set_zone_filter('{{ url()->full() }}',this.value)" id="zone_id">
-                                            <option value="all">{{ translate('All Zones') }}</option>
-                                            @foreach (\App\Models\Zone::orderBy('name')->get() as $z)
-                                                <option value="{{ $z['id'] }}" {{ isset($zone) && $zone->id == $z['id'] ? 'selected' : '' }}>
-                                                    {{ $z['name'] }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-
-                                    {{-- <div class="col-md-6">
-                                        <select name="restaurant_id" onchange="set_restaurant_filter('{{ url()->full() }}',this.value)"
-                                            data-placeholder="{{ translate('messages.select') }} {{ translate('messages.restaurant') }}"
-                                            class="js-data-example-ajax form-control h--45px">
-                                            @if (isset($restaurant))
-                                                <option value="{{ $restaurant->id }}" selected>{{ $restaurant->name }}</option>
-                                            @else
-                                                <option value="all" selected>{{ translate('messages.all') }} {{ translate('messages.restaurants') }}
-                                                </option>
-                                            @endif
-                                        </select>
-                                    </div> --}}
-                                    <div class="col-md-3">
-                                        <div>
-                                            <label class="floating-label" for="from_date">{{translate('start_date')}}</label>
-                                            <input type="date" class="form-control h--45px" name="from" id="from_date" {{session()->has('from_date')?'value='.session('from_date'):''}}
-                                            required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <div>
-                                            <label class="floating-label" for="to_date">{{translate('end_date')}}</label>
-                                            <input type="date" class="form-control h--45px" name="to" id="to_date" {{session()->has('to_date')?'value='.session('to_date'):''}}
-                                            required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <button type="submit" class="btn btn--primary h--45px btn-block">{{translate('Show Data')}}</button>
-                                    </div>
+                            </div>
+                            <h4 class="earning text-0661CB">
+                                {{ \App\CentralLogics\Helpers::number_format_short($admin_earned) }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-md-12">
+                        <div class="__card-vertical">
+                            <div class="__card-vertical-img">
+                                <img class="img"
+                                    src="{{ asset('/public/assets/admin/img/report/new/store-earning.png') }}"
+                                    alt="">
+                                <h4 class="name">{{ translate('Restaurant_Earning') }}</h4>
+                                <div class="info-icon" data-toggle="tooltip" data-placement="right"
+                                    data-original-title="{{ translate('messages.Deducting_admin_commission_and_restaurant_discount_from_actual_item_price_amount_goes_to_this_section.') }}">
+                                    <img src="{{ asset('/public/assets/admin/img/report/new/info2.png') }}"
+                                        alt="report/new">
                                 </div>
-                            </form>
+                            </div>
+                            <h4 class="earning text-00AA6D">
+                                {{\App\CentralLogics\Helpers::number_format_short($restaurant_earned) }}</h4>
                         </div>
                     </div>
-
-                    @php
-                        $from = session('from_date').' 00:00:00';
-                        $to = session('to_date').' 23:59:59';
-                        $total=\App\Models\Order::when(isset($zone), function($query)use($zone){
-                            return $query->whereHas('restaurant', function($q)use($zone){
-                                return $q->where('zone_id', $zone->id);
-                            });
-                        })->whereBetween('created_at', [$from, $to])->Notpos()->count();
-                        if($total==0){
-                        $total=.01;
-                        }
-                    $zone_currency = $zone->zone_currency ?? null;
-                    @endphp
-                    <!--Admin earned-->
-                    <div class="col-sm-6 col-xl-3">
-                    @php
-                        $admin_earned=$order_transactions->sum('admin_commission');
-                        $restaurant_earned=$order_transactions->sum('restaurant_amount');
-                        $deliveryman_earned=$order_transactions->sum('delivery_charge');
-                        $total_sell=$order_transactions->sum('order_amount');
-                    @endphp
-                        <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--6">
-                            <h4 class="title">{{\App\CentralLogics\Helpers::format_currency($admin_earned,$zone_currency)}}</h4>
-                            <span class="subtitle">{{translate('messages.admin')}} {{translate('messages.earned')}}
-                                <span  data-toggle="tooltip" data-placement="right" data-original-title='{{translate("messages.including_food_delivery_fee_commission")}}' class="input-label-secondary">
-                                    <i class="tio-info-outined"></i>
-                                </span>
-                            </span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/earned.png')}}" alt="order-report">
+                    <div class="col-md-12">
+                        <div class="__card-vertical">
+                            <div class="__card-vertical-img">
+                                <img class="img"
+                                    src="{{ asset('/public/assets/admin/img/report/new/deliveryman-earning.png') }}"
+                                    alt="">
+                                <h4 class="name">{{ translate('Deliveryman Earning') }}</h4>
+                                <div class="info-icon" data-toggle="tooltip" data-placement="right"
+                                    data-original-title="{{ translate('Deducting_the_admin_commission_on_the_delivery_fee,_the_delivery_fee_&_tips_amount_goes_to_earning_section.') }}">
+                                    <img src="{{ asset('/public/assets/admin/img/report/new/info3.png') }}"
+                                        alt="report/new">
+                                </div>
+                            </div>
+                            <h4 class="earning text-FF7500">
+                                {{ \App\CentralLogics\Helpers::number_format_short($deliveryman_earned) }}</h4>
                         </div>
-                        <!-- End Card -->
                     </div>
-                    <!--Admin earned End-->
-                    <!--restaurant earned-->
-                    <div class="col-sm-6 col-xl-3">
-                    <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--7">
-                            <h4 class="title">
-                                {{\App\CentralLogics\Helpers::format_currency($restaurant_earned,$zone_currency)}}
-                            </h4>
-                            <span class="subtitle">{{translate('messages.restaurant')}} {{translate('messages.earned')}}</span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/res-earned.png')}}" alt="order-report">
-                        </div>
-                    <!-- End Card -->
-                    </div>
-                    <!--restaurant earned end-->
-                    <!--Deliveryman earned-->
-                    <div class="col-sm-6 col-xl-3">
-                    <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--8">
-                            <h4 class="title">
-                                {{\App\CentralLogics\Helpers::format_currency($deliveryman_earned,$zone_currency)}}
-                            </h4>
-                            <span class="subtitle">
-                                {{translate('messages.delivery_fee_earned')}}
-                            </span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/delivery-fee.png')}}" alt="order-report">
-                        </div>
-                    <!-- End Card -->
-                    </div>
-                    <!--Deliveryman earned end-->
-                    <!--Total sell-->
-                    <div class="col-sm-6 col-xl-3">
-                    <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--9">
-                            <h4 class="title">
-                                {{\App\CentralLogics\Helpers::format_currency($total_sell,$zone_currency)}}
-                            </h4>
-                            <span class="subtitle">
-                                {{translate('messages.total_sell')}}
-                            </span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/sell.png')}}" alt="order-report">
-                        </div>
-                    <!-- End Card -->
-                    </div>
-                    <!--total sell end-->
-
-                    <!--In progress-->
-                    <div class="col-sm-6 col-xl-3 mb-3">
-                    @php
-                        $returned=\App\Models\Order::when(isset($zone), function($query)use($zone){
-                            return $query->whereHas('restaurant', function($q)use($zone){
-                                return $q->where('zone_id', $zone->id);
-                            });
-                        })->whereIn('order_status',['pending','accepted', 'confirmed', 'processing','handover','picked_up'])->whereBetween('created_at', [$from, $to])->Notpos()->count()
-                    @endphp
-                        <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--10">
-                            <h4 class="title">
-                                {{$returned}}
-                            </h4>
-                            <span class="subtitle">
-                                {{translate('messages.in_progress')}}
-                            </span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/progress.png')}}" alt="order-report">
-                        </div>
-                        <!-- End Card -->
-                    </div>
-                    <!--In progress End-->
-                    <!--In Delivered -->
-                    <div class="col-sm-6 col-xl-3 mb-3">
-                    @php
-                        $delivered=\App\Models\Order::when(isset($zone), function($query)use($zone){
-                            return $query->whereHas('restaurant', function($q)use($zone){
-                                return $q->where('zone_id', $zone->id);
-                            });
-                        })->where(['order_status'=>'delivered'])->whereBetween('created_at', [$from, $to])->Notpos()->count()
-                    @endphp
-                        <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--11">
-                            <h4 class="title">
-                                {{$delivered}}
-                            </h4>
-                            <span class="subtitle">
-                                {{translate('messages.delivered')}}
-                            </span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/delivered.png')}}" alt="order-report">
-                        </div>
-                        <!-- End Card -->
-                    </div>
-                    <!--Delivered End-->
-                    <!--Failed-->
-                    <div class="col-sm-6 col-xl-3 mb-3">
-                    @php
-                        $failed=\App\Models\Order::when(isset($zone), function($query)use($zone){
-                            return $query->whereHas('restaurant', function($q)use($zone){
-                                return $q->where('zone_id', $zone->id);
-                            });
-                        })->where(['order_status'=>'failed'])->whereBetween('created_at', [$from, $to])->Notpos()->count()
-                    @endphp
-                    <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--12">
-                            <h4 class="title">
-                                {{$failed}}
-                            </h4>
-                            <span class="subtitle">
-                                {{translate('messages.failed')}}
-                            </span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/failed.png')}}" alt="order-report">
-                        </div>
-                    <!-- End Card -->
-                    </div>
-                    <!--Failed End-->
-                    <!--Canceled-->
-                    <div class="col-sm-6 col-xl-3 mb-3">
-                    @php
-                        $canceled=\App\Models\Order::when(isset($zone), function($query)use($zone){
-                            return $query->whereHas('restaurant', function($q)use($zone){
-                                return $q->where('zone_id', $zone->id);
-                            });
-                        })->where(['order_status'=>'canceled'])->whereBetween('created_at', [$from, $to])->Notpos()->count()
-                    @endphp
-                    <!-- Card -->
-                        <div class="resturant-card resturant-card-2 bg--13">
-                            <h4 class="title">
-                                {{$canceled}}
-                            </h4>
-                            <span class="subtitle">
-                                {{translate('messages.canceled')}}
-                            </span>
-                            <img class="resturant-icon" src="{{asset('public/assets/admin/img/order-report/canceled.png')}}" alt="order-report">
-                        </div>
-                        <!-- End Card -->
-                    </div>
-                    <!--canceled End-->
-
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- End Stats -->
-        <!-- Card -->
-        <div class="card mt-3">
-            <!-- Header -->
-            <div class="card-header py-2 border-0">
-                <div class="search--button-wrapper">
-                    <h3 class="card-title">
-                        {{ translate('Day Wise Transaction Table') }} <span class="badge badge-soft-secondary">{{ $order_transactions_list->total() }}</span>
-                    </h3>
-                    <form action="javascript:" id="search-form" class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
-                        <!-- Search -->
-                        <div class="input--group input-group input-group-merge input-group-flush">
-                            <input class="form-control" placeholder="{{ translate('Search by Order ID') }}">
-                            <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
-                        </div>
-                        <!-- End Search -->
-                    </form>
-                    <!-- Static Export Button -->
-                    <div class="hs-unfold ml-3">
-                        <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle btn export-btn btn-outline-primary btn--primary font--sm" href="javascript:;"
-                            data-hs-unfold-options='{
-                                "target": "#usersExportDropdown",
-                                "type": "css-animation"
-                            }'>
-                            <i class="tio-download-to mr-1"></i> {{translate('messages.export')}}
+    <!-- End Stats -->
+    <!-- Card -->
+    <div class="card mt-3">
+        <!-- Header -->
+        <div class="card-header border-0 py-2">
+            <div class="search--button-wrapper">
+                <h3 class="card-title">
+                    {{ translate('messages.order_transactions') }} <span
+                        class="badge badge-soft-secondary" id="countItems">{{ $order_transactions->total() }}</span>
+                </h3>
+                <form  class="search-form">
+                    <!-- Search -->
+                    <div class="input--group input-group input-group-merge input-group-flush">
+                        <input class="form-control" value="{{ request()->search ?? null }}" placeholder="{{ translate('Search_by_Order_ID') }}" name="search">
+                        <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
+                    </div>
+                    <!-- End Search -->
+                </form>
+                <!-- Static Export Button -->
+                <div class="hs-unfold ml-3">
+                    <a class="js-hs-unfold-invoker btn btn-sm btn-white dropdown-toggle btn export-btn font--sm"
+                        href="javascript:;"
+                        data-hs-unfold-options="{
+                            &quot;target&quot;: &quot;#usersExportDropdown&quot;,
+                            &quot;type&quot;: &quot;css-animation&quot;
+                        }"
+                        data-hs-unfold-target="#usersExportDropdown" data-hs-unfold-invoker="">
+                        <i class="tio-download-to mr-1"></i> {{ translate('export') }}
+                    </a>
+
+                    <div id="usersExportDropdown"
+                        class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right hs-unfold-content-initialized hs-unfold-css-animation animated hs-unfold-reverse-y hs-unfold-hidden">
+
+                        <span class="dropdown-header">{{ translate('download_options') }}</span>
+                        <a id="export-excel" class="dropdown-item"
+                            href="{{ route('admin.report.day-wise-report-export', ['type' => 'excel', request()->getQueryString()]) }}">
+                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                src="{{ asset('public/assets/admin/svg/components/excel.svg') }}"
+                                alt="Image Description">
+                            {{ translate('messages.excel') }}
+                        </a>
+                        <a id="export-csv" class="dropdown-item"
+                            href="{{ route('admin.report.day-wise-report-export', ['type' => 'csv', request()->getQueryString()]) }}">
+                            <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                src="{{ asset('public/assets/admin/svg/components/placeholder-csv-format.svg') }}"
+                                alt="Image Description">
+                            {{ translate('messages.csv') }}
                         </a>
 
-                        <div id="usersExportDropdown"
-                                class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                            {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                            <a id="export-copy" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                        alt="Image Description">
-                                {{translate('messages.copy')}}
-                            </a>
-                            <a id="export-print" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                        alt="Image Description">
-                                {{translate('messages.print')}}
-                            </a>
-                            <div class="dropdown-divider"></div>--}}
-                            <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                            <a id="export-excel" class="dropdown-item" href="{{route('admin.report.day-wise-report-export', ['type'=>'excel',request()->getQueryString()])}}">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
-                                        alt="Image Description">
-                                {{translate('messages.excel')}}
-                            </a>
-                            <a id="export-csv" class="dropdown-item" href="{{route('admin.report.day-wise-report-export', ['type'=>'csv',request()->getQueryString()])}}">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
-                                        alt="Image Description">
-                                .{{translate('messages.csv')}}
-                            </a>
-                            {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                        src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                        alt="Image Description">
-                                {{translate('messages.pdf')}}
-                            </a>--}}
-                        </div>
-                    </div>
-                    <!-- Static Export Button -->
-                </div>
-            </div>
-            <!-- End Header -->
-
-            <!-- Body -->
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table id="datatable"
-                        class="table table-thead-bordered table-align-middle card-table">
-                        <thead class="thead-light">
-                            <tr>
-                                <th>{{ translate('messages.sl') }}</th>
-                                <th>{{translate('messages.order')}} {{translate('messages.id')}}</th>
-                                <th>{{translate('messages.total_order_amount')}}</th>
-                                <th>{{translate('messages.restaurant_commission')}}</th>
-                                <th>{{translate('messages.admin_commission')}}</th>
-                                <th>{{translate('messages.delivery_fee')}}</th>
-                                <th>{{translate('messages.commission_on_delivery_fee')}}</th>
-                                <th>{{translate('messages.vat/tax')}}</th>
-                                <th>{{translate('messages.amount_received_by')}}</th>
-                                <th>{{translate('messages.created_at')}}</th>
-                            </tr>
-                        </thead>
-                        <tbody id="set-rows">
-                        @foreach($order_transactions_list as $k=>$ot)
-                            <tr scope="row">
-                                <td >{{$k+$order_transactions_list->firstItem()}}</td>
-                                <td><a href="{{route('admin.order.details',$ot->order_id)}}">{{$ot->order_id}}</a></td>
-                                <td>{{\App\CentralLogics\Helpers::format_currency($ot->order_amount ,$zone_currency)}}</td>
-                                <td>{{\App\CentralLogics\Helpers::format_currency($ot->restaurant_amount - $ot->tax ,$zone_currency)}}</td>
-                                <td>{{\App\CentralLogics\Helpers::format_currency($ot->admin_commission ,$zone_currency)}}</td>
-                                <td>{{\App\CentralLogics\Helpers::format_currency($ot->delivery_charge ,$zone_currency)}}</td>
-                                <td>{{\App\CentralLogics\Helpers::format_currency($ot->delivery_fee_comission ,$zone_currency)}}</td>
-                                <td>{{\App\CentralLogics\Helpers::format_currency($ot->tax ,$zone_currency)}}</td>
-                                @if ($ot->received_by == 'admin')
-                                <td class="text-capitalize">{{translate('messages.admin')}}</td>
-                                @elseif ($ot->received_by == 'deliveryman')
-                                <td class="text-capitalize">{{translate('messages.delivery_man')}}</td>
-                                @elseif ($ot->received_by == 'restaurant')
-                                <td class="text-capitalize">{{translate('messages.restaurant')}}</td>
-                                @endif
-                                <td>{{$ot->created_at->format('Y/m/d '.config('timeformat'))}}</td>
-                            </tr>
-                        @endforeach
-                        </tbody>
-                    </table>
-                    @if(count($order_transactions_list) === 0)
-                    <div class="empty--data">
-                        <img src="{{asset('/public/assets/admin/img/empty.png')}}" alt="public">
-                        <h5>
-                            {{translate('no_data_found')}}
-                        </h5>
-                    </div>
-                    @endif
-                </div>
-            </div>
-            <!-- End Body -->
-            <div class="page-area px-4 pb-3">
-                <div class="d-flex align-items-center justify-content-end">
-                                        {{-- <div>
-                        1-15 of 380
-                    </div> --}}
-                    <div>
-                        {!!$order_transactions_list->links()!!}
                     </div>
                 </div>
+                <!-- Static Export Button -->
             </div>
         </div>
-        <!-- End Card -->
+        <!-- End Header -->
+
+        <!-- Body -->
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table id="datatable" class="table table-thead-bordered table-align-middle card-table">
+                    <thead class="thead-light">
+                        <tr>
+                            <th class="border-0">{{ translate('sl') }}</th>
+                            <th class="border-0">{{ translate('messages.order_id') }}</th>
+                            <th class="border-0">{{ translate('messages.restaurant') }}</th>
+                            <th class="border-0">{{ translate('messages.customer_name') }}</th>
+                            <th class="border-0 min-w-120">{{ translate('messages.total_item_amount') }}</th>
+                            <th class="border-0">{{ translate('messages.item_discount') }}</th>
+                            <th class="border-0">{{ translate('messages.coupon_discount') }}</th>
+                            <th class="border-0">{{ translate('messages.discounted_amount') }}</th>
+                            <th class="border-0">{{ translate('messages.vat/tax') }}</th>
+                            <th class="border-0">{{ translate('messages.delivery_charge') }}</th>
+                            <th class="border-0">{{ translate('messages.order_amount') }}</th>
+                            <th class="border-0">{{ translate('messages.admin_discount') }}</th>
+                            <th class="border-0">{{ translate('messages.restaurant_discount') }}</th>
+                            <th class="border-0">{{ translate('messages.admin_commission') }}</th>
+                            <th class="border-0">{{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('messages.additional_charge') }}</th>
+                            <th class="min-w-140 text-capitalize">{{ translate('commision_on_delivery_charge') }}</th>
+                            <th class="min-w-140 text-capitalize">{{ translate('admin_net_income') }}</th>
+                            <th class="min-w-140 text-capitalize">{{ translate('restaurant_net_income') }}</th>
+                            <th class="border-0 min-w-120">{{ translate('messages.amount_received_by') }}</th>
+                            <th class="border-top border-bottom text-capitalize">{{ translate('messages.payment_method') }}</th>
+                            <th class="border-0">{{ translate('messages.payment_status') }}</th>
+                            <th class="border-0">{{ translate('messages.action') }}</th>
+                        </tr>
+                    </thead>
+                    <tbody id="set-rows">
+                        @foreach ($order_transactions as $k => $ot)
+                            <tr scope="row">
+                                <td>{{ $k + $order_transactions->firstItem() }}</td>
+                                    <td><a
+                                            href="{{ route('admin.order.details', $ot->order_id) }}">{{ $ot->order_id }}</a>
+                                    </td>
+                                <td  class="text-capitalize">
+                                    @if($ot->order->restaurant)
+                                        {{Str::limit($ot->order->restaurant->name,25,'...')}}
+                                    @endif
+                                </td>
+                                <td class="white-space-nowrap">
+                                    @if ($ot->order->customer)
+                                        <a class="text-body text-capitalize"
+                                            href="{{ route('admin.customer.view', [$ot->order['user_id']]) }}">
+                                            <strong>{{ $ot->order->customer['f_name'] . ' ' . $ot->order->customer['l_name'] }}</strong>
+                                        </a>
+                                    @else
+                                        <label class="badge badge-danger">{{ translate('messages.invalid_customer_data') }}</label>
+                                    @endif
+                                </td>
+                                @php
+                                $discount_by_admin = 0;
+                                    if($ot->order->discount_on_product_by == 'admin'){
+                                        $discount_by_admin = $ot->order['restaurant_discount_amount'];
+                                    };
+                                // $discount_by_admin = 0;
+                                //     if($ot->order->discount_on_product_by == 'admin'){
+                                //         $discount_by_admin = $ot->order['restaurant_discount_amount'];
+                                //     };
+                                @endphp
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order['order_amount'] - $ot->additional_charge  -  $ot->order['dm_tips']-$ot->order['delivery_charge'] - $ot['tax'] + $ot->order['coupon_discount_amount'] + $ot->order['restaurant_discount_amount']) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order->details->sum('discount_on_food')) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order['coupon_discount_amount']) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::number_format_short($ot->order['coupon_discount_amount'] + $ot->order['restaurant_discount_amount']) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->tax) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_charge + $ot->delivery_fee_comission) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->order_amount) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->admin_expense) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->discount_amount_by_restaurant) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->admin_commission  + $ot->admin_expense  - $ot->additional_charge  ) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency(($ot->additional_charge)) }}</td>
+
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->delivery_fee_comission) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->admin_commission + $ot->delivery_fee_comission ) }}</td>
+                                <td class="white-space-nowrap">{{ \App\CentralLogics\Helpers::format_currency($ot->restaurant_amount - $ot->tax) }}</td>
+                                @if ($ot->received_by == 'admin')
+                                    <td class="text-capitalize white-space-nowrap">{{ translate('messages.admin') }}</td>
+                                @elseif ($ot->received_by == 'deliveryman')
+
+                                    <td class="text-capitalize white-space-nowrap">
+                                        <div>{{ translate('messages.delivery_man') }} </div>
+                                        <div class="text-right mw--85px">
+                                            @if (isset($ot->order->delivery_man) && $ot->order->delivery_man->earning == 1)
+                                            <span class="badge badge-soft-primary">
+                                                {{translate('messages.freelance')}}
+                                            </span>
+                                            @elseif (isset($ot->order->delivery_man) && $ot->order->delivery_man->earning == 0 && $ot->order->delivery_man->type == 'restaurant_wise')
+                                            <span class="badge badge-soft-warning">
+                                                {{translate('messages.restaurant')}}
+                                            </span>
+                                            @elseif (isset($ot->order->delivery_man) && $ot->order->delivery_man->earning == 0 && $ot->order->delivery_man->type == 'zone_wise')
+                                            <span class="badge badge-soft-success">
+                                                {{translate('messages.admin')}}
+                                                </span>
+                                            @endif
+                                        </div>
+                                    </td>
+                                @elseif ($ot->received_by == 'restaurant')
+                                    <td class="text-capitalize white-space-nowrap">{{ translate('messages.restaurant') }}</td>
+                                @endif
+                                <td class="mw--85px text-capitalize min-w-120 ">
+                                        {{ translate(str_replace('_', ' ', $ot->order['payment_method'])) }}
+                                </td>
+                                <td class="text-capitalize white-space-nowrap">
+                                    @if ($ot->status)
+                                    <span class="badge badge-soft-danger">
+                                        {{translate('messages.refunded')}}
+                                    </span>
+                                    @else
+                                    <span class="badge badge-soft-success">
+                                        {{translate('messages.completed')}}
+                                    </span>
+                                    @endif
+                                </td>
+
+                                <td>
+                                    <div class="btn--container justify-content-center">
+                                        <a class="btn btn-outline-success square-btn btn-sm mr-1 action-btn"  href="{{route('admin.report.generate-statement',[$ot['id']])}}">
+                                            <i class="tio-download-to"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <!-- End Body -->
+        @if (count($order_transactions) !== 0)
+            <hr>
+        @endif
+        <div class="page-area">
+            {!! $order_transactions->links() !!}
+        </div>
+        @if (count($order_transactions) === 0)
+            <div class="empty--data">
+                <img src="{{ asset('/public/assets/admin/svg/illustrations/sorry.svg') }}" alt="public">
+                <h5>
+                    {{ translate('no_data_found') }}
+                </h5>
+            </div>
+        @endif
     </div>
+    <!-- End Card -->
+</div>
+
 @endsection
 
 @push('script')
-
 @endpush
 
 @push('script_2')
 
-    <script src="{{asset('public/assets/admin')}}/vendor/chart.js/dist/Chart.min.js"></script>
-    <script
-        src="{{asset('public/assets/admin')}}/vendor/chartjs-chart-matrix/dist/chartjs-chart-matrix.min.js"></script>
-    <script src="{{asset('public/assets/admin')}}/js/hs.chartjs-matrix.js"></script>
-
     <script>
-        $(document).on('ready', function () {
-
-            // INITIALIZATION OF FLATPICKR
-            // =======================================================
-            $('.js-flatpickr').each(function () {
-                $.HSCore.components.HSFlatpickr.init($(this));
-            });
-
-
-            // INITIALIZATION OF NAV SCROLLER
-            // =======================================================
-            $('.js-nav-scroller').each(function () {
-                new HsNavScroller($(this)).init()
-            });
-
-
-            // INITIALIZATION OF DATERANGEPICKER
-            // =======================================================
-            $('.js-daterangepicker').daterangepicker();
-
-            $('.js-daterangepicker-times').daterangepicker({
-                timePicker: true,
-                startDate: moment().startOf('hour'),
-                endDate: moment().startOf('hour').add(32, 'hour'),
-                locale: {
-                    format: 'M/DD hh:mm A'
-                }
-            });
-
-            var start = moment();
-            var end = moment();
-
-            function cb(start, end) {
-                $('#js-daterangepicker-predefined .js-daterangepicker-predefined-preview').html(start.format('MMM D') + ' - ' + end.format('MMM D, YYYY'));
-            }
-
-            $('#js-daterangepicker-predefined').daterangepicker({
-                startDate: start,
-                endDate: end,
-                ranges: {
-                    'Today': [moment(), moment()],
-                    'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
-                    'Last 7 Days': [moment().subtract(6, 'days'), moment()],
-                    'Last 30 Days': [moment().subtract(29, 'days'), moment()],
-                    'This Month': [moment().startOf('month'), moment().endOf('month')],
-                    'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
-                }
-            }, cb);
-
-            cb(start, end);
-
-
-            // INITIALIZATION OF CHARTJS
-            // =======================================================
-            $('.js-chart').each(function () {
-                $.HSCore.components.HSChartJS.init($(this));
-            });
-
-            var updatingChart = $.HSCore.components.HSChartJS.init($('#updatingData'));
-
-            // Call when tab is clicked
-            $('[data-toggle="chart"]').click(function (e) {
-                let keyDataset = $(e.currentTarget).attr('data-datasets')
-
-                // Update datasets for chart
-                updatingChart.data.datasets.forEach(function (dataset, key) {
-                    dataset.data = updatingChartDatasets[keyDataset][key];
-                });
-                updatingChart.update();
-            })
-
-
-            // INITIALIZATION OF MATRIX CHARTJS WITH CHARTJS MATRIX PLUGIN
-            // =======================================================
-            function generateHoursData() {
-                var data = [];
-                var dt = moment().subtract(365, 'days').startOf('day');
-                var end = moment().startOf('day');
-                while (dt <= end) {
-                    data.push({
-                        x: dt.format('YYYY-MM-DD'),
-                        y: dt.format('e'),
-                        d: dt.format('YYYY-MM-DD'),
-                        v: Math.random() * 24
-                    });
-                    dt = dt.add(1, 'day');
-                }
-                return data;
-            }
-
-            $.HSCore.components.HSChartMatrixJS.init($('.js-chart-matrix'), {
-                data: {
-                    datasets: [{
-                        label: 'Commits',
-                        data: generateHoursData(),
-                        width: function (ctx) {
-                            var a = ctx.chart.chartArea;
-                            return (a.right - a.left) / 70;
-                        },
-                        height: function (ctx) {
-                            var a = ctx.chart.chartArea;
-                            return (a.bottom - a.top) / 10;
-                        }
-                    }]
-                },
-                options: {
-                    tooltips: {
-                        callbacks: {
-                            title: function () {
-                                return '';
-                            },
-                            label: function (item, data) {
-                                var v = data.datasets[item.datasetIndex].data[item.index];
-
-                                if (v.v.toFixed() > 0) {
-                                    return '<span class="font-weight-bold">' + v.v.toFixed() + ' hours</span> on ' + v.d;
-                                } else {
-                                    return '<span class="font-weight-bold">No time</span> on ' + v.d;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        xAxes: [{
-                            position: 'bottom',
-                            type: 'time',
-                            offset: true,
-                            time: {
-                                unit: 'week',
-                                round: 'week',
-                                displayFormats: {
-                                    week: 'MMM'
-                                }
-                            },
-                            ticks: {
-                                "labelOffset": 20,
-                                "maxRotation": 0,
-                                "minRotation": 0,
-                                "fontSize": 12,
-                                "fontColor": "rgba(22, 52, 90, 0.5)",
-                                "maxTicksLimit": 12,
-                            },
-                            gridLines: {
-                                display: false
-                            }
-                        }],
-                        yAxes: [{
-                            type: 'time',
-                            offset: true,
-                            time: {
-                                unit: 'day',
-                                parser: 'e',
-                                displayFormats: {
-                                    day: 'ddd'
-                                }
-                            },
-                            ticks: {
-                                "fontSize": 12,
-                                "fontColor": "rgba(22, 52, 90, 0.5)",
-                                "maxTicksLimit": 2,
-                            },
-                            gridLines: {
-                                display: false
-                            }
-                        }]
-                    }
-                }
-            });
-
-
-            // INITIALIZATION OF CLIPBOARD
-            // =======================================================
-            $('.js-clipboard').each(function () {
-                var clipboard = $.HSCore.components.HSClipboard.init(this);
-            });
-
-
-            // INITIALIZATION OF CIRCLES
-            // =======================================================
-            $('.js-circle').each(function () {
-                var circle = $.HSCore.components.HSCircles.init($(this));
-            });
-
             $('.js-data-example-ajax').select2({
                 ajax: {
-                    url: '{{ url('/') }}/admin/vendor/get-restaurants',
+                    url: '{{ url('/') }}/admin/restaurant/get-restaurants',
                     data: function(params) {
                         return {
                             q: params.term, // search term
-                            // all:true,
+                            all:true,
                             @if (isset($zone))
                                 zone_ids: [{{ $zone->id }}],
                             @endif
@@ -604,43 +424,14 @@
 
                         $request.then(success);
                         $request.fail(failure);
-
                         return $request;
                     }
                 }
             });
-
-            $('#search-form').on('submit', function(e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{ route('admin.report.day-wise-report-search') }}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function() {
-                    $('#loading').show();
-                },
-                success: function(data) {
-                    $('#set-rows').html(data.view);
-                    $('.page-area').hide();
-                },
-                complete: function() {
-                    $('#loading').hide();
-                },
-            });
-        });
-        });
     </script>
 
     <script>
-        $('#from_date,#to_date').change(function () {
+        $('#from_date,#to_date').change(function() {
             let fr = $('#from_date').val();
             let to = $('#to_date').val();
             if (fr != '' && to != '') {
@@ -655,5 +446,6 @@
             }
 
         })
+
     </script>
 @endpush

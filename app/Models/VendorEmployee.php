@@ -14,12 +14,12 @@ class VendorEmployee extends Authenticatable
         'auth_token',
         'remember_token',
     ];
-
+    protected $fillable = ['remember_token'];
     public function restaurant()
     {
         return $this->belongsTo(Restaurant::class);
     }
-    
+
     public function vendor()
     {
         return $this->belongsTo(Vendor::class);

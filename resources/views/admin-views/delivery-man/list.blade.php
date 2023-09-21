@@ -17,27 +17,10 @@
                             <img src="{{asset('/public/assets/admin/img/delivery-man.png')}}" alt="public">
                         </div>
                         <span>
-                            {{ translate('Deliveryman List') }}
+                            {{ translate('Deliveryman_List') }}
                         </span>
                     </h1>
                 </div>
-                {{-- <a href="{{route('admin.delivery-man.add')}}" class="btn btn-primary pull-right"><i
-                                class="tio-add-circle"></i> {{translate('messages.add')}} {{translate('messages.deliveryman')}}</a>
-
-                @if(!isset(auth('admin')->user()->zone_id))
-                <div class="col-sm-auto min-250">
-                    <select name="zone_id" class="form-control js-select2-custom"
-                            onchange="set_zone_filter('{{route('admin.delivery-man.list')}}', this.value)">
-                        <option value="all">All Zones</option>
-                        @foreach(\App\Models\Zone::orderBy('name')->get() as $z)
-                            <option
-                                value="{{$z['id']}}" {{isset($zone) && $zone->id == $z['id']?'selected':''}}>
-                                {{$z['name']}}
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-                @endif --}}
             </div>
         </div>
         <!-- End Page Header -->
@@ -49,12 +32,12 @@
                     <div class="card-header py-2">
                         <div class="search--button-wrapper">
                             <h5 class="card-title">{{translate('messages.deliveryman')}}<span class="badge badge-soft-dark ml-2" id="itemCount">{{$delivery_men->total()}}</span></h5>
-                            <form action="javascript:" id="search-form" >
+                            <form >
                                             <!-- Search -->
-                                @csrf
+
                                 <div class="input--group input-group input-group-merge input-group-flush">
-                                    <input id="datatableSearch_" type="search" name="search" class="form-control"
-                                            placeholder="{{ translate('Search by name or restaurant...') }}" aria-label="Search" required>
+                                    <input id="datatableSearch_" type="search" name="search" value="{{ request()?->search ?? null }}" class="form-control"
+                                            placeholder="{{ translate('Search_by_name_or_restaurant')}}" aria-label="Search">
                                     <button type="submit" class="btn btn--secondary">
                                         <i class="tio-search"></i>
                                     </button>
@@ -75,39 +58,22 @@
 
                                 <div id="usersExportDropdown"
                                      class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                                    {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                                    <a id="export-copy" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                             src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                             alt="Image Description">
-                                        {{translate('messages.copy')}}
-                                    </a>
-                                    <a id="export-print" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                             src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                             alt="Image Description">
-                                        {{translate('messages.print')}}
-                                    </a>
-                                    <div class="dropdown-divider"></div>--}}
-                                    <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
+                                    <span class="dropdown-header">{{translate('messages.download_options')}}</span>
                                     <a id="export-excel" class="dropdown-item" href="javascript:;">
+                                        <a id="export-excel" class="dropdown-item" href="{{route('admin.delivery-man.export-delivery-man', ['type'=>'excel',request()->getQueryString()])}}">
+
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                              src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                              alt="Image Description">
                                         {{translate('messages.excel')}}
                                     </a>
                                     <a id="export-csv" class="dropdown-item" href="javascript:;">
+                                        <a id="export-csv" class="dropdown-item" href="{{route('admin.delivery-man.export-delivery-man', ['type'=>'csv',request()->getQueryString()])}}">
                                         <img class="avatar avatar-xss avatar-4by3 mr-2"
                                              src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                              alt="Image Description">
-                                        .{{translate('messages.csv')}}
+                                        {{translate('messages.csv')}}
                                     </a>
-                                    {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                                        <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                             src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                             alt="Image Description">
-                                        {{translate('messages.pdf')}}
-                                    </a>--}}
                                 </div>
                             </div>
                             <!-- Unfold -->
@@ -130,8 +96,8 @@
                                 <th class="text-capitalize w-20p">{{translate('messages.name')}}</th>
                                 <th class="text-capitalize">{{ translate('messages.contact') }}</th>
                                 <th class="text-capitalize">{{translate('messages.zone')}}</th>
-                                <th class="text-capitalize text-center">{{ translate('Total Orders') }}</th>
-                                <th class="text-capitalize">{{translate('messages.availability')}} {{translate('messages.status')}}</th>
+                                <th class="text-capitalize text-center">{{ translate('Total_Orders') }}</th>
+                                <th class="text-capitalize">{{translate('messages.availability_status')}}</th>
                                 <th class="text-capitalize text-center w-110px">{{translate('messages.action')}}</th>
                             </tr>
                             </thead>
@@ -163,9 +129,8 @@
                                         @if($dm->zone)
                                         <span>{{$dm->zone->name}}</span>
                                         @else
-                                        <span>{{translate('messages.zone').' '.translate('messages.deleted')}}</span>
+                                        <span>{{translate('messages.zone_deleted')}}</span>
                                         @endif
-                                        {{--<span class="d-block font-size-sm">{{$banner['image']}}</span>--}}
                                     </td>
                                     <!-- Static Data -->
                                     <td class="text-center">
@@ -177,33 +142,33 @@
                                     <td>
                                         <div>
                                             <!-- Status -->
-                                            {{ translate('Currenty Assigned Orders') }} : {{$dm->current_orders}}
+                                            {{ translate('Currenty_Assigned_Orders') }} : {{$dm->current_orders}}
                                             <!-- Status -->
                                         </div>
                                         @if($dm->application_status == 'approved')
                                             @if($dm->active)
                                             <div>
-                                                {{ translate('Active Status') }} : <strong class="text-primary text-capitalize">{{translate('messages.online')}}</strong>
+                                                {{ translate('Active_Status') }} : <strong class="text-primary text-capitalize">{{translate('messages.online')}}</strong>
                                             </div>
                                             @else
                                             <div>
-                                                {{ translate('Active Status') }} : <strong class="text-secondary text-capitalize">{{translate('messages.offline')}}</strong>
+                                                {{ translate('Active_Status') }} : <strong class="text-secondary text-capitalize">{{translate('messages.offline')}}</strong>
                                             </div>
                                             @endif
                                         @elseif ($dm->application_status == 'denied')
                                             <div>
-                                                {{ translate('Active Status') }} : <strong class="text-danger text-capitalize">{{translate('messages.denied')}}</strong>
+                                                {{ translate('Active_Status') }} : <strong class="text-danger text-capitalize">{{translate('messages.denied')}}</strong>
                                             </div>
                                         @else
                                             <div>
-                                                {{ translate('Active Status') }} : <strong class="text-info text-capitalize">{{translate('messages.pending')}}</strong>
+                                                {{ translate('Active_Status') }} : <strong class="text-info text-capitalize">{{translate('messages.pending')}}</strong>
                                             </div>
                                         @endif
                                     </td>
                                     <td>
                                         <div class="btn--container justify-content-center">
                                             <a class="btn btn-sm btn--primary btn-outline-primary action-btn" href="{{route('admin.delivery-man.edit',[$dm['id']])}}" title="{{translate('messages.edit')}}"><i class="tio-edit"></i></a>
-                                            <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:" onclick="form_alert('delivery-man-{{$dm['id']}}','{{ translate('Want to remove this deliveryman ?') }}')" title="{{translate('messages.delete')}}"><i class="tio-delete-outlined"></i>
+                                            <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:" onclick="form_alert('delivery-man-{{$dm['id']}}','{{ translate('Want_to_remove_this_deliveryman_?') }}')" title="{{translate('messages.delete')}}"><i class="tio-delete-outlined"></i>
                                             </a>
                                             <form action="{{route('admin.delivery-man.delete',[$dm['id']])}}" method="post" id="delivery-man-{{$dm['id']}}">
                                                 @csrf @method('delete')
@@ -287,33 +252,4 @@
         });
     </script>
 
-    <script>
-        $('#search-form').on('submit', function (e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            $.ajaxSetup({
-                headers: {
-                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                }
-            });
-            $.post({
-                url: '{{route('admin.delivery-man.search')}}',
-                data: formData,
-                cache: false,
-                contentType: false,
-                processData: false,
-                beforeSend: function () {
-                    $('#loading').show();
-                },
-                success: function (data) {
-                    $('#set-rows').html(data.view);
-                    $('#itemCount').html(data.count);
-                    $('.page-area').hide();
-                },
-                complete: function () {
-                    $('#loading').hide();
-                },
-            });
-        });
-    </script>
 @endpush

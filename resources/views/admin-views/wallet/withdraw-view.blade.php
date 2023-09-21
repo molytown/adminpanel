@@ -1,5 +1,5 @@
 @extends('layouts.admin.app')
-@section('title',translate('Withdraw information View'))
+@section('title',translate('Withdraw_information_View'))
 @push('css_or_js')
     <!-- Custom styles for this page -->
     <link href="{{asset('public/assets')}}/vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
@@ -16,7 +16,7 @@
             <div class="card">
                 <div class="card-header p-3">
                     <h3 class="text-center text-capitalize">
-                        {{translate('Vendor Withdraw Information')}}
+                        {{translate('Vendor_Withdraw_Information')}}
                     </h3>
 
                     <i class="tio-wallet-outlined fz-30px"></i>
@@ -26,7 +26,11 @@
                         <div class="col-4">
                             <h5 class="text-capitalize">{{translate('messages.amount')}}
                                 : {{$wr->amount}}</h5>
-                            <h5 class="font-regular">{{translate('messages.request_time')}} : {{$wr->created_at}}</h5>
+                            <h5 class="font-regular">{{translate('messages.request_time')}} :
+
+                            {{  \App\CentralLogics\Helpers::time_date_format($wr->created_at) }}
+
+                            </h5>
                         </div>
                         <div class="col-4">
                             {{ translate('Note') }} : {{$wr->transaction_note}}
@@ -56,6 +60,26 @@
             </div>
         </div>
 
+        @if ($wr->method)
+        <div class="col-md-4">
+            <div class="card min-height-260px">
+                <div class="card-header">
+                    <h3 class="h3 mb-0 text-capitalize">{{ translate($wr->method->method_name) }} </h3>
+                    <i class="tio tio-dollar-outlined"></i>
+                </div>
+                <div class="card-body">
+                    <div class="col-md-8 mt-2">
+                    @forelse(json_decode($wr->withdrawal_method_fields, true) as $key=> $item)
+                    <h5 class="text-capitalize "> {{  translate($key) }}: {{$item}}</h5>
+                    @empty
+                    <h5 class="text-capitalize"> {{translate('messages.No_Data_found')}}</h5>
+                    @endforelse
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         <div class="col-md-4">
             <div class="card min-height-260px">
                 <div class="card-header">
@@ -65,13 +89,13 @@
                 <div class="card-body">
                     <div class="col-md-8 mt-2">
                         <h4>{{translate('messages.bank_name')}}
-                            : {{$wr->vendor->bank_name ? $wr->vendor->bank_name : 'No Data found'}}</h4>
+                            : {{$wr->vendor->bank_name ? $wr->vendor->bank_name : translate('messages.No_Data_found')}}</h4>
                         <h5 class="text-capitalize">{{translate('messages.branch')}}
-                            : {{$wr->vendor->branch ? $wr->vendor->branch : 'No Data found'}}</h5>
+                            : {{$wr->vendor->branch ? $wr->vendor->branch : translate('messages.No_Data_found')}}</h5>
                         <h5 class="text-capitalize font-regular">{{translate('messages.holder_name')}}
-                            : {{$wr->vendor->holder_name ? $wr->vendor->holder_name : 'No Data found'}}</h5>
+                            : {{$wr->vendor->holder_name ? $wr->vendor->holder_name : translate('messages.No_Data_found')}}</h5>
                         <h5 class="text-capitalize font-regular">{{translate('messages.account_no')}}
-                            : {{$wr->vendor->account_no ? $wr->vendor->account_no : 'No Data found'}}</h5>
+                            : {{$wr->vendor->account_no ? $wr->vendor->account_no : translate('messages.No_Data_found')}}</h5>
                     </div>
                 </div>
             </div>
@@ -80,7 +104,7 @@
         <div class="col-md-4">
             <div class="card min-height-260px">
                 <div class="card-header">
-                    <h3 class="h3 mb-0">{{translate('messages.restaurant')}} {{translate('messages.info')}}</h3>
+                    <h3 class="h3 mb-0">{{translate('messages.restaurant_info')}}</h3>
                     <i class="tio tio-shop-outlined"></i>
                 </div>
                 <div class="card-body">
@@ -92,7 +116,7 @@
                         : {{$wr->vendor->wallet->balance}}
                     </h5>
                     @else
-                    <center>{{translate('messages.Restaurant deleted!')}}</center>
+                    <center>{{translate('messages.Restaurant_deleted!')}}</center>
                     @endif
                 </div>
             </div>
@@ -101,7 +125,7 @@
         <div class="col-md-4">
             <div class="card min-height-260px">
                 <div class="card-header">
-                    <h3 class="h3 mb-0 "> {{translate('messages.owner')}} {{translate('messages.info')}}</h3>
+                    <h3 class="h3 mb-0 "> {{translate('messages.owner_info')}}</h3>
                     <i class="tio tio-user-big-outlined"></i>
                 </div>
                 <div class="card-body">
@@ -117,12 +141,12 @@
             <div class="modal-dialog" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">{{ translate('Withdraw request process') }}</h5>
+                        <h5 class="modal-title" id="exampleModalLabel">{{ translate('Withdraw_request_process') }}</h5>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <form action="{{route('admin.vendor.withdraw_status',[$wr->id])}}" method="POST">
+                    <form action="{{route('admin.restaurant.withdraw_status',[$wr->id])}}" method="POST">
                         @csrf
                         <div class="modal-body">
                             <div class="form-group">
@@ -133,8 +157,7 @@
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="message-text" class="col-form-label">{{ translate('Note about transaction or
-                                    request') }}:</label>
+                                <label for="message-text" class="col-form-label">{{ translate('Note_about_transaction_or_request') }}:</label>
                                 <textarea class="form-control" name="note" id="message-text"></textarea>
                             </div>
                         </div>

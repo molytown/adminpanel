@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Wishlist;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use App\CentralLogics\OrderLogic;
 
 class WishlistController extends Controller
 {
@@ -27,10 +28,10 @@ class WishlistController extends Controller
                 'errors' => $errors
             ], 403);
         }
-        $wishlist = Wishlist::where('user_id', $request->user()->id)->where('food_id', $request->food_id)->where('restaurant_id', $request->restaurant_id)->first();
+        $wishlist = Wishlist::where('user_id', $request?->user()?->id)->where('food_id', $request->food_id)->where('restaurant_id', $request->restaurant_id)->first();
         if (empty($wishlist)) {
             $wishlist = new Wishlist;
-            $wishlist->user_id = $request->user()->id;
+            $wishlist->user_id = $request?->user()?->id;
             $wishlist->food_id = $request->food_id;
             $wishlist->restaurant_id = $request->restaurant_id;
             $wishlist->save();
@@ -57,10 +58,10 @@ class WishlistController extends Controller
         ->when($request->restaurant_id, function($query)use($request){
             return $query->where('restaurant_id', $request->restaurant_id);
         })
-        ->where('user_id', $request->user()->id)->first();
+        ->where('user_id', $request?->user()?->id)->first();
 
         if ($wishlist) {
-            $wishlist->delete();
+            $wishlist?->delete();
             return response()->json(['message' => translate('messages.successfully_removed')], 200);
 
         }
@@ -77,15 +78,18 @@ class WishlistController extends Controller
             ], 403);
         }
         $zone_id= json_decode($request->header('zoneId'), true);
-        $wishlists = Wishlist::where('user_id', $request->user()->id)->with(['food'=>function($q)use($zone_id){
+        $longitude= $request->header('longitude');
+        $latitude= $request->header('latitude');
+        $wishlists = Wishlist::where('user_id', $request?->user()?->id)->with(['food'=>function($q)use($zone_id){
             return $q->whereHas('restaurant', function($q)use($zone_id){
                 $q->whereIn('zone_id', $zone_id);
             });
-        }, 'restaurant'=>function($q)use($zone_id){
-            return $q->withOpen()->whereIn('zone_id', $zone_id);
+        }, 'restaurant'=>function($q)use($zone_id,$longitude,$latitude){
+            return $q->withOpen($longitude,$latitude)->whereIn('zone_id', $zone_id);
         }])
         ->get();
-        $wishlists = Helpers::wishlist_data_formatting($wishlists, true);
+        $wishlists = Helpers::wishlist_data_formatting(data:$wishlists,multi_data: true);
+        OrderLogic::check_subscription($request->user());
         return response()->json($wishlists, 200);
     }
 }

@@ -1,4 +1,4 @@
-@foreach($categories as $key=>$category)
+{{-- @foreach($categories as $key=>$category)
     <tr>
         <td>{{$key+1}}</td>
         <td>{{$category->id}}</td>
@@ -32,10 +32,10 @@
                                 <td>
                                     <div class="btn--container justify-content-center">
                                         <a class="btn btn-sm btn--primary btn-outline-primary action-btn"
-                                            href="{{route('admin.category.edit',[$category['id']])}}" title="{{translate('messages.edit')}} {{translate('messages.category')}}"><i class="tio-edit"></i>
+                                            href="{{route('admin.category.edit',[$category['id']])}}" title="{{translate('messages.edit_category')}}"><i class="tio-edit"></i>
                                         </a>
                                         <a class="btn btn-sm btn--danger btn-outline-danger action-btn" href="javascript:"
-                                        onclick="form_alert('category-{{$category['id']}}','{{ translate('Want to delete this category') }}')" title="{{translate('messages.delete')}} {{translate('messages.category')}}"><i class="tio-delete-outlined"></i>
+                                        onclick="form_alert('category-{{$category['id']}}','{{ translate('Want_to_delete_this_category_?') }}')" title="{{translate('messages.delete_category')}}"><i class="tio-delete-outlined"></i>
                                         </a>
                                     </div>
                                     <form action="{{route('admin.category.delete',[$category['id']])}}" method="post" id="category-{{$category['id']}}">
@@ -43,4 +43,4 @@
                                     </form>
                                 </td>
     </tr>
-@endforeach
+@endforeach --}}

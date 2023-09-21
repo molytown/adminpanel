@@ -16,7 +16,7 @@
                 <img src="{{asset('/public/assets/admin/img/collect-cash.png')}}" class="w-20px" alt="public">
             </div>
             <span>
-                {{ translate('Cash Collection Transaction') }}
+                {{ translate('Cash_Collection_Transaction') }}
             </span>
         </h1>
     </div>
@@ -37,7 +37,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="input-label" for="restaurant">{{translate('messages.restaurant')}}<span class="input-label-secondary"></span></label>
-                            <select id="restaurant" name="restaurant_id" data-placeholder="{{translate('messages.select')}} {{translate('messages.restaurant')}}" onchange="getAccountData('{{url('/')}}/admin/vendor/get-account-data/',this.value,'restaurant')" class="form-control h--48px" title="Select Restaurant" disabled>
+                            <select id="restaurant" name="restaurant_id" data-placeholder="{{translate('messages.select_restaurant')}}" onchange="getAccountData('{{url('/')}}/admin/restaurant/get-account-data/',this.value,'restaurant')" class="form-control h--48px" title="Select Restaurant" disabled>
 
                             </select>
                         </div>
@@ -45,7 +45,7 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="input-label" for="deliveryman">{{translate('messages.deliveryman')}}<span class="input-label-secondary"></span></label>
-                            <select id="deliveryman" name="deliveryman_id" data-placeholder="{{translate('messages.select')}} {{translate('messages.deliveryman')}}" onchange="getAccountData('{{url('/')}}/admin/delivery-man/get-account-data/',this.value,'deliveryman')" class="form-control h--48px" title="Select deliveryman">
+                            <select id="deliveryman" name="deliveryman_id" data-placeholder="{{translate('messages.select_deliveryman')}}" onchange="getAccountData('{{url('/')}}/admin/delivery-man/get-account-data/',this.value,'deliveryman')" class="form-control h--48px" title="Select deliveryman">
 
                             </select>
                         </div>
@@ -56,25 +56,25 @@
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="input-label" for="method">{{translate('messages.method')}}<span class="input-label-secondary"></span></label>
-                            <input class="form-control h--48px" type="text" name="method" id="method" required maxlength="191" placeholder="{{ translate('Ex : Cash') }}">
+                            <input class="form-control h--48px" type="text" name="method" id="method" required maxlength="191" placeholder="{{ translate('messages.Ex_:_Cash') }}">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="input-label" for="ref">{{translate('messages.reference')}}<span class="input-label-secondary"></span></label>
-                            <input  class="form-control h--48px" type="text" name="ref" id="ref" maxlength="191" placeholder="{{ translate('Ex : Collect Cash') }}">
+                            <input  class="form-control h--48px" type="text" name="ref" id="ref" maxlength="191" placeholder="{{ translate('messages.Ex_:_Collect_Cash') }}">
                         </div>
                     </div>
                     <div class="col-md-4">
                         <div class="form-group">
                             <label class="input-label" for="amount">{{translate('messages.amount')}}<span class="input-label-secondary" id="account_info"></span></label>
-                            <input class="form-control h--48px" type="number" min=".01" step="0.01" name="amount" id="amount" max="999999999999.99" placeholder="{{ translate('Ex : 100') }}">
+                            <input class="form-control h--48px" type="number" min=".01" step="0.01" name="amount" id="amount" max="999999999999.99" placeholder="{{ translate('messages.Ex_:_100') }}">
                         </div>
                     </div>
                 </div>
                 <div class="btn--container justify-content-end">
                     <button type="reset" id="reset_btn" class="btn btn--reset">{{translate('messages.reset')}}</button>
-                    <button type="submit" class="btn btn--primary">{{translate('messages.collect')}} {{translate('messages.cash')}}</button>
+                    <button type="submit" class="btn btn--primary">{{translate('messages.collect_cash')}}</button>
                 </div>
             </form>
         </div>
@@ -83,13 +83,13 @@
         <div class="card-header py-2 border-0">
             <div class="search--button-wrapper">
                 <h3 class="card-title">
-                    <span>{{ translate('messages.transaction')}} {{ translate('messages.table')}}</span>
+                    <span>{{ translate('messages.transaction_table')}}</span>
                     <span class="badge badge-soft-secondary" id="itemCount" >{{$account_transaction->total()}}</span>
                 </h3>
                 <!-- Static Search Form -->
-                <form action="javascript:" id="search-form" class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
+                <form class="my-2 ml-auto mr-sm-2 mr-xl-4 ml-sm-auto flex-grow-1 flex-grow-sm-0">
                         <div class="input--group input-group input-group-merge input-group-flush">
-                        <input id="datatableSearch_" type="search" name="search" class="form-control" placeholder="{{ translate('Search by Reference') }}" aria-label="Search" required="">
+                        <input id="datatableSearch_" type="search" name="search" class="form-control" value="{{ request()?->search ?? null}}"  placeholder="{{ translate('messages.Search_by_Reference') }}" aria-label="Search" required>
                         <button type="submit" class="btn btn--secondary"><i class="tio-search"></i></button>
                     </div>
                     <!-- End Search -->
@@ -104,63 +104,21 @@
                         }'>
                         <i class="tio-download-to mr-1"></i> {{translate('messages.export')}}
                     </a>
-
                     <div id="usersExportDropdown"
                             class="hs-unfold-content dropdown-unfold dropdown-menu dropdown-menu-sm-right">
-                        {{--<span class="dropdown-header">{{translate('messages.options')}}</span>
-                        <a id="export-copy" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/copy.svg"
-                                    alt="Image Description">
-                            {{translate('messages.copy')}}
-                        </a>
-                        <a id="export-print" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/illustrations/print.svg"
-                                    alt="Image Description">
-                            {{translate('messages.print')}}
-                        </a>
-                        <div class="dropdown-divider"></div>--}}
-                        <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                        {{-- <form action="{{route('admin.export-account-transaction')}}"  method="post">
-                            @csrf
-                            <input type="hidden" name="type" value="excel">
-                            <button type="submit">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
-                                alt="Image Description">
-                                {{translate('messages.excel')}}
-                            </button>
-                        </form> --}}
-                        <a id="export-excel" class="dropdown-item" href="{{route('admin.export-account-transaction', ['type'=>'excel'])}}">
+                        <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                        <a id="export-excel" class="dropdown-item" href="{{route('admin.export-account-transaction', ['type'=>'excel',request()->getQueryString()])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                     alt="Image Description">
                             {{translate('messages.excel')}}
                         </a>
-
-                        {{-- <form action="{{route('admin.export-account-transaction')}}" method="post">
-                            @csrf
-                            <input type="hidden" name="type" value="csv">
-                            <button type="submit">
-                                <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
-                                alt="Image Description">
-                                .{{translate('messages.csv')}}
-                            </button>
-                        </form> --}}
-                        <a id="export-csv" class="dropdown-item" href="{{route('admin.export-account-transaction', ['type'=>'csv'])}}">
+                        <a id="export-csv" class="dropdown-item" href="{{route('admin.export-account-transaction', ['type'=>'csv',request()->getQueryString()])}}">
                             <img class="avatar avatar-xss avatar-4by3 mr-2"
                                     src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                     alt="Image Description">
-                            .{{translate('messages.csv')}}
+                            {{translate('messages.csv')}}
                         </a>
-                        {{--<a id="export-pdf" class="dropdown-item" href="javascript:;">
-                            <img class="avatar avatar-xss avatar-4by3 mr-2"
-                                    src="{{asset('public/assets/admin')}}/svg/components/pdf.svg"
-                                    alt="Image Description">
-                            {{translate('messages.pdf')}}
-                        </a>--}}
                     </div>
                 </div>
                 <!-- Static Export Button -->
@@ -187,15 +145,19 @@
                             <td scope="row">{{$k+$account_transaction->firstItem()}}</td>
                             <td>
                                 @if($at->restaurant)
-                                <a href="{{route('admin.vendor.view',[$at->restaurant['id']])}}">{{ Str::limit($at->restaurant->name, 20, '...') }}</a>
+                                <a href="{{route('admin.restaurant.view',[$at->restaurant['id']])}}">{{ Str::limit($at->restaurant->name, 20, '...') }}</a>
                                 @elseif($at->deliveryman)
                                 <a href="{{route('admin.delivery-man.preview',[$at->deliveryman->id])}}">{{ $at->deliveryman->f_name }} {{ $at->deliveryman->l_name }}</a>
                                 @else
                                     {{translate('messages.not_found')}}
                                 @endif
                             </td>
-                            <td><label class="text-uppercase">{{$at['from_type']}}</label></td>
-                            <td>{{$at->created_at->format('Y-m-d '.config('timeformat'))}}</td>
+                            <td><label class="text-uppercase">{{ translate($at['from_type'])}}</label></td>
+                            <td>
+                                {{ \App\CentralLogics\Helpers::time_date_format($at->created_at)  }}
+
+                                {{-- {{  Carbon\Carbon::parse($at->created_at)->locale(app()->getLocale())->translatedFormat('d M Y '.config('timeformat')) }} --}}
+                            </td>
                             <td>{{$at['amount']}}</td>
                             <td>{{$at['ref']}}</td>
                             <td>
@@ -213,7 +175,7 @@
                 <div class="empty--data">
                     <img src="{{asset('/public/assets/admin/img/empty.png')}}" alt="public">
                     <h5>
-                        {{translate('no_data_found')}}
+                        {{translate('messages.no_data_found')}}
                     </h5>
                 </div>
                 @endif
@@ -222,9 +184,7 @@
         <div class="card-footer border-0 pt-0">
             <div class="page-area px-4 pb-3">
                 <div class="d-flex align-items-center justify-content-end">
-                                        {{-- <div>
-                        1-15 of 380
-                    </div> --}}
+
                     <div>
                         {{$account_transaction->links()}}
                     </div>
@@ -261,7 +221,7 @@
     });
     $('#restaurant').select2({
         ajax: {
-            url: '{{url('/')}}/admin/vendor/get-restaurants',
+            url: '{{url('/')}}/admin/restaurant/get-restaurants',
             data: function (params) {
                 return {
                     q: params.term, // search term
@@ -357,32 +317,32 @@
     });
 </script>
 <script>
-    $('#search-form').on('submit', function () {
-        var formData = new FormData(this);
-        $.ajaxSetup({
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            }
-        });
-        $.post({
-            url: '{{route('admin.search-account-transaction')}}',
-            data: formData,
-            cache: false,
-            contentType: false,
-            processData: false,
-            beforeSend: function () {
-                $('#loading').show();
-            },
-            success: function (data) {
-                $('#set-rows').html(data.view);
-                $('#itemCount').html(data.total);
-                $('.page-area').hide();
-            },
-            complete: function () {
-                $('#loading').hide();
-            },
-        });
-    });
+    // $('#search-form').on('submit', function () {
+    //     var formData = new FormData(this);
+    //     $.ajaxSetup({
+    //         headers: {
+    //             'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+    //         }
+    //     });
+    //     $.post({
+    //         url: '{{route('admin.search-account-transaction')}}',
+    //         data: formData,
+    //         cache: false,
+    //         contentType: false,
+    //         processData: false,
+    //         beforeSend: function () {
+    //             $('#loading').show();
+    //         },
+    //         success: function (data) {
+    //             $('#set-rows').html(data.view);
+    //             $('#itemCount').html(data.total);
+    //             $('.page-area').hide();
+    //         },
+    //         complete: function () {
+    //             $('#loading').hide();
+    //         },
+    //     });
+    // });
 
     $('#reset_btn').click(function(){
             $('#restaurant').val(null).trigger('change');

@@ -55,7 +55,7 @@
                             class="js-sticky-block js-scrollspy navbar-nav navbar-nav-lg nav-tabs card card-navbar-nav">
                             <li class="nav-item">
                                 <a class="nav-link active" href="javascript:" id="generalSection">
-                                    <i class="tio-user-outlined nav-icon d-flex"></i>{{translate('messages.Basic')}} {{translate('messages.information')}}
+                                    <i class="tio-user-outlined nav-icon d-flex"></i>{{translate('messages.Basic_information')}}
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -98,7 +98,7 @@
                     <!-- Card -->
                     <div class="card mb-3 mb-lg-5">
                         <div class="card-header">
-                            <h2 class="card-title h4">{{translate('messages.Basic')}} {{translate('messages.information')}}</h2>
+                            <h2 class="card-title h4">{{translate('messages.Basic_information')}}</h2>
                         </div>
 
                         <!-- Body -->
@@ -106,7 +106,7 @@
                             <!-- Form -->
                             <!-- Form Group -->
                             <div class="row form-group">
-                                <label for="firstNameLabel" class="col-sm-3 col-form-label input-label">{{translate('messages.Full')}} {{translate('messages.name')}}  <i
+                                <label for="firstNameLabel" class="col-sm-3 col-form-label input-label">{{translate('messages.Full_name')}}  <i
                                         class="tio-help-outlined text-body ml-1" data-toggle="tooltip"
                                         data-placement="top"
                                         title="Display name"></i></label>
@@ -118,7 +118,7 @@
                                                required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="name">{{translate('messages.Last')}} {{translate('messages.Name')}}  <span class="text-danger">*</span></label>
+                                        <label for="name">{{translate('messages.Last_Name')}}  <span class="text-danger">*</span></label>
                                         <input type="text" name="l_name" value="{{$data->l_name}}" class="form-control" id="name"
                                                required>
                                     </div>
@@ -159,7 +159,7 @@
                                     <div class="custom-file">
                                         <input type="file" name="image" id="customFileUpload" class="custom-file-input"
                                             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                        <label class="custom-file-label" for="customFileUpload">{{translate('messages.image')}} {{translate('messages.Upload')}}</label>
+                                        <label class="custom-file-label" for="customFileUpload">{{translate('messages.image_Upload')}}</label>
                                     </div>
                                 </div>
                                 </div>
@@ -174,11 +174,10 @@
                     </div>
                     <!-- End Card -->
                 </form>
-
                 <!-- Card -->
                 <div id="passwordDiv" class="card mb-3 mb-lg-5">
                     <div class="card-header">
-                        <h4 class="card-title">{{translate('messages.Change')}} {{translate('messages.your')}} {{translate('messages.password')}}</h4>
+                        <h4 class="card-title">{{translate('messages.Change_your_password')}}</h4>
                     </div>
 
                     <!-- Body -->
@@ -191,10 +190,15 @@
                         <!-- Form Group -->
                             <div class="row form-group">
                                 <label for="newPassword" class="col-sm-3 col-form-label input-label"> {{translate('messages.New')}}
-                                    {{translate('messages.password')}}</label>
+                                    {{translate('messages.password')}}
+                                    <span class="input-label-secondary ps-1" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span>
+                                </label>
 
                                 <div class="col-sm-9">
                                     <input type="password" class="js-pwstrength form-control" name="password"
+                                    pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                    required
+
                                            id="newPassword" placeholder="{{translate('messages.enter_new_password')}}"
                                            aria-label="{{translate('messages.enter_new_password')}}"
                                            data-hs-pwstrength-options='{
@@ -222,6 +226,8 @@
                                 <div class="col-sm-9">
                                     <div class="mb-3">
                                         <input type="password" class="form-control" name="confirm_password"
+                                        pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                        required
                                                id="confirmNewPasswordLabel" placeholder="{{translate('messages.confirm_new_password')}}"
                                                aria-label="{{translate('messages.confirm_new_password')}}">
                                     </div>
@@ -230,7 +236,11 @@
                             <!-- End Form Group -->
 
                             <div class="d-flex justify-content-end">
-                                <button type="button" onclick="{{env('APP_MODE')!='demo'?"form_alert('changePasswordForm','{{translate('messages.want_to_update_password')}}')":"call_demo()"}}" class="btn btn-primary">{{translate('messages.Save')}} {{translate('messages.changes')}}</button>
+                                @if (env('APP_MODE')!='demo')
+                                <button type="submit" class="btn btn--primary">{{translate('messages.Save_changes')}}</button>
+                            @else
+                                <button type="button" onclick="call_demo()" class="btn btn--primary">{{translate('messages.Save_changes')}}</button>
+                            @endif
                             </div>
                         </form>
                         <!-- End Form -->

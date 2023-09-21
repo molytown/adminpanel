@@ -2,15 +2,19 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\User;
-use Brian2694\Toastr\Facades\Toastr;
+use App\Models\Order;
+use App\Models\Newsletter;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use App\CentralLogics\Helpers;
 use App\Models\BusinessSetting;
-use App\Models\Newsletter;
+use Illuminate\Support\Facades\DB;
+use App\Exports\CustomerListExport;
+use App\Exports\CustomerOrderExport;
+use App\Http\Controllers\Controller;
+use Brian2694\Toastr\Facades\Toastr;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\SubscriberListExport;
 
 class CustomerController extends Controller
 {
@@ -63,11 +67,10 @@ class CustomerController extends Controller
                         'updated_at'=>now()
                     ]);
                 }
-
             }
-
         }
         catch (\Exception $e) {
+            info($e->getMessage());
             Toastr::warning(translate('messages.push_notification_faild'));
         }
 
@@ -75,26 +78,52 @@ class CustomerController extends Controller
         return back();
     }
 
-    public function search(Request $request){
-        $key = explode(' ', $request['search']);
-        $customers=User::where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('f_name', 'like', "%{$value}%")
-                    ->orWhere('l_name', 'like', "%{$value}%")
-                    ->orWhere('email', 'like', "%{$value}%")
-                    ->orWhere('phone', 'like', "%{$value}%");
-            }
-        })->orderBy('order_count','desc')->limit(50)->get();
-        return response()->json([
-            'view'=>view('admin-views.customer.partials._table',compact('customers'))->render()
-        ]);
-    }
+    // public function search(Request $request){
+    //     $key = explode(' ', $request['search']);
+    //     $customers=User::where(function ($q) use ($key) {
+    //         foreach ($key as $value) {
+    //             $q->orWhere('f_name', 'like', "%{$value}%")
+    //                 ->orWhere('l_name', 'like', "%{$value}%")
+    //                 ->orWhere('email', 'like', "%{$value}%")
+    //                 ->orWhere('phone', 'like', "%{$value}%");
+    //         }
+    //     })->orderBy('order_count','desc')->limit(50)->get();
+    //     return response()->json([
+    //         'view'=>view('admin-views.customer.partials._table',compact('customers'))->render()
+    //     ]);
+    // }
+    // public function order_search(Request $request){
+    //     $key = explode(' ', $request['search']);
+    //     $customer = User::find($request->id);
+
+    //     $orders=Order::where(['user_id' => $customer->id])
+    //     ->Notpos()->
+    //     where(function ($q) use ($key) {
+    //         foreach ($key as $value) {
+    //             $q->Where('id', 'like', "%{$value}%");
+    //         }
+    //     })
+    //     ->paginate(config('default_pagination'));
+    //     $total=$orders->total();
+    //     return response()->json([
+    //         'view'=>view('admin-views.customer.partials._list_table',compact('customer', 'orders'))->render() ,'total' => $total
+    //     ]);
+    // }
 
     public function view($id)
     {
+        $key = explode(' ', request()?->search);
         $customer = User::find($id);
         if (isset($customer)) {
-            $orders = Order::latest()->where(['user_id' => $id])->Notpos()->paginate(config('default_pagination'));
+            $orders = Order::latest()->where(['user_id' => $id])->Notpos()
+            ->when(isset($key), function($q) use($key) {
+                $q->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->Where('id', 'like', "%{$value}%");
+                    }
+                });
+            })
+            ->paginate(config('default_pagination'));
             return view('admin-views.customer.customer-view', compact('customer', 'orders'));
         }
         Toastr::error(translate('messages.customer_not_found'));
@@ -114,8 +143,6 @@ class CustomerController extends Controller
         ->limit(8)
         ->get([DB::raw('id, CONCAT(f_name, " ", l_name, " (", phone ,")") as text')]);
         if($request->all) $data[]=(object)['id'=>false, 'text'=>translate('messages.all')];
-
-
         return response()->json($data);
     }
 
@@ -123,10 +150,10 @@ class CustomerController extends Controller
     {
         $data = BusinessSetting::where('key','like','wallet_%')
             ->orWhere('key','like','loyalty_%')
+            ->orWhere('key', 'like', 'customer_%')
             ->orWhere('key','like','ref_earning_%')
             ->orWhere('key','like','ref_earning_%')->get();
         $data = array_column($data->toArray(), 'value','key');
-        //dd($data);
         return view('admin-views.customer.settings', compact('data'));
     }
 
@@ -167,26 +194,139 @@ class CustomerController extends Controller
         BusinessSetting::updateOrInsert(['key' => 'loyalty_point_minimum_point'], [
             'value' => $request['minimun_transfer_point']??0
         ]);
-
+        BusinessSetting::query()->updateOrInsert(['key' => 'customer_verification'], [
+            'value' => $request['customer_verification']
+        ]);
+        BusinessSetting::updateOrInsert(['key' => 'add_fund_status'], [
+            'value' => $request['add_fund_status']??0
+        ]);
         Toastr::success(translate('messages.customer_settings_updated_successfully'));
         return back();
     }
 
-    public function subscribedCustomers()
-    {
-        $subscribers = Newsletter::orderBy('id', 'desc')->paginate(config('default_pagination'));
-        return view('admin-views.customer.subscriber.list', compact('subscribers'));
-    }
-    public function subscriberMailSearch(Request $request)
+    public function subscribedCustomers(Request $request)
     {
         $key = explode(' ', $request['search']);
-        $customers = Newsletter::where(function ($q) use ($key) {
-            foreach ($key as $value) {
-                $q->orWhere('email', 'like', "%". $value."%");
-            }
-        })->orderBy('id', 'desc')->get();
-        return response()->json([
-            'view' => view('admin-views.customer.partials._subscriber-email-table', compact('customers'))->render()
-        ]);
+
+        $subscribers = Newsletter::orderBy('id', 'desc')
+        ->when(isset($key),function($q) use($key){
+            $q->where(function ($q) use ($key) {
+                foreach ($key as $value) {
+                    $q->orWhere('email', 'like', "%". $value."%");
+                }
+            });
+        })
+        ->paginate(config('default_pagination'));
+        return view('admin-views.customer.subscriber.list', compact('subscribers'));
     }
+    // public function subscriberMailSearch(Request $request)
+    // {
+    //     $key = explode(' ', $request['search']);
+
+    //     $customers = Newsletter::
+    //     where(function ($q) use ($key) {
+    //         foreach ($key as $value) {
+    //             $q->orWhere('email', 'like', "%". $value."%");
+    //         }
+    //     })
+    //     ->orderBy('id', 'desc')->get();
+    //     return response()->json([
+    //         'view' => view('admin-views.customer.partials._subscriber-email-table', compact('customers'))->render()
+    //     ]);
+    // }
+
+    public function export(Request $request){
+        try{
+                $key = [];
+                if ($request->search) {
+                    $key = explode(' ', $request['search']);
+                }
+                $customers = User::when(count($key) > 0, function ($query) use ($key) {
+                    foreach ($key as $value) {
+                        $query->orWhere('f_name', 'like', "%{$value}%")
+                            ->orWhere('l_name', 'like', "%{$value}%")
+                            ->orWhere('email', 'like', "%{$value}%")
+                            ->orWhere('phone', 'like', "%{$value}%");
+                    };
+                })
+                ->orderBy('order_count', 'desc')->get();
+                $data = [
+                    'customers'=>$customers,
+                    'search'=>$request->search??null,
+                ];
+                if ($request->type == 'excel') {
+                    return Excel::download(new CustomerListExport($data), 'Customers.xlsx');
+                } else if ($request->type == 'csv') {
+                    return Excel::download(new CustomerListExport($data), 'Customers.csv');
+                }
+            }  catch(\Exception $e){
+                Toastr::error("line___{$e->getLine()}",$e->getMessage());
+                info(["line___{$e->getLine()}",$e->getMessage()]);
+                return back();
+            }
+    }
+
+    public function customer_order_export(Request $request)
+    {
+        try{
+                $key = explode(' ', $request['search']);
+                $customer = User::find($request->id);
+
+                $orders = Order::latest()->where(['user_id' => $request->id])->Notpos()
+                ->when(isset($key), function($q) use($key) {
+                    $q->where(function ($q) use ($key) {
+                        foreach ($key as $value) {
+                            $q->Where('id', 'like', "%{$value}%");
+                        }
+                    });
+                })
+                ->get();
+                $data = [
+                    'orders'=>$orders,
+                    'customer_id'=>$customer->id,
+                    'customer_name'=>$customer->f_name.' '.$customer->l_name,
+                    'customer_phone'=>$customer->phone,
+                    'customer_email'=>$customer->email,
+                ];
+                if ($request->type == 'excel') {
+                    return Excel::download(new CustomerOrderExport($data), 'CustomerOrders.xlsx');
+                } else if ($request->type == 'csv') {
+                    return Excel::download(new CustomerOrderExport($data), 'CustomerOrders.csv');
+                }
+            }  catch(\Exception $e){
+                Toastr::error("line___{$e->getLine()}",$e->getMessage());
+                info(["line___{$e->getLine()}",$e->getMessage()]);
+                return back();
+            }
+    }
+
+    public function subscribed_customer_export(Request $request){
+        try{
+            $key = explode(' ', $request['search']);
+            $subscribers = Newsletter::orderBy('id', 'desc')
+            ->when(isset($key),function($q) use($key){
+                $q->where(function ($q) use ($key) {
+                    foreach ($key as $value) {
+                        $q->orWhere('email', 'like', "%". $value."%");
+                    }
+                });
+            })
+            ->get();
+
+            $data = [
+                'customers'=>$subscribers
+            ];
+
+            if ($request->type == 'excel') {
+                return Excel::download(new SubscriberListExport($data), 'Subscribers.xlsx');
+            } else if ($request->type == 'csv') {
+                return Excel::download(new SubscriberListExport($data), 'Subscribers.csv');
+            }
+        }  catch(\Exception $e){
+            Toastr::error("line___{$e->getLine()}",$e->getMessage());
+            info(["line___{$e->getLine()}",$e->getMessage()]);
+            return back();
+        }
+    }
+
 }

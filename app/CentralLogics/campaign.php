@@ -12,8 +12,7 @@ class CampaignLogic
         $data = [];
         $paginator=Campaign::with('restaurants')->latest()->paginate($limit, ['*'], 'page', $offset);
         foreach ($paginator->items() as $item) {
-            $variations = [];
-            $restaurant_ids = count($item->restaurants)?$item->restaurants->pluck('id')->toArray():[];
+            $restaurant_ids = $item?->restaurants?->pluck('id')?->toArray() ?? [];
             if($item->start_date)
             {
                 $item['available_date_starts']=$item->start_date->format('Y-m-d');

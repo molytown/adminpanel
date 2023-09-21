@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Add new sub sub category'))
+@section('title',translate('Add_new_sub_sub_category'))
 
 @push('css_or_js')
 
@@ -12,7 +12,7 @@
         <div class="page-header">
             <div class="row align-items-center">
                 <div class="col-sm mb-2 mb-sm-0">
-                    <h1 class="page-header-title">{{ translate('Sub Sub Category') }}</h1>
+                    <h1 class="page-header-title">{{ translate('Sub_Sub_Category') }}</h1>
                 </div>
             </div>
         </div>
@@ -22,7 +22,7 @@
                 <form action="{{route('admin.category.store')}}" method="post">
                     @csrf
                     <div class="form-group">
-                        <label class="input-label" for="exampleFormControlSelect1">{{ translate('Sub Categories') }}
+                        <label class="input-label" for="exampleFormControlSelect1">{{ translate('Sub_Categories') }}
                             <span class="input-label-secondary">*</span></label>
                         <select id="exampleFormControlSelect1" name="parent_id" class="form-control" required>
                             @foreach(\App\Models\Category::where(['position'=>1])->get() as $category)
@@ -57,8 +57,8 @@
                             <thead class="thead-light">
                             <tr>
                                 <th>{{translate('sl')}}</th>
-                                <th class="w-50p">{{ translate('Sub Category') }}</th>
-                                <th class="w-50p">{{ translate('Sub Sub Category') }}</th>
+                                <th class="w-50p">{{ translate('Sub_Category') }}</th>
+                                <th class="w-50p">{{ translate('Sub_Sub_Category') }}</th>
                                 <th class="w-20p">{{ translate('Status') }}</th>
                                 <th class="w-20p">{{ translate('Action') }}</th>
                             </tr>

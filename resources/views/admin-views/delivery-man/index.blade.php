@@ -38,19 +38,17 @@
                                 <div class="col-sm-6">
                                     <div class="form-group m-0">
                                         <label class="input-label"
-                                            for="exampleFormControlInput1">{{ translate('messages.first') }}
-                                            {{ translate('messages.name') }}</label>
+                                            for="exampleFormControlInput1">{{ translate('messages.first_name') }}</label>
                                         <input type="text" name="f_name" class="form-control h--45px"
-                                            placeholder="{{ translate('Ex: Jhone') }}" required>
+                                            placeholder="{{ translate('Ex:_Jhone') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="form-group m-0">
                                         <label class="input-label"
-                                            for="exampleFormControlInput1">{{ translate('messages.last') }}
-                                            {{ translate('messages.name') }}</label>
+                                            for="exampleFormControlInput1">{{ translate('messages.last_name') }}</label>
                                         <input type="text" name="l_name" class="form-control h--45px"
-                                            placeholder="{{ translate('Ex: Joe') }}" required>
+                                            placeholder="{{ translate('Ex:_Joe') }}" required>
                                     </div>
                                 </div>
                                 <div class="col-sm-6">
@@ -58,7 +56,7 @@
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.email') }}</label>
                                         <input type="email" name="email" class="form-control h--45px"
-                                            placeholder="{{ translate('Ex : ex@example.com') }}" required>
+                                            placeholder="{{ translate('Ex:_ex@example.com') }}" required>
                                     </div>
                                 </div>
 
@@ -66,10 +64,10 @@
                                     <div class="form-group m-0">
                                         <label class="input-label"
                                             for="exampleFormControlInput1">{{ translate('messages.zone') }}</label>
-                                        <select name="zone_id" class="form-control h--45px" required
-                                            data-placeholder="{{ translate('messages.select') }} {{ translate('messages.zone') }}">
-                                            <option value="" readonly="true" hidden="true">{{ translate('Ex: XYZ Zone') }}</option>
-                                            @foreach (\App\Models\Zone::all() as $zone)
+                                        <select name="zone_id" class="form-control js-select2-custom h--45px" required
+                                            data-placeholder="{{ translate('messages.select_zone') }}">
+                                            <option value="" readonly="true" hidden="true">{{ translate('Ex:_XYZ_Zone') }}</option>
+                                            @foreach (\App\Models\Zone::where('status',1)->get(['id','name']) as $zone)
                                                 @if (isset(auth('admin')->user()->zone_id))
                                                     @if (auth('admin')->user()->zone_id == $zone->id)
                                                         <option value="{{ $zone->id }}" selected>{{ $zone->name }}
@@ -82,12 +80,25 @@
                                         </select>
                                     </div>
                                 </div>
+                                <div class="col-sm-6">
+                                    <div class="form-group m-0">
+                                        <label class="input-label"
+                                            for="exampleFormControlInput1">{{ translate('messages.Vehicle') }}</label>
+                                        <select name="vehicle_id" class="form-control js-select2-custom h--45px" required
+                                            data-placeholder="{{ translate('messages.select_vehicle') }}">
+                                            <option value="" readonly="true" hidden="true">{{ translate('messages.select_vehicle') }}</option>
+                                            @foreach (\App\Models\Vehicle::where('status',1)->get(['id','type']) as $v)
+                                                        <option value="{{ $v->id }}" >{{ $v->type }}
+                                                        </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
 
                                 <div class="col-sm-6">
                                     <div class="form-group m-0">
                                         <label class="input-label"
-                                            for="exampleFormControlInput1">{{ translate('messages.deliveryman') }}
-                                            {{ translate('messages.type') }}</label>
+                                            for="exampleFormControlInput1">{{ translate('messages.deliveryman_type') }}</label>
                                         <select name="earning" class="form-control h--45px">
                                             <option value="" readonly="true" hidden="true">{{ translate('messages.delivery_man_type') }}</option>
                                             <option value="1">{{ translate('messages.freelancer') }}</option>
@@ -99,17 +110,17 @@
                         </div>
                         <div class="col-lg-4">
                             <div class="form-group m-0">
-                                <label class="d-block mb-lg-5 text-center">{{ translate('messages.delivery_man_image') }} <small class="text-danger">* ( {{ translate('messages.ratio') }} {{ translate('100x100') }} )</small></label>
+                                <label class="d-block mb-lg-5 text-center">{{ translate('messages.delivery_man_image') }} <small class="text-danger">* ( {{ translate('messages.ratio_100x100') }} )</small></label>
                                 <center>
                                     <img class="initial-24" id="viewer"
                                         src="{{ asset('public/assets/admin/img/100x100/user.png') }}"
                                         alt="delivery-man image" />
                                 </center>
+                                <label class="d-block mb-lg-3 "></label>
                                 <div class="custom-file">
                                     <input type="file" name="image" id="customFileEg1" class="custom-file-input h--45px"
                                         accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*" required>
-                                    <label class="custom-file-label" for="customFileEg1">{{ translate('messages.choose') }}
-                                        {{ translate('messages.file') }}</label>
+                                    <label class="custom-file-label" for="customFileEg1">{{ translate('messages.choose_file') }}</label>
                                 </div>
                             </div>
                         </div>
@@ -118,25 +129,21 @@
                                 <div class="col-sm-6 col-lg-12">
                                     <div class="form-group m-0">
                                         <label class="input-label"
-                                            for="exampleFormControlInput1">{{ translate('messages.identity') }}
-                                            {{ translate('messages.type') }}</label>
+                                            for="exampleFormControlInput1">{{ translate('messages.identity_type') }}</label>
                                         <select name="identity_type" class="form-control h--45px">
                                             <option value="passport">{{ translate('messages.passport') }}</option>
-                                            <option value="driving_license">{{ translate('messages.driving') }}
-                                                {{ translate('messages.license') }}</option>
+                                            <option value="driving_license">{{ translate('messages.driving_license') }}</option>
                                             <option value="nid">{{ translate('messages.nid') }}</option>
-                                            <option value="restaurant_id">{{ translate('messages.restaurant') }}
-                                                {{ translate('messages.id') }}</option>
+                                            <option value="restaurant_id">{{ translate('messages.restaurant_id') }}</option>
                                         </select>
                                     </div>
                                 </div>
                                 <div class="col-sm-6 col-lg-12">
                                     <div class="form-group m-0">
                                         <label class="input-label"
-                                            for="exampleFormControlInput1">{{ translate('messages.identity') }}
-                                            {{ translate('messages.number') }}</label>
+                                            for="exampleFormControlInput1">{{ translate('messages.identity_number') }}</label>
                                         <input type="text" name="identity_number" class="form-control h--45px"
-                                            placeholder="{{ translate('Ex : DH-23434-LS') }}" required>
+                                            placeholder="{{ translate('Ex:_DH-23434-LS') }}" required>
                                     </div>
                                 </div>
                             </div>
@@ -144,8 +151,7 @@
                         <div class="col-lg-8">
                             <div class="form-group m-0">
                                 <label class="input-label"
-                                    for="exampleFormControlInput1">{{ translate('messages.identity') }}
-                                    {{ translate('messages.image') }}</label>
+                                    for="exampleFormControlInput1">{{ translate('messages.identity_image') }}</label>
                                 <div>
                                     <div class="row" id="coba"></div>
                                 </div>
@@ -168,7 +174,7 @@
                             <div class="form-group m-0">
                                 <label class="input-label" for="phone">{{ translate('messages.phone') }}</label>
                                 <div class="input-group">
-                                    <input type="tel" name="phone" id="phone" placeholder="{{ translate('Ex : 017********') }}"
+                                    <input type="tel" name="phone" id="phone" placeholder="{{ translate('Ex:_017********') }}"
                                         class="form-control h--45px" required>
                                 </div>
                             </div>
@@ -176,8 +182,12 @@
                         <div class="col-md-4">
                             <div class="form-group m-0">
                                 <label class="input-label"
-                                    for="exampleFormControlInput1">{{ translate('messages.password') }}</label>
-                                <input type="text" name="password" class="form-control h--45px" placeholder="{{ translate('Ex: 5+ Character') }}"
+                                    for="exampleFormControlInput1">{{ translate('messages.password') }}
+                                    <span class="input-label-secondary ps-1" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span>
+                                </label>
+                                <input type="text" name="password"
+                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                class="form-control h--45px" placeholder="{{ translate('Ex:_8+_Character') }}"
                                     required>
                             </div>
                         </div>
@@ -186,7 +196,9 @@
                             <div class="form-group m-0">
                                 <label class="input-label"
                                 for="exampleFormControlInput1">{{ translate('messages.confirm_password') }}</label>
-                                <input type="text" name="password" class="form-control h--45px" placeholder="{{ translate('Ex: 5+ Character') }}"
+                                <input type="text" name="password" class="form-control h--45px"
+                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+                                placeholder="{{ translate('Ex:_8+_Character') }}"
                                 required>
                             </div>
                         </div>

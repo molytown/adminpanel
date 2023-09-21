@@ -23,45 +23,10 @@
         <!-- End Page Header -->
         <!-- Nav Scroller -->
         <div class="js-nav-scroller hs-nav-scroller-horizontal">
-            <!-- Nav -->
-            <ul class="nav nav-tabs page-header-tabs">
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'index') }}">{{ translate('messages.text') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link active"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'links') }}"
-                        aria-disabled="true">{{ translate('messages.button_links') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'speciality') }}"
-                        aria-disabled="true">{{ translate('messages.speciality') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'testimonial') }}"
-                        aria-disabled="true">{{ translate('messages.testimonial') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'feature') }}"
-                        aria-disabled="true">{{ translate('messages.feature') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'image') }}"
-                        aria-disabled="true">{{ translate('messages.image') }}</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link"
-                        href="{{ route('admin.business-settings.landing-page-settings', 'backgroundChange') }}"
-                        aria-disabled="true">{{ translate('messages.header_footer_bg') }}</a>
-                </li>
-            </ul>
-            <!-- End Nav -->
-        </div>
+                <!-- Nav -->
+                @include('admin-views.business-settings.landing-page-settings.top-menu-links.top-menu-links')
+                <!-- End Nav -->
+            </div>
         <!-- End Nav Scroller -->
     </div>
         <!-- End Page Header -->
@@ -111,6 +76,18 @@
                                 </span>
                             </label>
                             <input type="text" id="web_app_url" name="web_app_url" class="form-control h--45px" value="{{isset($landing_page_links)?$landing_page_links['web_app_url']:''}}">
+                        </div>
+                    </div>
+                    <div class="col-sm-6 col-lg-4">
+                        <div class="form-group">
+                            <label class="toggle-switch toggle-switch-sm d-flex justify-content-between input-label mb-1" for="order_now_url_status">
+                                <span class="form-check-label">{{translate('messages.order_now_url')}} </span>
+                                <input type="checkbox" class="toggle-switch-input" name="order_now_url_status" id="order_now_url_status" value="1" {{(isset($landing_page_links['order_now_url_status']) && $landing_page_links['order_now_url_status'])?'checked':''}}>
+                                <span class="toggle-switch-label">
+                                    <span class="toggle-switch-indicator"></span>
+                                </span>
+                            </label>
+                            <input type="text" id="order_now_url" name="order_now_url" class="form-control h--45px" value="{{isset($landing_page_links['order_now_url'])?$landing_page_links['order_now_url']:''}}">
                         </div>
                     </div>
                 </div>

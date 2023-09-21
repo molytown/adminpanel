@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title', '')
+@section('title',translate('messages.Order_Invoice'))
 
 
 @section('content')
@@ -10,105 +10,167 @@
             <div class="col-md-12">
                 <center>
                     <input type="button" class="btn btn-primary non-printable" onclick="printDiv('printableArea')"
-                        value="{{ translate('Proceed, If thermal printer is ready.') }}" />
-                    <a href="{{ url()->previous() }}" class="btn btn-danger non-printable">{{ translate('Back') }}</a>
+                        value="{{ translate('messages.Proceed_If_thermal_printer_is_ready.') }}" />
+                    <a href="{{ url()->previous() }}" class="btn btn-danger non-printable">{{ translate('messages.back') }}</a>
                 </center>
                 <hr class="non-printable">
                 <div class="initial-38-1">
                     <div class="pt-3">
                         <img src="{{asset('/public/assets/admin/img/restaurant-invoice.png')}}" class="initial-38-2" alt="">
                     </div>
-                    @if ($order->restaurant)
                     <div class="text-center pt-2 mb-3">
-                        <h2 class="initial-38-3">{{ isset($order->restaurant) ? $order->restaurant->name : ' ' }}</h2>
-                        <h5 class="initial-38-4">
-                            {{ isset($order->restaurant) ? $order->restaurant->address : ' ' }}
+                        <h2  class="initial-38-3">{{ $order->restaurant->name }}</h2>
+                        <h5 class="text-break initial-38-4">
+                            {{ $order->restaurant->address }}
                         </h5>
                         <h5 class="initial-38-4 initial-38-3">
-                            {{ translate('messages.phone') }} :
-                            {{ isset($order->restaurant) ? $order->restaurant->phone : ' ' }}
+                            <span>{{ translate('phone') }}</span> <span>:</span> <span>{{ $order->restaurant->phone }}</span>
                         </h5>
                         @if ($order->restaurant->gst_status)
-                        <span class="text-center">{{ translate('messages.gst') }}: {{$order->restaurant->gst_code}}</span>
-                    @endif
+                            <h5 class="initial-38-4 initial-38-3 fz-12px">
+                                <span>{{ translate('Gst_No') }}</span> <span>:</span> <span>{{ $order->restaurant->gst_code }}</span>
+                            </h5>
+                        @endif
+                        {{-- <span class="text-center">Gst: {{$order->restaurant->gst_code}}</span> --}}
                     </div>
-                    @endif
+
                     <span class="initial-38-5">---------------------------------------------------------------------------------</span>
                     <div class="row mt-3">
                         <div class="col-6">
-                            <h5>{{ translate('Order ID') }} :
-                                <span class="font-light">
-                                    {{ isset($order) ? $order->id : ' ' }}
-                                </span>
+                            <h5>{{ translate('Order_ID') }} :
+                                <span class="font-light"> {{ $order['id'] }} </span>
                             </h5>
                         </div>
                         <div class="col-6">
-                            <h5 class="font-light">
-                                {{ date('d/M/Y ' . config('timeformat'), strtotime(isset($order) ? $order['created_at'] : '')) }}
+                                <span class="font-light">
+                                {{  Carbon\Carbon::parse($order['created_at'])->locale(app()->getLocale())->translatedFormat('d/M/Y ' . config('timeformat')) }}
+
+                                {{-- {{ date('d/M/Y ' . config('timeformat'), strtotime($order['created_at'])) }} --}}
                             </h5>
                         </div>
                         <div class="col-12">
+
+                            @if ($order?->delivery_address)
+
                             <h5>
-                                {{ translate('Customer Name') }} :
-                                <span class="font-regular">
+                                {{ translate('Customer_Name') }} :
+                                <span class="font-light">
                                     {{ isset($order->delivery_address) ? json_decode($order->delivery_address, true)['contact_person_name'] : '' }}
                                 </span>
                             </h5>
                             <h5>
                                 {{ translate('messages.phone') }} :
-                                <span class="font-regular">
-                                    {{ isset($order->delivery_address) ? json_decode($order->delivery_address, true)        ['contact_person_number'] : '' }}
+                                <span class="font-light">
+                                    {{ isset($order->delivery_address) ? json_decode($order->delivery_address, true)['contact_person_number'] : '' }}
                                 </span>
                             </h5>
+
+                            @if (isset($order->delivery_address) && isset(json_decode($order->delivery_address, true)['road'])  )
+                            <h5>
+                                {{ translate('messages.Road') }} :
+                                <span class="font-light">
+                                    {{ json_decode($order->delivery_address, true)['road'] }}
+                                </span>
+                            </h5>
+                            @endif
+
+
+                            @if (isset($order->delivery_address) && isset(json_decode($order->delivery_address, true)['house']) )
+                            <h5>
+                                {{ translate('messages.House') }} :
+                                <span class="font-light">
+                                    {{  json_decode($order->delivery_address, true)['house'] }}
+                                </span>
+                            </h5>
+                            @endif
+
+                            @if (isset($order->delivery_address) && isset(json_decode($order->delivery_address, true)['floor']) )
+                                <h5>
+                                    {{ translate('messages.floor') }} :
+                                    <span class="font-light">
+                                        {{ json_decode($order->delivery_address, true)['floor'] }}
+                                    </span>
+                                </h5>
+                            @endif
+
                             <h5 class="text-break">
                                 {{ translate('messages.address') }} :
-                                <span class="font-regular">
+                                <span class="font-light">
                                     {{ isset($order->delivery_address) ? json_decode($order->delivery_address, true)['address'] : '' }}
                                 </span>
                             </h5>
+                            @else
+                            <h5>
+                                {{ translate('Customer_Name') }} :
+                                <span class="font-light">
+                                    {{ translate('messages.walk_in_customer')}}
+                                </span>
+                            </h5>
+                            @endif
+
                         </div>
                     </div>
                     <h5 class="text-uppercase"></h5>
                     <span class="initial-38-5">---------------------------------------------------------------------------------</span>
-                    <table class="table table-bordered mt-3">
+                    <table class="table table-bordered mt-1 mb-1">
                         <thead>
                             <tr>
                                 <th class="initial-38-6">{{ translate('messages.qty') }}</th>
-                                <th class="initial-38-7">{{ translate('DESC') }}</th>
+                                <th class="initial-38-7">{{ translate('messages.DESC') }}</th>
                                 <th class="initial-38-7">{{ translate('messages.price') }}</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            @php($zone_currency=$order->zone_currency ?? null)
                             @php($sub_total = 0)
                             @php($total_tax = 0)
                             @php($total_dis_on_pro = 0)
                             @php($add_ons_cost = 0)
                             @foreach ($order->details as $detail)
-                                @if ($detail->food_id)
+                                @if ($detail->food_id || $detail->campaign == null)
                                     <tr>
                                         <td class="">
                                             {{ $detail['quantity'] }}
                                         </td>
                                         <td class="text-break">
-                                            {{ json_decode($detail->food_details, true)['name'] }} <br>
-                                            @if (count(json_decode($detail['variation'], true)) > 0)
-                                                <strong><u>{{ translate('Variation') }} : </u></strong>
-                                                @foreach (json_decode($detail['variation'], true)[0] as $key1 => $variation)
-                                                    <div class="font-size-sm text-body">
-                                                        <span>{{ $key1 }} : </span>
-                                                        <span
-                                                            class="font-weight-bold">{{ $key1 == 'price' ? \App\CentralLogics\Helpers::format_currency($variation,$zone_currency) : $variation }}</span>
-                                                    </div>
-                                                @endforeach
-                                            @else
-                                                <div class="font-size-sm text-body">
-                                                    <span>{{ 'Price' }} : </span>
-                                                    <span
-                                                        class="font-weight-bold">{{ \App\CentralLogics\Helpers::format_currency($detail->price,$zone_currency) }}</span>
-                                                </div>
-                                            @endif
+                                        {{ json_decode($detail->food_details, true)['name'] }} <br>
+
+                                    @if (count(json_decode($detail['variation'], true)) > 0)
+                                                <strong><u>{{ translate('messages.variation') }} : </u></strong>
+                                                @foreach(json_decode($detail['variation'],true) as  $variation)
+                                                @if ( isset($variation['name'])  && isset($variation['values']))
+                                                    <span class="d-block text-capitalize">
+                                                            <strong>{{  $variation['name']}} - </strong>
+                                                    </span>
+                                                    @foreach ($variation['values'] as $value)
+                                                    <span class="d-block text-capitalize">
+                                                        &nbsp;   &nbsp; {{ $value['label']}} :
+                                                        <strong>{{\App\CentralLogics\Helpers::format_currency( $value['optionPrice'])}}</strong>
+                                                        </span>
+                                                    @endforeach
+                                                @else
+                                                    @if (isset(json_decode($detail['variation'],true)[0]))
+                                                        @foreach(json_decode($detail['variation'],true)[0] as $key1 =>$variation)
+                                                            <div class="font-size-sm text-body">
+                                                                <span>{{$key1}} :  </span>
+                                                                <span class="font-weight-bold">{{$variation}}</span>
+                                                            </div>
+                                                        @endforeach
+                                                    @endif
+                                                        @break
+                                                @endif
+                                                        @endforeach
+                                                        @else
+                                                        <div class="font-size-sm text-body">
+                                                            <span>{{ translate('messages.Price') }} : </span>
+                                                            <span
+                                                                class="font-weight-bold">{{ \App\CentralLogics\Helpers::format_currency($detail->price) }}</span>
+                                                        </div>
+                                        @endif
+
+
+
+
                                             @foreach (json_decode($detail['add_ons'], true) as $key2 => $addon)
                                                 @if ($key2 == 0)
                                                     <strong><u>{{ translate('messages.addons') }} : </u></strong>
@@ -117,7 +179,7 @@
                                                     <span class="text-break">{{ $addon['name'] }} : </span>
                                                     <span class="font-weight-bold">
                                                         {{ $addon['quantity'] }} x
-                                                        {{ \App\CentralLogics\Helpers::format_currency($addon['price'],$zone_currency) }}
+                                                        {{ \App\CentralLogics\Helpers::format_currency($addon['price']) }}
                                                     </span>
                                                 </div>
                                                 @php($add_ons_cost += $addon['price'] * $addon['quantity'])
@@ -125,50 +187,60 @@
                                         </td>
                                         <td class="w-28p">
                                             @php($amount = $detail['price'] * $detail['quantity'])
-                                            {{ \App\CentralLogics\Helpers::format_currency($amount,$zone_currency) }}
+                                            {{ \App\CentralLogics\Helpers::format_currency($amount) }}
                                         </td>
                                     </tr>
                                     @php($sub_total += $amount)
                                     @php($total_tax += $detail['tax_amount'] * $detail['quantity'])
-                                @endif
-
-
-                                @if ($detail->campaign)
+                                @elseif($detail->campaign)
                                     <tr>
                                         <td class="">
                                             {{ $detail['quantity'] }}
                                         </td>
-                                        <td class="text-break">
+                                        <td class="">
                                             {{ $detail->campaign['title'] }} <br>
-                                            @if (count(json_decode($detail['variation'], true)) > 0)
-                                                <strong><u>{{ translate('messages.variation') }} : </u></strong>
-                                                @foreach (json_decode($detail['variation'], true)[0] as $key1 => $variation)
-                                                    <div class="font-size-sm text-body">
-                                                        <span class="text-break">{{ $addon['name'] }} : </span>
-                                                        <span class="font-weight-bold">
-                                                            {{ $addon['quantity'] }} x
-                                                            {{ \App\CentralLogics\Helpers::format_currency($addon['price'],$zone_currency) }}
-                                                        </span>
-                                                    </div>
-                                                    @php($add_ons_cost += $addon['price'] * $addon['quantity'])
+                                        @if (count(json_decode($detail['variation'], true)) > 0)
+                                            <strong><u>{{ translate('messages.variation') }} : </u></strong>
+                                            @foreach(json_decode($detail['variation'],true) as  $variation)
+                                            @if ( isset($variation['name'])  && isset($variation['values']))
+                                                <span class="d-block text-capitalize">
+                                                        <strong>{{  $variation['name']}} - </strong>
+                                                </span>
+                                                @foreach ($variation['values'] as $value)
+                                                <span class="d-block text-capitalize">
+                                                    &nbsp;   &nbsp; {{ $value['label']}} :
+                                                    <strong>{{\App\CentralLogics\Helpers::format_currency( $value['optionPrice'])}}</strong>
+                                                    </span>
                                                 @endforeach
                                             @else
-                                                <div class="font-size-sm text-body">
-                                                    <span>{{ translate('messages.price') }} : </span>
-                                                    <span
-                                                        class="font-weight-bold">{{ \App\CentralLogics\Helpers::format_currency($detail->price,$zone_currency) }}</span>
-                                                </div>
+                                                @if (isset(json_decode($detail['variation'],true)[0]))
+                                                    @foreach(json_decode($detail['variation'],true)[0] as $key1 =>$variation)
+                                                        <div class="font-size-sm text-body">
+                                                            <span>{{$key1}} :  </span>
+                                                            <span class="font-weight-bold">{{$variation}}</span>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                                    @break
                                             @endif
+                                                    @endforeach
+                                                    @else
+                                                    <div class="font-size-sm text-body">
+                                                        <span>{{ translate('messages.Price') }} : </span>
+                                                        <span
+                                                            class="font-weight-bold">{{ \App\CentralLogics\Helpers::format_currency($detail->price) }}</span>
+                                                    </div>
+                                    @endif
 
                                             @foreach (json_decode($detail['add_ons'], true) as $key2 => $addon)
                                                 @if ($key2 == 0)
                                                     <strong><u>{{ translate('messages.addons') }} : </u></strong>
                                                 @endif
                                                 <div class="font-size-sm text-body">
-                                                    <span class="text-break">{{ $addon['name'] }} : </span>
+                                                    <span>{{ $addon['name'] }} : </span>
                                                     <span class="font-weight-bold">
                                                         {{ $addon['quantity'] }} x
-                                                        {{ \App\CentralLogics\Helpers::format_currency($addon['price'],$zone_currency) }}
+                                                        {{ \App\CentralLogics\Helpers::format_currency($addon['price']) }}
                                                     </span>
                                                 </div>
                                                 @php($add_ons_cost += $addon['price'] * $addon['quantity'])
@@ -176,7 +248,7 @@
                                         </td>
                                         <td class="w-28p">
                                             @php($amount = $detail['price'] * $detail['quantity'])
-                                            {{ \App\CentralLogics\Helpers::format_currency($amount,$zone_currency) }}
+                                            {{ \App\CentralLogics\Helpers::format_currency($amount) }}
                                         </td>
                                     </tr>
                                     @php($sub_total += $amount)
@@ -189,58 +261,99 @@
                     <div class="mb-2 initial-38-9">
                         <div class="px-3">
                             <dl class="row text-right">
-
-                                <dt class="col-6">{{ translate('Items Price') }}:</dt>
-                                <dd class="col-6 mb-1">{{ \App\CentralLogics\Helpers::format_currency($sub_total,$zone_currency) }}
-                                </dd>
-                                <dt class="col-6">{{ translate('Addon Cost') }}:</dt>
-
-                                <dd class="col-6 mb-1">
-                                    {{ \App\CentralLogics\Helpers::format_currency($add_ons_cost,$zone_currency) }}
+                                <dt class="col-6 text-left">{{ translate('Items_Price') }}:</dt>
+                                <dd class="col-6">{{ \App\CentralLogics\Helpers::format_currency($sub_total) }}</dd>
+                                <dt class="col-6 text-left">{{ translate('Addon_Cost') }}:</dt>
+                                <dd class="col-6">
+                                    {{ \App\CentralLogics\Helpers::format_currency($add_ons_cost) }}
                                     <hr>
                                 </dd>
-                                <dt class="col-6">{{ translate('messages.subtotal') }}:</dt>
-                                <dd class="col-6 mb-1">
-
-                                    {{ \App\CentralLogics\Helpers::format_currency($sub_total + $add_ons_cost,$zone_currency) }}</dd>
-                                <dt class="col-6">{{ translate('messages.discount') }}:</dt>
-                                <dd class="col-6 mb-1">
-                                    -
-                                    {{ \App\CentralLogics\Helpers::format_currency($order['restaurant_discount_amount'],$zone_currency) }}
+                                <dt class="col-6 text-left">{{ translate('messages.subtotal') }}
+                                    @if ($order->tax_status == 'included' )
+                                    ({{ translate('messages.TAX_Included') }})
+                                    @endif
+                                    :</dt>
+                                <dd class="col-6">
+                                    {{ \App\CentralLogics\Helpers::format_currency($sub_total + $add_ons_cost) }}</dd>
+                                <dt class="col-6 text-left">{{ translate('messages.discount') }}:</dt>
+                                <dd class="col-6">
+                                    - {{ \App\CentralLogics\Helpers::format_currency($order['restaurant_discount_amount']) }}
                                 </dd>
-                                <dt class="col-6">{{ translate('messages.coupon_discount') }}:</dt>
-                                <dd class="col-6 mb-1">
-                                    - {{ \App\CentralLogics\Helpers::format_currency($order['coupon_discount_amount'],$zone_currency) }}
+                                <dt class="col-6 text-left">{{ translate('messages.coupon_discount') }}:</dt>
+                                <dd class="col-6">
+                                    - {{ \App\CentralLogics\Helpers::format_currency($order['coupon_discount_amount']) }}</dd>
+                                    @if ($order->tax_status == 'excluded' || $order->tax_status == null  )
+                                    <dt class="col-6 text-left">{{ translate('messages.vat/tax') }}:</dt>
+                                    <dd class="col-6">
+                                        {{ \App\CentralLogics\Helpers::format_currency($order['total_tax_amount']) }}
+                                    </dd>
+                                    @endif
+                                <dt class="col-6 text-left">{{ translate('messages.delivery_man_tips') }}:</dt>
+                                <dd class="col-6">
+                                    @php($dm_tips = $order['dm_tips'])
+                                    {{ \App\CentralLogics\Helpers::format_currency($dm_tips) }}
                                 </dd>
-                                <dt class="col-6">{{ translate('messages.vat/tax') }}:</dt>
-                                <dd class="col-6 mb-1">+
-                                    {{ \App\CentralLogics\Helpers::format_currency($order['total_tax_amount'],$zone_currency) }}</dd>
-                                <dt class="col-6">{{ translate('DM Tips') }}:</dt>
-
-                                <dd class="col-6 mb-1">
-                                    @php($delivery_man_tips = $order['dm_tips'])
-                                    + {{ \App\CentralLogics\Helpers::format_currency($delivery_man_tips,$zone_currency) }}
-                                </dd>
-                                <dt class="col-6">{{ translate('delivery_fee') }}:</dt>
-                                <dd class="col-6 mb-1">
+                                <dt class="col-6 text-left">{{ translate('messages.delivery_charge') }}:</dt>
+                                <dd class="col-6">
                                     @php($del_c = $order['delivery_charge'])
-                                    {{ \App\CentralLogics\Helpers::format_currency($del_c,$zone_currency) }}
-                                    <hr>
+                                    {{ \App\CentralLogics\Helpers::format_currency($del_c) }}
+
+                                    @if (\App\CentralLogics\Helpers::get_business_data('additional_charge_status') == 1 || $order['additional_charge'] > 0)
+                                        @php($additional_charge_status = 1)
+                                    @else
+                                        @php($additional_charge_status = 0)
+                                        <hr>
+                                    @endif
                                 </dd>
+                                @if ($additional_charge_status )
+                                    <dt class="col-6 text-left">{{ \App\CentralLogics\Helpers::get_business_data('additional_charge_name')??translate('messages.additional_charge') }}:</dt>
+                                    <dd class="col-6">
+                                        + {{ \App\CentralLogics\Helpers::format_currency($order['additional_charge']) }}
+                                        <hr>
+                                    </dd>
+                                @endif
 
 
-                                <dt class="col-6 fz-20px">{{ translate('messages.total') }}:
-                                </dt>
-                                <dd class="col-6 mb-1 fz-20px">
-                                    {{ \App\CentralLogics\Helpers::format_currency($sub_total + $del_c + $delivery_man_tips + $order['total_tax_amount'] + $add_ons_cost - $order['coupon_discount_amount'] - $order['restaurant_discount_amount'],$zone_currency) }}
+                                <dt class="col-6 text-left fz-20px">{{ translate('messages.total') }}:</dt>
+                                <dd class="col-6 fz-20px">
+                                    {{ \App\CentralLogics\Helpers::format_currency($order['order_amount'] ) }}
                                 </dd>
+
+                                @if ($order?->payments)
+                                @foreach ($order?->payments as $payment)
+                                    @if ($payment->payment_status == 'paid')
+                                        @if ( $payment->payment_method == 'cash_on_delivery')
+
+                                        <dt class="col-6 text-left">{{ translate('messages.Paid_with_Cash') }} ({{  translate('COD')}}) :</dt>
+                                        @else
+
+                                        <dt class="col-6 text-left">{{ translate('messages.Paid_by') }} {{  translate($payment->payment_method)}} :</dt>
+                                        @endif
+                                    @else
+
+                                    <dt class="col-6 text-left">{{ translate('Due_Amount') }} ({{  $payment->payment_method == 'cash_on_delivery' ?  translate('messages.COD') : translate($payment->payment_method) }}) :</dt>
+                                    @endif
+                                <dd class="col-6 ">
+                                    {{ \App\CentralLogics\Helpers::format_currency($payment->amount) }}
+                                </dd>
+                                @endforeach
+                            @endif
+
+
 
                             </dl>
                         </div>
                     </div>
+
+                    <div class="d-flex flex-row justify-content-between border-top pt-3">
+                        <span class="text-capitalize d-flex"><span>{{ translate('Paid_by') }}</span> <span>:</span> <span>{{ translate(str_replace('_', ' ', $order['payment_method'])) }}</span> </span>
+                        {{-- <span>{{translate('messages.amount')}}: {{$order->adjusment}}</span>
+                        <span>{{translate('messages.change')}}: {{$order->adjusment - $order->order_amount}}</span> --}}
+
+                    </div>
                     <span class="initial-38-7">-------------------------------------------------------------------</span>
-                    <h5 class="text-center pt-1">
-                        <span class="d-block">"""{{ translate('THANK YOU') }}"""</span>
+                    <h5 class="text-center pt-1  justify-content-center">
+                        <span class="d-block">"""{{ translate('THANK_YOU') }}"""</span>
                     </h5>
                     <span class="initial-38-7">-------------------------------------------------------------------</span>
                     <span class="d-block text-center">© {{date('Y')}} {{\App\Models\BusinessSetting::where(['key'=>'business_name'])->first()->value}}. {{translate('messages.all_right_reserved')}}</span>
@@ -254,11 +367,26 @@
 @push('script')
     <script>
         function printDiv(divName) {
-            var printContents = document.getElementById(divName).innerHTML;
-            var originalContents = document.body.innerHTML;
-            document.body.innerHTML = printContents;
-            window.print();
-            document.body.innerHTML = originalContents;
+
+            if($('html').attr('dir') === 'rtl') {
+                $('html').attr('dir', 'ltr')
+                var printContents = document.getElementById(divName).innerHTML;
+                var originalContents = document.body.innerHTML;
+                document.body.innerHTML = printContents;
+                $('.initial-38-1').attr('dir', 'rtl')
+                window.print();
+                document.body.innerHTML = originalContents;
+                $('html').attr('dir', 'rtl')
+                location.reload()
+            }else{
+                var printContents = document.getElementById(divName).innerHTML;
+                var originalContents = document.body.innerHTML;
+                document.body.innerHTML = printContents;
+                window.print();
+                document.body.innerHTML = originalContents;
+                location.reload()
+            }
+
         }
     </script>
 @endpush

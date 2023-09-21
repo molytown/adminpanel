@@ -11,7 +11,7 @@
                 <img src="{{asset('/public/assets/admin/img/resturant-panel/page-title/employee-role.png')}}" alt="public">
             </div>
             <span>
-                {{translate('messages.Employee')}} {{translate('messages.update')}}
+                {{translate('messages.Employee_update')}}
             </span>
         </h2>
     </div>
@@ -36,12 +36,12 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
-                            <label class="form-label" for="f_name">{{translate('messages.first')}} {{translate('messages.name')}}</label>
+                            <label class="form-label" for="f_name">{{translate('messages.irst_name')}}</label>
                             <input type="text" name="f_name" value="{{$e['f_name']}}" class="form-control h--45px" id="f_name"
                                     placeholder="{{translate('messages.first_name')}}" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label" for="l_name">{{translate('messages.last')}} {{translate('messages.name')}}</label>
+                            <label class="form-label" for="l_name">{{translate('messages.last_name')}}</label>
                             <input type="text" name="l_name" value="{{$e['l_name']}}" class="form-control h--45px" id="l_name"
                                     placeholder="{{translate('messages.last_name')}}">
                         </div>
@@ -54,7 +54,7 @@
                         <div class="form-group mb-md-0">
                             <label class="form-label" for="role_id">{{translate('messages.Role')}}</label>
                             <select class="form-control h--45px w-100" name="role_id">
-                                    <option value="" selected disabled>{{translate('messages.select')}} {{translate('messages.Role')}}</option>
+                                    <option value="" selected disabled>{{translate('messages.select_Role')}}</option>
                                     @foreach($rls as $r)
                                         <option
                                             value="{{$r->id}}" {{$r['id']==$e['employee_role_id']?'selected':''}}>{{$r->name}}</option>
@@ -78,7 +78,7 @@
                                     <div class="custom-file">
                                         <input type="file" name="image" id="customFileUpload" class="custom-file-input"
                                             accept=".jpg, .png, .jpeg, .gif, .bmp, .tif, .tiff|image/*">
-                                        <label class="custom-file-label" for="customFileUpload">{{translate('messages.choose')}} {{translate('messages.file')}}</label>
+                                        <label class="custom-file-label" for="customFileUpload">{{translate('messages.choose_file')}}</label>
                                     </div>
                                 </div>
                             </div>
@@ -94,7 +94,7 @@
                                 <i class="tio-user"></i>
                             </span>
                             <span>
-                                {{translate('messages.account')}} {{translate('messages.info')}}
+                                {{translate('messages.account_info')}}
                             </span>
                         </h5>
                     </div>
@@ -105,14 +105,22 @@
                                 <input type="email" value="{{$e['email']}}" name="email" class="form-control h--45px" id="email" placeholder="{{ translate('messages.Ex :') }} ex@gmail.com">
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label" for="password">{{translate('messages.password')}}<small> ( {{translate('messages.enter_if_you_want_to_change')}} )</small></label>
-                                <input type="text" name="password" class="form-control h--45px" id="password" placeholder="{{translate('messages.password_length_placeholder',['length'=>'8+'])}}">
+                                <label class="form-label" for="password">{{translate('messages.password')}}<small> ( {{translate('messages.enter_if_you_want_to_change')}} )</small>
+                                    <span class="input-label-secondary ps-1" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"><img src="{{ asset('/public/assets/admin/img/info-circle.svg') }}" alt="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"></span>
+                                </label>
+                                <input type="text" name="password"
+                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+
+                                class="form-control h--45px" id="password" placeholder="{{translate('messages.password_length_8+')}}">
                             </div>
                             <div class="col-md-4">
                                 <label class="form-label" for="confirm-password">
                                     {{translate('messages.confirm_password')}}
                                 </label>
-                                <input type="text" name="confirm-password" class="form-control h--45px" id="confirm-password" placeholder="{{ translate('Ex : Confirm Password') }}">
+                                <input type="text" name="confirm-password"
+                                pattern="(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{8,}" title="{{ translate('messages.Must_contain_at_least_one_number_and_one_uppercase_and_lowercase_letter_and_symbol,_and_at_least_8_or_more_characters') }}"
+
+                                class="form-control h--45px" id="confirm-password" placeholder="{{ translate('Ex : Confirm Password') }}">
                             </div>
                         </div>
                     </div>

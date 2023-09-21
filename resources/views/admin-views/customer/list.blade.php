@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Customer list'))
+@section('title',translate('Customer_list'))
 
 @push('css_or_js')
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -29,11 +29,11 @@
             <div class="card-header py-0 border-0">
                 <div class="search--button-wrapper justify-content-end">
                     <span class="card-title"></span>
-                    <form action="{{route('admin.customer.list')}}" id="search-form">
+                    <form >
                         <!-- Search -->
                         <div class="input--group input-group input-group-merge input-group-flush">
-                            <input id="datatableSearch_" type="search" name="search" class="form-control" value="{{request()->get('search')}}"
-                                    placeholder="{{ translate('Ex: Search by name, email or phone...') }}" aria-label="Search" required>
+                            <input id="datatableSearch_" type="search" name="search" class="form-control" value="{{request()?->search ?? null}}"
+                                    placeholder="{{ translate('Ex:_Search_by_name') }}" aria-label="Search" required>
                             <button type="submit" class="btn btn--secondary">
                                 <i class="tio-search"></i>
                             </button>
@@ -72,8 +72,8 @@
                                     {{translate('messages.print')}}
                                 </a>
                                 <div class="dropdown-divider"></div>
-                                <span class="dropdown-header">{{translate('messages.download')}} {{translate('messages.options')}}</span>
-                                <a id="export-excel" class="dropdown-item" href="javascript:;">
+                                <span class="dropdown-header">{{translate('messages.download_options')}}</span>
+                                {{-- <a id="export-excel" class="dropdown-item" href="javascript:;">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/excel.svg"
                                             alt="Image Description">
@@ -83,7 +83,19 @@
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
                                             src="{{asset('public/assets/admin')}}/svg/components/placeholder-csv-format.svg"
                                             alt="Image Description">
-                                    .{{translate('messages.csv')}}
+                                    {{translate('messages.csv')}}
+                                </a> --}}
+                                <a id="export-excel" class="dropdown-item" href="{{route('admin.customer.export', ['type'=>'excel',request()->getQueryString()])}}">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/excel.svg"
+                                        alt="Image Description">
+                                    {{ translate('messages.excel') }}
+                                </a>
+                                <a id="export-csv" class="dropdown-item" href="{{route('admin.customer.export', ['type'=>'csv',request()->getQueryString()])}}">
+                                    <img class="avatar avatar-xss avatar-4by3 mr-2"
+                                        src="{{ asset('public/assets/admin') }}/svg/components/placeholder-csv-format.svg"
+                                        alt="Image Description">
+                                    .{{ translate('messages.csv') }}
                                 </a>
                                 <a id="export-pdf" class="dropdown-item" href="javascript:;">
                                     <img class="avatar avatar-xss avatar-4by3 mr-2"
@@ -125,7 +137,7 @@
                                         </div>
 
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="mr-2">{{translate('messages.contact')}} {{translate('messages.info')}}</span>
+                                            <span class="mr-2">{{translate('messages.contact_info')}}</span>
 
                                             <!-- Checkbox Switch -->
                                             <label class="toggle-switch toggle-switch-sm" for="toggleColumn_email">
@@ -137,24 +149,8 @@
                                             </label>
                                             <!-- End Checkbox Switch -->
                                         </div>
-
-                                        {{-- <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="mr-2">{{translate('messages.phone')}}</span>
-
-                                            <!-- Checkbox Switch -->
-                                            <label class="toggle-switch toggle-switch-sm"
-                                                    for="toggleColumn_phone">
-                                                <input type="checkbox" class="toggle-switch-input"
-                                                        id="toggleColumn_phone" checked>
-                                                <span class="toggle-switch-label">
-                                                <span class="toggle-switch-indicator"></span>
-                                                </span>
-                                            </label>
-                                            <!-- End Checkbox Switch -->
-                                        </div> --}}
-
                                         <div class="d-flex justify-content-between align-items-center mb-3">
-                                            <span class="mr-2">{{translate('messages.total')}} {{translate('messages.order')}}</span>
+                                            <span class="mr-2">{{translate('messages.total_order')}}</span>
 
                                             <!-- Checkbox Switch -->
                                             <label class="toggle-switch toggle-switch-sm"
@@ -234,8 +230,8 @@
                             {{ translate('messages.sl') }}
                         </th>
                         <th class="table-column-pl-0">{{translate('messages.name')}}</th>
-                        <th>{{translate('messages.contact')}} {{translate('messages.info')}}</th>
-                        <th>{{translate('messages.total')}} {{translate('messages.order')}}</th>
+                        <th>{{translate('messages.contact_info')}}</th>
+                        <th>{{translate('messages.Total_Delivered_Orders')}}</th>
                         <th class="text-center">{{translate('messages.active')}}/{{translate('messages.inactive')}}</th>
                         <th>{{translate('messages.actions')}}</th>
                     </tr>
@@ -268,7 +264,7 @@
                             <td>
                                 <div class="d-flex justify-content-center">
                                     <label class="toggle-switch toggle-switch-sm" for="stocksCheckbox{{$customer->id}}">
-                                        <input type="checkbox" onclick="status_change_alert('{{route('admin.customer.status',[$customer->id,$customer->status?0:1])}}', '{{$customer->status?translate('messages.you_want_to_block_this_customer'):translate('messages.you_want_to_unblock_this_customer')}}', event)" class="toggle-switch-input" id="stocksCheckbox{{$customer->id}}" {{$customer->status?'checked':''}}>
+                                        <input type="checkbox" onclick="status_change_alert('{{route('admin.customer.status',[$customer->id,$customer->status?0:1])}}', '{{$customer->status?translate('messages.you_want_to_block_this_customer_?'):translate('messages.you_want_to_unblock_this_customer_?')}}', event)" class="toggle-switch-input" id="stocksCheckbox{{$customer->id}}" {{$customer->status?'checked':''}}>
                                         <span class="toggle-switch-label">
                                             <span class="toggle-switch-indicator"></span>
                                         </span>
@@ -278,7 +274,7 @@
                             <td>
                                 <div class="btn--container">
                                     <a class="btn btn-sm btn--warning btn-outline-warning action-btn"
-                                        href="{{route('admin.customer.view',[$customer['id']])}}" title="{{translate('messages.view')}} {{translate('messages.customer')}}"><i class="tio-visible-outlined"></i>
+                                        href="{{route('admin.customer.view',[$customer['id']])}}" title="{{translate('messages.view_customer')}}"><i class="tio-visible-outlined"></i>
                                     </a>
                                 </div>
                             </td>
@@ -319,14 +315,14 @@
         function status_change_alert(url, message, e) {
             e.preventDefault();
             Swal.fire({
-                title: 'Are you sure?',
+                title: '{{ translate('Are_you_sure_?') }}',
                 text: message,
                 type: 'warning',
                 showCancelButton: true,
                 cancelButtonColor: 'default',
                 confirmButtonColor: '#FC6A57',
-                cancelButtonText: 'No',
-                confirmButtonText: 'Yes',
+                cancelButtonText: '{{ translate('no') }}',
+                confirmButtonText: '{{ translate('yes') }}',
                 reverseButtons: true
             }).then((result) => {
                 if (result.value) {
@@ -386,7 +382,7 @@
                 language: {
                     zeroRecords: '<div class="text-center p-4">' +
                         '<img class="mb-3 w-7rem" src="{{asset('public/assets/admin')}}/svg/illustrations/sorry.svg" alt="Image Description">' +
-                        '<p class="mb-0">{{ translate('No data to show') }}</p>' +
+                        '<p class="mb-0">{{ translate('No_data_to_show') }}</p>' +
                         '</div>'
                 }
             });
@@ -399,13 +395,13 @@
                                 });
             });
 
-            $('#export-excel').click(function () {
-                datatable.button('.buttons-excel').trigger()
-            });
+            // $('#export-excel').click(function () {
+            //     datatable.button('.buttons-excel').trigger()
+            // });
 
-            $('#export-csv').click(function () {
-                datatable.button('.buttons-csv').trigger()
-            });
+            // $('#export-csv').click(function () {
+            //     datatable.button('.buttons-csv').trigger()
+            // });
 
             $('#export-pdf').click(function () {
                 datatable.button('.buttons-pdf').trigger()

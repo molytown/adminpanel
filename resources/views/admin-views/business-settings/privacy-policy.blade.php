@@ -1,6 +1,6 @@
 @extends('layouts.admin.app')
 
-@section('title',translate('Privacy policy'))
+@section('title',translate('Privacy_Policy'))
 
 @push('css_or_js')
 
@@ -23,41 +23,51 @@
                     @csrf
                     @php($language=\App\Models\BusinessSetting::where('key','language')->first())
                     @php($language = $language->value ?? null)
-                    @php($default_lang = 'en')
-                    @if($language)
-                        @php($default_lang = json_decode($language)[0])
-                        <ul class="nav nav-tabs mb-4">
-                            @foreach(json_decode($language) as $lang)
-                                <li class="nav-item">
-                                    <a class="nav-link lang_link {{$lang == $default_lang? 'active':''}}" href="#" id="{{$lang}}-link">{{\App\CentralLogics\Helpers::get_language_name($lang).'('.strtoupper($lang).')'}}</a>
-                                </li>
-                            @endforeach
-                        </ul>
-                    @endif
+                    @php($default_lang = str_replace('_', '-', app()->getLocale()))
                     @if ($language)
-                        @foreach(json_decode($language) as $lang)
+                    <ul class="nav nav-tabs mb-4 border-0">
+                        <li class="nav-item">
+                            <a class="nav-link lang_link active"
+                            href="#"
+                            id="default-link">{{translate('messages.default')}}</a>
+                        </li>
+
+                        @foreach (json_decode($language) as $lang)
+                        <li class="nav-item">
+                            <a class="nav-link lang_link"
+                            href="#"
+                            id="{{ $lang }}-link">{{ \App\CentralLogics\Helpers::get_language_name($lang) . '(' . strtoupper($lang) . ')' }}</a>
+                        </li>
+                        @endforeach
+                    </ul>
+                    @endif
+
+                    <div class="form-group lang_form" id="default-form">
+                        <input type="hidden" name="lang[]" value="default">
+                        <textarea class="ckeditor form-control" name="privacy_policy[]">{!! $privacy_policy?->getRawOriginal('value') ?? '' !!}</textarea>
+                    </div>
+
+                    @if ($language)
+                        @forelse(json_decode($language) as $lang)
                             <?php
-                                if(count($data['translations'])){
+                                if($privacy_policy?->translations){
                                     $translate = [];
-                                    foreach($data['translations'] as $t)
+                                    foreach($privacy_policy?->translations as $t)
                                     {
                                         if($t->locale == $lang && $t->key=="privacy_policy"){
                                             $translate[$lang]['privacy_policy'] = $t->value;
                                         }
                                     }
                                 }
-                            ?>
-                            <div class="form-group {{$lang != $default_lang ? 'd-none':''}} lang_form" id="{{$lang}}-form">
-                            <textarea class="ckeditor form-control" name="privacy_policy[]" oninvalid="document.getElementById('en-link').click()">{!! $lang==$default_lang?$data['value']:($translate[$lang]['privacy_policy']??'') !!}</textarea>
+                                ?>
+                            <div class="form-group d-none lang_form" id="{{$lang}}-form">
+                                <textarea class="ckeditor form-control" name="privacy_policy[]">{!!  $translate[$lang]['privacy_policy'] ?? null !!}</textarea>
                             </div>
                             <input type="hidden" name="lang[]" value="{{$lang}}">
-                        @endforeach
-                    @else
-                    <div class="form-group">
-                        <textarea class="ckeditor form-control" name="privacy_policy">{!! $data['value'] !!}</textarea>
-                        <input type="hidden" name="lang[]" value="{{$lang}}">
-                    </div>
+                            @empty
+                        @endforelse
                     @endif
+
                     <div class="btn--container justify-content-end">
                         <button type="submit" class="btn btn--primary">{{translate('messages.submit')}}</button>
                     </div>
@@ -75,26 +85,15 @@
         $('.ckeditor').ckeditor();
     });
 </script>
-
 <script>
     $(".lang_link").click(function(e){
         e.preventDefault();
         $(".lang_link").removeClass('active');
         $(".lang_form").addClass('d-none');
         $(this).addClass('active');
-
         let form_id = this.id;
         let lang = form_id.substring(0, form_id.length - 5);
-        console.log(lang);
         $("#"+lang+"-form").removeClass('d-none');
-        if(lang == '{{$default_lang}}')
-        {
-            $(".from_part_2").removeClass('d-none');
-        }
-        else
-        {
-            $(".from_part_2").addClass('d-none');
-        }
     });
 </script>
 @endpush
